@@ -62,12 +62,14 @@ class Vec3{
 class Sphere{
     public:
         Vec3 position;
-        int radius;
+        float radius;
         uint8_t color[3];
+        bool is_light;
 
-    Sphere(Vec3 position, int radius){
+    Sphere(Vec3 position, float radius){
         this->position = position;
         this->radius = radius;
+        this->is_light = false;
     }
     void set_color(uint8_t r, uint8_t g, uint8_t b){
         this->color[0] = r;
@@ -152,11 +154,12 @@ Vec3 * ray_sphere_intersect(Ray * ray, Sphere * sphere){
 }
 
 Ray * get_bounce(Ray * ray, Vec3 intersection, Sphere s){
+    // Vec3 normal = intersection - s.position;
     Vec3 normal = intersection - s.position;
     normal = normal / sqrt(normal.length_squared());
     Vec3 rnormal = ray->direction / sqrt(ray->direction.length_squared()); // ensure the ray direction is normalized
     Vec3 reflection = rnormal - normal * 2.0f * rnormal.dot(normal);
-    reflection = reflection * -1.0f;
+    // reflection = reflection * -1.0f;
 
     Ray * bounce = new Ray(intersection, reflection);
 
@@ -171,8 +174,9 @@ Ray * get_bounce(Ray * ray, Vec3 intersection, Sphere s){
 int main(int argc, char **argv){
     Camera * c = new Camera(Vec3(0, 0, 0), Vec3(0, 0, -1), PI/6);
 
-    Sphere * sun = new Sphere(Vec3(0, 0, 1001), 1000);
+    Sphere * sun = new Sphere(Vec3(0, 0, 10001), 10000);
     sun->set_color(255, 255, 255);
+    sun->is_light = true;
 
     Sphere * red = new Sphere(Vec3(0, 0, -20), 3);
     red->set_color(255, 0, 0);
@@ -240,12 +244,16 @@ int main(int argc, char **argv){
                     }                
                 }
                 if(closest_sphere != nullptr){
-                    r->set_color(closest_sphere->color[0], closest_sphere->color[1], closest_sphere->color[2]);
                     Ray * bounce = get_bounce(r, *closest, *closest_sphere);
+                    bounce->set_color(closest_sphere->color[0], closest_sphere->color[1], closest_sphere->color[2]);
                     r->set_next(bounce);
                     bounce->set_prev(r);
                     r = bounce;
                     fprintf(f2, "c:[%f,%f,%f] b:[%f,%f,%f] red: %d, green: %d\n", closest->x, closest->y, closest->z, bounce->direction.x, bounce->direction.y, bounce->direction.z, r->color[0], r->color[1]);
+                    if(closest_sphere->is_light){
+                        printf("light hit\n");
+                        break;
+                    }
                 }
                 else{
                     r->set_color(0, 0, 0);
