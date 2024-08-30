@@ -224,6 +224,7 @@ int main(int argc, char **argv){
             r->color[0] = 255;
             r->color[1] = 255;
             r->color[2] = 255;
+            int bounces = 100;
             do{ 
                 Sphere * spheres[2] = {sun, red};
                 Vec3 * intersections[2] = {ray_sphere_intersect(r, sun), ray_sphere_intersect(r, red)};
@@ -259,8 +260,11 @@ int main(int argc, char **argv){
                     r->set_color(0, 0, 0);
                     break;
                 }
+                if (bounces-- == 0){
+                    break;
+                }
 
-            } while(r->get_next() != nullptr);
+            } while(true);
 
             // trace color back to the origin
             uint8_t *color = r->color;
