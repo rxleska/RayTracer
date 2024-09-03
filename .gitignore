@@ -33,3 +33,6 @@
 
 
 .vscode/
+uprof/
+run
+perf.data*
