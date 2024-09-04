@@ -25,8 +25,8 @@ __global__ void render(float *fb, int max_x, int max_y) {
 }
 
 int main() {
-    int nx = 64;
-    int ny = 32;
+    int nx = 1920;
+    int ny = 1080;
     int tx = 8;
     int ty = 8;
 
