@@ -35,3 +35,8 @@
 .vscode/
 
 run
+
+#cuda generated files
+*.exp
+# exe already generated
+# lib already generated 
