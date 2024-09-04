@@ -4,6 +4,7 @@
 #define TPPM_HPP
 
 #include <fstream>
+#include <stdint.h>
 
 #include "vec3.hpp"
 #include "color.hpp"

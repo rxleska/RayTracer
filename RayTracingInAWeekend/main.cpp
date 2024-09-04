@@ -59,8 +59,8 @@ int main(int argc, char** argv){
         }
     }
 
-    auto material = make_shared<lambertian>(color(1,0,0));
-    world.add(make_shared<sphere>(point3(5, 0.3, 2), 0.3, material));
+    // auto material = make_shared<lambertian>(color(1,0,0));
+    // world.add(make_shared<sphere>(point3(5, 0.3, 2), 0.3, material));
 
     auto material1 = make_shared<dielectric>(1.5);
     world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
@@ -69,7 +69,7 @@ int main(int argc, char** argv){
     world.add(make_shared<sphere>(point3(-4, 1, 0), 1.0, material2));
 
     // auto material3 = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
-    auto material3 = make_shared<metal>(color(1, 0.8431, 0.0), 0.05);
+    auto material3 = make_shared<metal>(color(1, 0.8431, 0.0), 0.0);
     world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
     auto material4 = make_shared<light>(color(1,1,1));
@@ -82,9 +82,9 @@ int main(int argc, char** argv){
     camera cam = camera();
 
     cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 400;
-    cam.samples_per_pixel = 30;
-    cam.max_depth         = 15;
+    cam.image_width       = 3840;
+    cam.samples_per_pixel = 64;
+    cam.max_depth         = 100;
 
     cam.vfov     = 20;
     cam.lookfrom = point3(13,2,3);
