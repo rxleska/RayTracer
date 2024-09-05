@@ -36,3 +36,4 @@
 uprof/
 run
 perf.data*
+*.pdb

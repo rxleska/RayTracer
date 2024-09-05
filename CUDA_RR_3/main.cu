@@ -107,14 +107,14 @@ __global__ void init_random(){
     }
 }
 
-__global__ void render(hittable_list *world, camera *cam, color **img){
+__global__ void render(hittable_list *world, camera *cam, color *img){
     //temp set all pixels red
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if(x >= WIDTH || y >= HEIGHT) return;
 
-    img[y][x] = color(1,0,0);
+    img[y*WIDTH + x] = color(1,0,0);
 }
 
 int main(int argc, char** argv){
@@ -138,11 +138,8 @@ int main(int argc, char** argv){
     // checkCudaErrors(cudaDeviceSynchronize());
 
     //allocate memory for the image in the gpu
-    color **img; // [height][width]
-    checkCudaErrors(cudaMalloc(&img, HEIGHT));
-    for(int i = 0; i < HEIGHT; i++){
-        checkCudaErrors(cudaMalloc(&img[i], WIDTH*sizeof(color)));
-    }
+    color *img; // [height][width]
+    checkCudaErrors(cudaMalloc(&img, WIDTH*HEIGHT*sizeof(color*)));
 
     //create threads to render the image
     dim3 blocks(WIDTH/THREADS_X +1, HEIGHT/THREADS_Y + 1);
@@ -156,14 +153,13 @@ int main(int argc, char** argv){
     color **host_img = new color*[HEIGHT];
     for(int i = 0; i < HEIGHT; i++){
         host_img[i] = new color[WIDTH];
-        checkCudaErrors(cudaMemcpy(host_img[i], img[i], WIDTH*sizeof(color), cudaMemcpyDeviceToHost));
+        checkCudaErrors(cudaMemcpy(host_img[i], &img[i*WIDTH], WIDTH*sizeof(color), cudaMemcpyDeviceToHost));
     }
 
     write_ppm("output.ppm", host_img, WIDTH, HEIGHT);
 
     //free memory
     for(int i = 0; i < HEIGHT; i++){
-        checkCudaErrors(cudaFree(img[i]));
         delete[] host_img[i];
     }
     delete[] host_img;
