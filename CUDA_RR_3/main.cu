@@ -29,11 +29,15 @@
 // }
 
 //create the world of object in gpu memory
-__global__ void create_world(hittable_list * world){
+__global__ void create_world(hittable ** things, hittable_list ** world){
     //only construct on the first thread (its shared memory so all threads will have the same world)
     if(threadIdx.x == 0 && blockIdx.x == 0){
+
+        // material * ground_material;
+        // cudaMalloc(&ground_material, sizeof(lambertian));
+        // memcpy(ground_material, &lambertian(color(0.5, 0.5, 0.5)), sizeof(lambertian));
         material* ground_material = new lambertian(color(0.5, 0.5, 0.5));
-        world->add(new sphere(point3(0,-1000,0), 1000, ground_material));
+        *(things) = new sphere(point3(0,-1000,0), 1000, ground_material);
 
         // for (int a = -11; a < 11; a++) {
         //     for (int b = -11; b < 11; b++) {
@@ -64,16 +68,18 @@ __global__ void create_world(hittable_list * world){
         // }
 
         material * material1 = new dielectric(1.5);
-        world->add(new sphere(point3(0, 1, 0), 1.0, material1));
+        *(things + 1) = new sphere(point3(0, 1, 0), 1.0, material1);
 
-        material * material2 = new lambertian(color(0.4, 0.2, 0.1));
-        world->add(new sphere(point3(-4, 1, 0), 1.0, material2));
+        *world = new hittable_list(things, 2);
 
-        material * material3 = new metal(color(0.7, 0.6, 0.5), 0.0);
-        world->add(new sphere(point3(4, 1, 0), 1.0, material3));
+        // material * material2 = new lambertian(color(0.4, 0.2, 0.1));
+        // world->add(new sphere(point3(-4, 1, 0), 1.0, material2));
 
-        material * material4 = new light(color(1,1,1));
-        world->add(new sphere(point3(0,510,400), 500, material4));
+        // material * material3 = new metal(color(0.7, 0.6, 0.5), 0.0);
+        // world->add(new sphere(point3(4, 1, 0), 1.0, material3));
+
+        // material * material4 = new light(color(1,1,1));
+        // world->add(new sphere(point3(0,510,400), 500, material4));
     }
     else{
         return;
@@ -95,6 +101,8 @@ __global__ void init_camera(camera *cam){
 
         cam->defocus_angle = 0.0;
         cam->focus_dist    = 1.0;
+
+        cam->initialize();
     }
 }
 
@@ -107,65 +115,39 @@ __global__ void init_random(){
     }
 }
 
-__global__ void render(hittable_list *world, camera *cam, color *img){
+__global__ void render(hittable_list **world, camera *cam, color *img){
     //temp set all pixels red
     int x = threadIdx.x + blockIdx.x * blockDim.x;
     int y = threadIdx.y + blockIdx.y * blockDim.y;
 
     if(x >= WIDTH || y >= HEIGHT) return;
 
+    
+
     img[y*WIDTH + x] = color(1,0,0);
 }
 
 int main(int argc, char** argv){
-    //allocate memory for the world in the gpu
-    hittable_list *world;
-    checkCudaErrors(cudaMalloc(&world, sizeof(hittable_list)));
-    // cudaDeviceSynchronize();
+    //world __device__ memory 
+    hittable ** things;
+    cudaMalloc(&things, 2*sizeof(hittable*));
+    hittable_list ** world;
+    cudaMalloc(&world, sizeof(hittable_list*));
+    create_world<<<1,1>>>(things, world);
 
-    // create_world<<<1,1>>>(world);
-    // checkCudaErrors(cudaDeviceSynchronize());
-
-
-    //allocate memory for the camera in the gpu
     camera *cam;
-    checkCudaErrors(cudaMalloc(&cam, sizeof(camera)));
-    // checkCudaErrors(cudaDeviceSynchronize());
-    
+    cudaMalloc(&cam, sizeof(camera));
 
-    //initialize the camera
-    // init_camera<<<1,1>>>(cam);
-    // checkCudaErrors(cudaDeviceSynchronize());
+    init_camera<<<1,1>>>(cam);
 
-    //allocate memory for the image in the gpu
-    color *img; // [height][width]
-    checkCudaErrors(cudaMalloc(&img, WIDTH*HEIGHT*sizeof(color*)));
+    color *img;
+    cudaMallocManaged(&img, WIDTH*HEIGHT*sizeof(color));
 
     //create threads to render the image
     dim3 blocks(WIDTH/THREADS_X +1, HEIGHT/THREADS_Y + 1);
     dim3 threads(THREADS_X, THREADS_Y);
     render<<<blocks, threads>>>(world, cam, img);
     checkCudaErrors(cudaDeviceSynchronize());
-
-    //wait for all threads to finish
-    // cudaDeviceSynchronize();
-
-    color **host_img = new color*[HEIGHT];
-    for(int i = 0; i < HEIGHT; i++){
-        host_img[i] = new color[WIDTH];
-        checkCudaErrors(cudaMemcpy(host_img[i], &img[i*WIDTH], WIDTH*sizeof(color), cudaMemcpyDeviceToHost));
-    }
-
-    write_ppm("output.ppm", host_img, WIDTH, HEIGHT);
-
-    //free memory
-    for(int i = 0; i < HEIGHT; i++){
-        delete[] host_img[i];
-    }
-    delete[] host_img;
-    checkCudaErrors(cudaFree(img));
-    checkCudaErrors(cudaFree(cam));
-    checkCudaErrors(cudaFree(world));
 
     
     return 0;

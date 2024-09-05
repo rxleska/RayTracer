@@ -23,6 +23,7 @@ class camera {
 
     double defocus_angle;
     double focus_dist;
+    __device__ void initialize();
 
     __device__ camera();
     __device__ void render_point(const hittable& world, int row, int column, color** image);
@@ -39,7 +40,6 @@ class camera {
     vec3   defocus_disk_u;       // Defocus disk horizontal radius
     vec3   defocus_disk_v;       // Defocus disk vertical radius
 
-    __device__ void initialize();
 
     __device__ ray get_ray(int i, int j) const;
     __device__ vec3 sample_square() const;
