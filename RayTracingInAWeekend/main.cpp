@@ -82,8 +82,8 @@ int main(int argc, char** argv){
     camera cam = camera();
 
     cam.aspect_ratio      = 16.0 / 9.0;
-    cam.image_width       = 3840;
-    cam.samples_per_pixel = 64;
+    cam.image_width       = 768;
+    cam.samples_per_pixel = 25;
     cam.max_depth         = 100;
 
     cam.vfov     = 20;
