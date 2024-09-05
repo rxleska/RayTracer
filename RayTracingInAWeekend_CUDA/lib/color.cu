@@ -1,17 +1,16 @@
 #include "headers/color.hpp"
 
-inline double linear_to_gamma(double linear_component)
+__host__ inline double linear_to_gamma(double linear_component)
 {
     if (linear_component > 0)
-        return std::sqrt(linear_component);
-
+        return sqrt(linear_component);
     return 0;
 }
 
-void write_color(std::ostream& out, const color& pixel_color) {
-    auto r = pixel_color.x();
-    auto g = pixel_color.y();
-    auto b = pixel_color.z();
+__host__ void write_color(std::ostream& out, const color& pixel_color) {
+    double r = pixel_color.x();
+    double g = pixel_color.y();
+    double b = pixel_color.z();
 
     // Apply a linear to gamma transform for gamma 2
     r = linear_to_gamma(r);
@@ -19,7 +18,8 @@ void write_color(std::ostream& out, const color& pixel_color) {
     b = linear_to_gamma(b);
 
     // Translate the [0,1] component values to the byte range [0,255].
-    static const interval intensity = interval(0.0, 0.999);
+    //TODO find a static way to do this
+    interval intensity = interval(0.0, 0.999);
     int rbyte = int(255.999 * intensity.clamp(r));
     int gbyte = int(255.999 * intensity.clamp(g));
     int bbyte = int(255.999 * intensity.clamp(b));

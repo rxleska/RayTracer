@@ -3,18 +3,29 @@
 
 #include "hittable.hpp"
 
+enum MaterialType{
+    LAMBERTIAN,
+    METAL,
+    DIELECTRIC,
+    LIGHT
+};
+
 class material
 {
 public:
     virtual ~material() = default;
 
-    virtual int scatter( // 0:no scatter, 1:scatter, 2:scatter and absorb
+    __host__ __device__ virtual int scatter( // 0:no scatter, 1:scatter, 2:scatter and absorb
         const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const;
-    bool getIsLightSrc() const;
-    void setIsLightSrc(bool isLightSrc);
+    __host__ __device__ bool getIsLightSrc() const;
+    __host__ __device__ void setIsLightSrc(bool isLightSrc);
+    __host__ __device__ MaterialType getType() const;
+    __host__ __device__ void setType(MaterialType type);
 
 private:
     bool isLightSrc = false;
+    MaterialType type;
+
 };
 
 // defining some materials
@@ -23,9 +34,11 @@ private:
 class lambertian : public material
 {
 public:
-    lambertian(const color &albedo) : albedo(albedo) {}
+    __host__ __device__ lambertian(const color &albedo) : albedo(albedo) {
+        setType(LAMBERTIAN);
+    }
 
-    int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+    __host__ __device__ int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
         const override;
 
 private:
@@ -36,9 +49,11 @@ private:
 class metal : public material
 {
 public:
-    metal(const color &albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {}
+    __host__ __device__ metal(const color &albedo, double fuzz) : albedo(albedo), fuzz(fuzz < 1 ? fuzz : 1) {
+        setType(METAL);
+    }
 
-    int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+    __host__ __device__ int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
         const override;
 
 private:
@@ -50,9 +65,11 @@ private:
 class dielectric : public material
 {
 public:
-    dielectric(double refraction_index) : refraction_index(refraction_index) {}
+    __host__ __device__ dielectric(double refraction_index) : refraction_index(refraction_index) {
+        setType(DIELECTRIC);
+    }
 
-    int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+    __host__ __device__ int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
         const override;
 
 private:
@@ -60,9 +77,9 @@ private:
     // the refractive index of the enclosing media
     double refraction_index;
 
-    static double reflectance(double cosine, double refraction_index) {
+    __host__ __device__ static double reflectance(double cosine, double refraction_index) {
         // Use Schlick's approximation for reflectance.
-        auto r0 = (1 - refraction_index) / (1 + refraction_index);
+        double r0 = (1 - refraction_index) / (1 + refraction_index);
         r0 = r0 * r0;
         return r0 + (1 - r0) * std::pow((1 - cosine), 5);
     }
@@ -72,12 +89,12 @@ private:
 class light : public material
 {   
     public:
-        light(const color &emission) : emission(emission) {setIsLightSrc(true);}
+        __host__ __device__ light(const color &emission) : emission(emission) {setIsLightSrc(true); setType(LIGHT);}
 
-        int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+        __host__ __device__ int scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
             const override;
 
-        color emitted() const;
+        __host__ __device__ color emitted() const;
     private:
         color emission;
 

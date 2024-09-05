@@ -1,12 +1,12 @@
-BIGEN = nvcc
+BIGEN = nvcc --relocatable-device-code=true
 
-all: run
+all: run.exe
 
 # List of object files
-OBJS = bin/main.o bin/camera.o bin/color.o bin/hittable_list.o bin/hittable.o bin/material.o bin/ray.o bin/sphere.o bin/tppm.o bin/vec3.o
+OBJS = bin/main.o bin/camera.o bin/color.o bin/hittable_list.o bin/hittable.o bin/material.o bin/ray.o bin/sphere.o bin/tppm.o bin/vec3.o bin/arraylist.o bin/GlobaL.o
 
 # Final executable
-run: $(OBJS)
+run.exe: $(OBJS)
 	$(BIGEN) -o run $(OBJS)
 
 # Object file rules
@@ -40,7 +40,20 @@ bin/tppm.o: lib/tppm.cu lib/headers/tppm.hpp
 bin/vec3.o: lib/vec3.cu lib/headers/vec3.hpp lib/headers/RTWeekend.hpp
 	$(BIGEN) -c lib/vec3.cu -o bin/vec3.o
 
-clean:
-	rm -f run bin/*.o
+bin/arraylist.o: lib/ArrayList.cu lib/headers/ArrayList.hpp
+	$(BIGEN) -c lib/ArrayList.cu -o bin/arraylist.o
+
+bin/GlobaL.o: lib/GlobaL.cu lib/headers/GlobaL.hpp
+	$(BIGEN) -c lib/GlobaL.cu -o bin/GlobaL.o
+
+clean: # windows
+	del bin\*.o
+	del run.exe
+
 
 rebuild: clean all
+
+
+test: run.exe
+	ncu -o profile run.exe
+	

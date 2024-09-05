@@ -2,7 +2,7 @@
 
 #include "headers/tppm.hpp"
 
-void write_ppm(const char * filename, color ** image, int width, int height){  // note that the image is stored in a 2D array of vec3s [height][width]
+__host__  void write_ppm(const char * filename, color ** image, int width, int height){  // note that the image is stored in a 2D array of vec3s [height][width]
     std::ofstream file;
     file.open(filename);
     file << "P3\n" << width << " " << height << "\n255\n";
@@ -15,7 +15,7 @@ void write_ppm(const char * filename, color ** image, int width, int height){  /
 
 }
 
-void write_ppm(const char * filename, uint8_t *** image, int width, int height){ // note that the image is stored in a 3d array of uint8_t [height][width][rgb]
+__host__ void write_ppm(const char * filename, uint8_t *** image, int width, int height){ // note that the image is stored in a 3d array of uint8_t [height][width][rgb]
     std::ofstream file;
     file.open(filename);
     file << "P6\n" << width << " " << height << "\n255\n";

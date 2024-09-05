@@ -1,21 +1,29 @@
 #include "headers/material.hpp"
+#include "headers/Global.hpp"
 
-
-int material::scatter( // 0:no scatter, 1:scatter, 2:scatter and absorb
+__host__ __device__ int material::scatter( // 0:no scatter, 1:scatter, 2:scatter and absorb
     const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const
 {
     return false;
 }
-bool material::getIsLightSrc() const { return isLightSrc; }
-void material::setIsLightSrc(bool isLightSrc) { this->isLightSrc = isLightSrc; }
+__host__ __device__ bool material::getIsLightSrc() const { return isLightSrc; }
+__host__ __device__ void material::setIsLightSrc(bool isLightSrc) { this->isLightSrc = isLightSrc; }
+
+__host__ __device__ MaterialType material::getType() const{
+    return type;
+}
+__host__ __device__ void material::setType(MaterialType type)
+{
+    this->type = type;
+}
 
 // defining some materials
 
 // Lambertian material - scatters light in all directions
-int lambertian::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+__host__ __device__ int lambertian::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
-    auto scatter_direction = rec.normal + random_unit_vector();
+    vec3 scatter_direction = rec.normal + random_unit_vector();
 
     // Catch degenerate scatter direction
     if (scatter_direction.near_zero())
@@ -27,7 +35,7 @@ int lambertian::scatter(const ray &r_in, const hit_record &rec, color &attenuati
 }
 
 // Metal material - scatters light in a single direction with reflection
-int metal::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+__host__ __device__ int metal::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
     vec3 reflected = reflect(r_in.direction(), rec.normal);
@@ -38,7 +46,7 @@ int metal::scatter(const ray &r_in, const hit_record &rec, color &attenuation, r
 }
 
 // Dielectric material - scatters light in a single direction with refraction
-int dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+__host__ __device__ int dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
     attenuation = color(1.0, 1.0, 1.0);
@@ -51,7 +59,16 @@ int dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuati
     bool cannot_refract = ri * sin_theta > 1.0;
     vec3 direction;
 
-    if (cannot_refract || reflectance(cos_theta, ri) > random_double())
+
+    #ifdef __CUDA_ARCH__
+        // Device-specific code
+        //get curand state
+        curandState local_rand_state = d_rand_state[threadIdx.x + threadIdx.y * 16];
+        if (cannot_refract || reflectance(cos_theta, ri) > curand_uniform(&local_rand_state))
+    #else
+        // Host-specific code
+        if (cannot_refract || reflectance(cos_theta, ri) > random_double())
+    #endif
         direction = reflect(unit_direction, rec.normal);
     else
         direction = refract(unit_direction, rec.normal, ri);
@@ -62,10 +79,10 @@ int dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuati
 
 
 // Light material - scatters light in all directions (inverse: absorbs inverse rays)
-int light::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
+__host__ __device__ int light::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
     return 2;
 }
 
-color light::emitted() const { return emission; }
+__host__ __device__ color light::emitted() const { return emission; }

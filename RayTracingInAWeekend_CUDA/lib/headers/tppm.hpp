@@ -10,8 +10,8 @@
 #include "color.hpp"
 
 
-void write_ppm(const char * filename, color ** image, int width, int height);
+__host__ void write_ppm(const char * filename, color ** image, int width, int height);
 
-void write_ppm(const char * filename, uint8_t *** image, int width, int height);
+__host__ void write_ppm(const char * filename, uint8_t *** image, int width, int height);
 
 #endif

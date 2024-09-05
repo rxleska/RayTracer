@@ -12,18 +12,27 @@
 
 // C++ Std Usage
 
-using std::make_shared;
-using std::shared_ptr;
+// using std::make_shared;
+// using std::shared_ptr;
+
+#include "Global.hpp"
 
 
 // Constants
 // const double infinity = std::numeric_limits<double>::infinity();
 const double pi = 3.1415926535897932385;
+__device__ const double d_pi = 3.1415926535897932385;
 
 // Utility Functions
 
-inline double degrees_to_radians(double degrees) {
-    return degrees * pi / 180.0;
+__host__ __device__ inline double degrees_to_radians(double degrees) {
+    #ifdef __CUDA_ARCH__
+    // Device-specific code
+        return degrees * d_pi / 180.0;
+    #else
+        // Host-specific code
+        return degrees * pi / 180.0;
+    #endif
 }
 
 

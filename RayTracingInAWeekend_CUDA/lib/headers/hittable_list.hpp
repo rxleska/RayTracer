@@ -3,22 +3,23 @@
 
 
 #include "hittable.hpp"
-#include <vector>
+// #include <vector>
+#include "ArrayList.hpp"
 
 #include "RTWeekend.hpp"
 
 class hittable_list : public hittable {
   public:
-    std::vector<shared_ptr<hittable>> objects;
+    ArrayList<hittable*> objects;
 
-    hittable_list();
-    hittable_list(shared_ptr<hittable> object);
+    __host__ __device__ hittable_list();
+    __host__ __device__ hittable_list(hittable* object);
 
-    void clear();
+    __host__ __device__ void clear();
 
-    void add(shared_ptr<hittable> object);
+    __host__ __device__ void add(hittable* object);
 
-    bool hit(const ray& r, interval ray_t, hit_record& rec) const override;
+    __host__ __device__ bool hit(const ray& r, interval ray_t, hit_record& rec) const override;
 };
 
 #endif 

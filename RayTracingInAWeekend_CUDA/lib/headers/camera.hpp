@@ -3,6 +3,7 @@
 
 #include "hittable.hpp"
 #include "RTWeekend.hpp"
+#include "ArrayList.hpp"
 #include "tppm.hpp"
 #include "material.hpp"
 
@@ -24,12 +25,14 @@ class camera {
     double defocus_angle;
     double focus_dist;
 
-    camera();
-
-    void render(const hittable& world);
-    void render_mt(const hittable& world);
-    void render_line(const hittable& world, int j, color ** image);
-    color ray_color(const ray& r, int depth, const hittable& world) const;
+    __host__ __device__ camera();
+    __host__ void render(const hittable& world);
+    __host__ void render_mt(const hittable& world);
+    __host__ void render_line(const hittable& world, int j, color ** image);
+    __host__ void render_cuda(const hittable& world);
+   
+    __host__ __device__ ray get_ray(int i, int j) const;
+    __host__ __device__ color ray_color(const ray& r, int depth, const hittable& world) const;
 
   private:
     /* Private Camera Variables Here */
@@ -43,11 +46,12 @@ class camera {
     vec3   defocus_disk_u;       // Defocus disk horizontal radius
     vec3   defocus_disk_v;       // Defocus disk vertical radius
 
-    void initialize();
-
-    ray get_ray(int i, int j) const;
-    vec3 sample_square() const;
-    point3 defocus_disk_sample() const;
+    __host__ __device__ void initialize();
+    __host__ __device__ vec3 sample_square() const;
+    __host__ __device__ point3 defocus_disk_sample() const;
 };
+
+ __global__ void render_cuda_call(const hittable& world, color ** image, int image_width, int image_height, int samples_per_pixel, int max_depth, double pixel_sample_scale, camera *cam); 
+ __global__ void initcurand(int image_width, int image_height);
 
 #endif
