@@ -29,8 +29,12 @@ int main(int argc, char** argv){
     // define the world
     hittable_list world;
 
-    auto ground_material = make_shared<lambertian>(color(0.5, 0.5, 0.5));
-    world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+    auto ground_material = make_shared<lambertian>(color(1, 0.5, 0.5));
+    // world.add(make_shared<sphere>(point3(0,-1000,0), 1000, ground_material));
+    //flat ground
+    world.add(make_shared<polygon>(point3(-1000, 0, -1000),  point3(1000, 0, 1000),point3(1000, 0, -1000), ground_material));
+    world.add(make_shared<polygon>(point3(-1000, 0, -1000),  point3(-1000, 0, 1000),point3(1000, 0, 1000), ground_material));
+
 
     // for (int a = -11; a < 11; a++) {
     //     for (int b = -11; b < 11; b++) {
@@ -61,9 +65,11 @@ int main(int argc, char** argv){
     // }
 
     // auto material = make_shared<lambertian>(color(1,0,0));
-    auto material = make_shared<metal>(color(1, 0.8431, 0.0), 0.0);
+    auto material = make_shared<metal>(color(0.7, 0.6, 0.5), 0.0);
     // world.add(make_shared<sphere>(point3(5, 0.3, 2), 0.3, material));
-    world.add(make_shared<polygon>(point3(2, 2, 0),point3(3, 2, 0),point3(2, 3, 0), material));
+    world.add(make_shared<polygon>(point3(-5, 0, -3), point3(5, 0, -3), point3(5, 5, -3), material));
+    world.add(make_shared<polygon>(point3(-5, 0, -3), point3(5, 5, -3), point3(-5, 5, -3), material));
+
 
     auto material1 = make_shared<dielectric>(1.5);
     world.add(make_shared<sphere>(point3(0, 1, 0), 1.0, material1));
@@ -87,7 +93,7 @@ int main(int argc, char** argv){
     cam.aspect_ratio      = 16.0 / 9.0;
     cam.image_width       = 768;
     cam.samples_per_pixel = 25;
-    cam.max_depth         = 100;
+    cam.max_depth         = 30;
 
     cam.vfov     = 20;
     cam.lookfrom = point3(0,2,20); // point3(13,2,3);
