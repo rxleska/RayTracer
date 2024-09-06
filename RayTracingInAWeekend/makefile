@@ -3,7 +3,7 @@ BIGEN = g++ -Wall -Werror -ggdb
 all: run
 
 # List of object files
-OBJS = bin/main.o bin/camera.o bin/color.o bin/hittable_list.o bin/hittable.o bin/material.o bin/ray.o bin/sphere.o bin/tppm.o bin/vec3.o
+OBJS = bin/main.o bin/camera.o bin/color.o bin/hittable_list.o bin/hittable.o bin/material.o bin/ray.o bin/sphere.o bin/tppm.o bin/vec3.o bin/Polygon.o
 
 # Final executable
 run: $(OBJS)
@@ -39,6 +39,9 @@ bin/tppm.o: lib/tppm.cpp lib/headers/tppm.hpp
 
 bin/vec3.o: lib/vec3.cpp lib/headers/vec3.hpp lib/headers/RTWeekend.hpp
 	$(BIGEN) -c lib/vec3.cpp -o bin/vec3.o
+
+bin/Polygon.o: lib/Polygon.cpp lib/headers/Polygon.hpp
+	$(BIGEN) -c lib/Polygon.cpp -o bin/Polygon.o
 
 clean:
 	rm -f run bin/*.o
