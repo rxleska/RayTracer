@@ -37,3 +37,7 @@ uprof/
 run
 perf.data*
 *.pdb
+
+*.nvcudmp
+
+guide/

@@ -1,5 +1,6 @@
 #include "headers/camera.hpp"
 #include "headers/interval.hpp"
+#include "headers/Global.hpp"
 
 __device__ camera::camera() : aspect_ratio(16.0 / 9.0), image_width(1920), samples_per_pixel(1), max_depth(10), vfov(90), lookfrom(0, 0, 0), lookat(0, 0, -1), vup(0, 1, 0), defocus_angle(0), focus_dist(10.0) {}
 
@@ -60,8 +61,9 @@ __device__ vec3 camera::sample_square() const
 {
     // TODO 16 will be wrong if the # thread vertically changes
     //get curand state
-    curandState local_rand_state = d_rand_state[threadIdx.x + threadIdx.y * 16];
-    return vec3(curand_uniform(&local_rand_state) - 0.5, curand_uniform(&local_rand_state) - 0.5, 0);
+    // curandState local_rand_state = d_rand_state[threadIdx.x + threadIdx.y * 16];
+    // return vec3(curand_uniform(&local_rand_state) - 0.5, curand_uniform(&local_rand_state) - 0.5, 0);
+    return vec3(0, 0, 0);
 
     // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
     // return vec3(random_double() - 0.5, random_double() - 0.5, 0);
@@ -76,36 +78,62 @@ __device__ point3 camera::defocus_disk_sample() const
 
 __device__ color camera::ray_color(const ray &r, int depth, const hittable &world) const
 {
-    if (depth <= 0)
-    {
-        return color(0, 0, 0);
-    }
+    color result(0, 0, 0);
+    ray current_ray = r;
+    int current_depth = depth;
 
-    hit_record rec;
-
-    if (world.hit(r, interval(0.001, infinity), rec))
+    while (current_depth > 0)
     {
-        ray scattered;
-        color attenuation;
-        int result = rec.mat->scatter(r, rec, attenuation, scattered);
-        if (result == 1)
-            return attenuation * ray_color(scattered, depth - 1, world);
-        else if (result == 2)
-            // hit a light source
-            return ((light *)(rec.mat))->emitted();
+        hit_record rec;
+
+        if (world.hit(current_ray, interval(0.001, infinity), rec))
+        {
+            ray scattered;
+            color attenuation;
+            int scatter_result = rec.mat->scatter(current_ray, rec, attenuation, scattered);
+
+            if (scatter_result == 1)
+            {
+                current_ray = scattered;
+                result = result * attenuation;
+                --current_depth;
+            }
+            else if (scatter_result == 2)
+            {
+                // hit a light source
+                return ((light *)(rec.mat))->emitted();
+            }
+            else
+            {
+                return color(0, 0, 0);
+            }
+        }
         else
-            return color(0, 0, 0);
+        {
+            // If no object was hit, return the background color. (Ambient light)
+            double ambient_light_volume = 1;
+            vec3 unit_direction = unit_vector(current_ray.direction());
+            auto a = 0.5 * (unit_direction.y() + 1.0);
+            return ambient_light_volume * ((1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0));
+        }
     }
 
-    // If no object was hit, return the background color. (Ambient light)
-    // currently the ambient light is a function that makes a sky gradient (blue to white)
+    // If depth reaches 0, return the background color. (Ambient light)
     double ambient_light_volume = 1;
-    vec3 unit_direction = unit_vector(r.direction());
+    vec3 unit_direction = unit_vector(current_ray.direction());
     auto a = 0.5 * (unit_direction.y() + 1.0);
     return ambient_light_volume * ((1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0));
 }
 
 
-__device__ void render_point(const hittable& world, int row, int column, color** image){
 
+__device__ void camera::render_point(const hittable& world, int row, int column, color* image){
+    color pixel_color(0, 0, 0);
+    for (int sample = 0; sample < samples_per_pixel; sample++)
+    {
+        ray r = get_ray(row, column);
+        pixel_color += ray_color(r, max_depth, world);
+    }
+
+    image[(image_height - column - 1) * image_width + row ] = pixel_color * pixel_sample_scale;
 }

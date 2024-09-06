@@ -91,8 +91,8 @@ __global__ void init_camera(camera *cam){
         // cam->aspect_ratio      = 16.0 / 9.0;
         cam->aspect_ratio      =  1.30279898; // 1024/768
         cam->image_width       = 768;
-        cam->samples_per_pixel = 25;
-        cam->max_depth         = 100;
+        cam->samples_per_pixel = 5;
+        cam->max_depth         = 2;
 
         cam->vfov     = 20;
         cam->lookfrom = point3(13,2,3);
@@ -106,14 +106,6 @@ __global__ void init_camera(camera *cam){
     }
 }
 
-__global__ void init_random(){
-    if(threadIdx.x == 0 && blockIdx.x == 0){
-        d_rand_state = new curandState[THREADS_X*THREADS_Y];
-        for(int i = 0; i < THREADS_X*THREADS_Y; i++){
-            curand_init(1984, i, 0, &d_rand_state[i]);
-        }
-    }
-}
 
 __global__ void render(hittable_list **world, camera *cam, color *img){
     //temp set all pixels red
@@ -122,9 +114,9 @@ __global__ void render(hittable_list **world, camera *cam, color *img){
 
     if(x >= WIDTH || y >= HEIGHT) return;
 
-    
+    cam->render_point(**world, x, y, img);
 
-    img[y*WIDTH + x] = color(1,0,0);
+    // img[y*WIDTH + x] = color(1,0,0);
 }
 
 int main(int argc, char** argv){
@@ -134,21 +126,29 @@ int main(int argc, char** argv){
     hittable_list ** world;
     cudaMalloc(&world, sizeof(hittable_list*));
     create_world<<<1,1>>>(things, world);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
 
     camera *cam;
     cudaMalloc(&cam, sizeof(camera));
-
     init_camera<<<1,1>>>(cam);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
 
     color *img;
-    cudaMallocManaged(&img, WIDTH*HEIGHT*sizeof(color));
+    checkCudaErrors(cudaMallocManaged(&img, WIDTH*HEIGHT*sizeof(color)));
+
+    curandState h_rand_state[THREADS_X * THREADS_Y];
 
     //create threads to render the image
     dim3 blocks(WIDTH/THREADS_X +1, HEIGHT/THREADS_Y + 1);
     dim3 threads(THREADS_X, THREADS_Y);
     render<<<blocks, threads>>>(world, cam, img);
-    checkCudaErrors(cudaDeviceSynchronize());
 
+    
+    //wait for all threads to finish
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
     
     return 0;
 }

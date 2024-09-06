@@ -46,16 +46,19 @@ class vec3 {
         __device__ static vec3 random()
         {
             //TODO 16 might be wrong if the thread height is not 16
-            curandState *local_rand_state = &d_rand_state[threadIdx.x + threadIdx.y * 16];
-            return vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), curand_uniform(local_rand_state));
+            return vec3(0.5,0.5,0.5);
+            // curandState *local_rand_state = &d_rand_state[threadIdx.x + threadIdx.y * 16];
+            // return vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), curand_uniform(local_rand_state));
             // return vec3(random_double(), random_double(), random_double());
         }
 
         __device__ static vec3 random(double min, double max)
         {
             //TODO 16 might be wrong if the thread height is not 16
-            curandState *local_rand_state = &d_rand_state[threadIdx.x + threadIdx.y * 16];
-            return vec3(curand_uniform(local_rand_state) * (max - min) + min, curand_uniform(local_rand_state) * (max - min) + min, curand_uniform(local_rand_state) * (max - min) + min);
+            // curandState *local_rand_state = &d_rand_state[threadIdx.x + threadIdx.y * 16];
+            // return vec3(curand_uniform(local_rand_state) * (max - min) + min, curand_uniform(local_rand_state) * (max - min) + min, curand_uniform(local_rand_state) * (max - min) + min);
+
+            return vec3((max-min)/2 + min,(max-min)/2 + min,(max-min)/2 + min);
 
             // return vec3(random_double(min, max), random_double(min, max), random_double(min, max));
         }
@@ -122,12 +125,13 @@ __device__ inline vec3 random_unit_vector() {
 __device__ inline vec3 random_in_unit_disk() {
     //get curandState
     //TODO 16 might be wrong if the thread height is not 16
-    curandState *local_rand_state = &d_rand_state[threadIdx.x + threadIdx.y * 16];
-    while (true) {
-        auto p = vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0) * 2 - vec3(1, 1, 0);
-        if (p.length_squared() < 1)
-            return p;
-    }
+    // curandState *local_rand_state = &d_rand_state[threadIdx.x + threadIdx.y * 16];
+    return vec3(0.5,0.5,0);
+    // while (true) {
+    //     auto p = vec3(curand_uniform(local_rand_state), curand_uniform(local_rand_state), 0) * 2 - vec3(1, 1, 0);
+    //     if (p.length_squared() < 1)
+    //         return p;
+    // }
 }
 
 __device__ inline vec3 random_on_hemisphere(const vec3& normal) {

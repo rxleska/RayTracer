@@ -53,9 +53,9 @@ __device__ int dielectric::scatter(const ray &r_in, const hit_record &rec, color
 
     //TODO 16 will be wrong if the # thread vertically changes
     //get curand state
-    curandState local_rand_state = d_rand_state[threadIdx.x + threadIdx.y * 16];
+    // curandState local_rand_state = d_rand_state[threadIdx.x + threadIdx.y * 16];
 
-    if (cannot_refract || reflectance(cos_theta, ri) >  curand_uniform(&local_rand_state))
+    if (cannot_refract || reflectance(cos_theta, ri) >  0.5)
         direction = reflect(unit_direction, rec.normal);
     else
         direction = refract(unit_direction, rec.normal, ri);

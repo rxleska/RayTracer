@@ -6,8 +6,6 @@
 #include "tppm.hpp"
 #include "material.hpp"
 
-#include <thread>
-
 class camera {
   public:
     /* Public Camera Parameters Here */
@@ -26,7 +24,7 @@ class camera {
     __device__ void initialize();
 
     __device__ camera();
-    __device__ void render_point(const hittable& world, int row, int column, color** image);
+    __device__ void render_point(const hittable& world, int row, int column, color* image);
 
   private:
     /* Private Camera Variables Here */

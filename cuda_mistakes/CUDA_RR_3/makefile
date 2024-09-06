@@ -1,4 +1,4 @@
-BIGEN = nvcc -diag-suppress 20012 -rdc true --debug
+BIGEN = nvcc -diag-suppress 20012 -rdc true --debug -lineinfo
 
 all: run.exe
 
@@ -7,7 +7,7 @@ OBJS = bin/main.o bin/camera.o bin/color.o bin/hittable_list.o bin/hittable.o bi
 
 # Final executable
 run.exe: $(OBJS)
-	$(BIGEN) -o run $(OBJS)
+	$(BIGEN) --verbose -o run $(OBJS)
 
 # Object file rules
 bin/main.o: main.cu lib/headers/interval.hpp lib/headers/RTWeekend.hpp lib/headers/Global.hpp
@@ -50,9 +50,15 @@ bin/Global.o: lib/Global.cu lib/headers/Global.hpp
 clean:
 	rm -f run bin/*.o run.exe run.exp run.lib
 
+clean-win: 
+	del run.exe bin\*.o run.exp run.lib
+
 rebuild: clean all
 
 # using nsight test
 test: run.exe
 	ncu ./run
 	
+
+san: run.exe
+	compute-sanitizer --force-blocking-launches --generate-coredump ./run.exe
