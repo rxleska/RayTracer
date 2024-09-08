@@ -28,7 +28,7 @@ bool polygon::hit(const ray& r, interval ray_t, hit_record& rec) const {
     float a = aa + ab + ac;
 
     float triangleArea = normal.length() / 2;
-    if (a > triangleArea + 0.0001) {
+    if (a > triangleArea +  (triangleArea * 0.0001)) {
         // std::cout << p.x() << " " << p.y() << " " << p.z() << std::endl;
         // if(p.x() < 5 && p.x() > -5 && p.y() < 5 && p.y() > -5 && p.z() < -2 && p.z() > -4){
         //     std::cout << a << ":" << triangleArea << std::endl;

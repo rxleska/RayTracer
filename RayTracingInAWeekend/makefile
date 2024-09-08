@@ -46,4 +46,7 @@ bin/Polygon.o: lib/Polygon.cpp lib/headers/Polygon.hpp
 clean:
 	rm -f run bin/*.o
 
+clean-win:
+	del run.exe bin\*.o	
+
 rebuild: clean all

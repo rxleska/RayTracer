@@ -24,10 +24,17 @@ class camera {
     double defocus_angle;
     double focus_dist;
 
+    int thread_count = 0;
+
     camera();
 
     void render(const hittable& world);
+    
+    
     void render_mt(const hittable& world);
+    void render_mt_subset(const hittable& world, int start, int end, color ** image);
+
+    void render_mt_old(const hittable& world);
     void  render_line(const hittable& world, int j, color ** image);
 
   private:
@@ -41,6 +48,7 @@ class camera {
     vec3   u, v, w;       // Camera basis vectors
     vec3   defocus_disk_u;       // Defocus disk horizontal radius
     vec3   defocus_disk_v;       // Defocus disk vertical radius
+    int percent_modulo = 0;
 
     void initialize();
 
@@ -48,6 +56,11 @@ class camera {
     vec3 sample_square() const;
     point3 defocus_disk_sample() const;
     color ray_color(const ray& r, int depth, const hittable& world) const;
+    void count_thread();
+    void count_pixels(int add);
+    void count_pixels_percent(int add);
 };
+
+
 
 #endif

@@ -15,11 +15,14 @@ void material::setIsLightSrc(bool isLightSrc) { this->isLightSrc = isLightSrc; }
 int lambertian::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
-    auto scatter_direction = rec.normal + random_unit_vector();
+    //ensure rec.normal is a unit vector
+    vec3 norm = unit_vector(rec.normal);
+
+    auto scatter_direction = norm + random_unit_vector();
 
     // Catch degenerate scatter direction
     if (scatter_direction.near_zero())
-        scatter_direction = rec.normal;
+        scatter_direction = norm;
 
     scattered = ray(rec.p, scatter_direction);
     attenuation = albedo;

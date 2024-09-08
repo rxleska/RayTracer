@@ -45,4 +45,12 @@ inline double degrees_to_radians(double degrees) {
 #include "color.hpp"
 #include "interval.hpp"
 
+
+// thread locking
+#include <mutex>
+
+// global static mutex lock for thread end counting
+static std::mutex thread_lock;
+
+
 #endif
