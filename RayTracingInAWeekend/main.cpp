@@ -305,9 +305,9 @@ int main(int argc, char** argv){
 
     // cam.aspect_ratio      = 16.0 / 9.0;
     cam.aspect_ratio      = 9.0 / 9.0;
-    cam.image_width       = 1000;
+    cam.image_width       = 500;
     cam.samples_per_pixel = 16;
-    cam.max_depth         = 100;
+    cam.max_depth         = 20;
 
     cam.thread_count = 20;
 

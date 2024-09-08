@@ -50,3 +50,4 @@ clean-win:
 	del run.exe bin\*.o	
 
 rebuild: clean all
+

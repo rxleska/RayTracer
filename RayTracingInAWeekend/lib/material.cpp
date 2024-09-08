@@ -1,17 +1,27 @@
 #include "headers/material.hpp"
 
+// Material class
 
-int material::scatter( // 0:no scatter, 1:scatter, 2:scatter and absorb
+
+// Base Scatter function for materials
+// 0:no scatter, 1:scatter, 2:scatter and absorb
+int material::scatter( 
     const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered) const
 {
     return false;
 }
+
+// Get if the material is a light source (therefore absorbs inverse rays)
 bool material::getIsLightSrc() const { return isLightSrc; }
+
+// Set if the material is a light source (therefore absorbs inverse rays)
 void material::setIsLightSrc(bool isLightSrc) { this->isLightSrc = isLightSrc; }
 
 // defining some materials
 
 // Lambertian material - scatters light in all directions
+
+// Lambertian material Scatter , scatters light in all directions (randomly) creating a Matte finish
 int lambertian::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
@@ -30,6 +40,8 @@ int lambertian::scatter(const ray &r_in, const hit_record &rec, color &attenuati
 }
 
 // Metal material - scatters light in a single direction with reflection
+
+// Metal material Scatter, scatters light in a single direction with reflection creating a shiny finish with fuzziness
 int metal::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
@@ -41,6 +53,9 @@ int metal::scatter(const ray &r_in, const hit_record &rec, color &attenuation, r
 }
 
 // Dielectric material - scatters light in a single direction with refraction
+
+
+// Dielectric material Scatter, scatters light in a single direction with refraction creating a glassy finish
 int dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
@@ -65,10 +80,13 @@ int dielectric::scatter(const ray &r_in, const hit_record &rec, color &attenuati
 
 
 // Light material - scatters light in all directions (inverse: absorbs inverse rays)
+
+// Light material Scatter, scatters light in all directions (inverse: absorbs inverse rays)
 int light::scatter(const ray &r_in, const hit_record &rec, color &attenuation, ray &scattered)
     const 
 {
     return 2;
 }
 
+// Light material emitted color
 color light::emitted() const { return emission; }

@@ -1,5 +1,6 @@
 #include "headers/color.hpp"
 
+// Convert a linear component in the range [0,1] to a gamma corrected value.
 inline double linear_to_gamma(double linear_component)
 {
     if (linear_component > 0)
@@ -8,6 +9,7 @@ inline double linear_to_gamma(double linear_component)
     return 0;
 }
 
+// Write the color to the output stream in 8-bit PPM format.
 void write_color(std::ostream& out, const color& pixel_color) {
     auto r = pixel_color.x();
     auto g = pixel_color.y();

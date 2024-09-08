@@ -4,6 +4,8 @@
 
 camera::camera() : aspect_ratio(16.0 / 9.0), image_width(1920), samples_per_pixel(1), max_depth(10), vfov(90), lookfrom(0, 0, 0), lookat(0, 0, -1), vup(0, 1, 0), defocus_angle(0), focus_dist(10.0) {}
 
+
+//Method that counts the number of threads that have finished (uses a static variable to track the number of threads)
 void camera::count_thread() {
     thread_lock.lock();
     static int thread_count = 0;
@@ -12,6 +14,7 @@ void camera::count_thread() {
     thread_lock.unlock();
 }
 
+//Method that counts the number of pixels that have been rendered (uses a static variable to track the number of pixels)
 void camera::count_pixels(int add){
     thread_lock.lock();
     static int pixel_count = 0;
@@ -20,6 +23,7 @@ void camera::count_pixels(int add){
     thread_lock.unlock();
 }
 
+//Method that counts the percentage of pixels that have been rendered (uses a static variable to track the number of pixels)
 void camera::count_pixels_percent(int add){
     thread_lock.lock();
     static int pixel_count = 0;
@@ -29,6 +33,7 @@ void camera::count_pixels_percent(int add){
     thread_lock.unlock();
 }
 
+//Method that renders the image using the camera parameters
 void camera::render(const hittable &world)
 {
     initialize();
@@ -55,6 +60,8 @@ void camera::render(const hittable &world)
     write_ppm("output.ppm", image, image_width, image_height);
 }
 
+
+//Method that renders the image using the camera parameters and multithreading (uses thread_count threads)
 void camera::render_mt(const hittable& world){
     initialize();
 
@@ -85,6 +92,8 @@ void camera::render_mt(const hittable& world){
     write_ppm("output.ppm", image, image_width, image_height);
 }
 
+
+//Method that renders a subset of the image using the camera parameters and multithreading (method that each thread will call)
 void camera::render_mt_subset(const hittable& world, int start, int end, color ** image){
     int count = 0;
     int i;
@@ -109,7 +118,7 @@ void camera::render_mt_subset(const hittable& world, int start, int end, color *
     count_pixels_percent(count%percent_modulo);
 }
 
-
+//Method that renders the image using the camera parameters and multithreading (uses a thread for each line)
 void camera::render_mt_old(const hittable &world)
 {
     initialize();
@@ -134,6 +143,7 @@ void camera::render_mt_old(const hittable &world)
     write_ppm("output.ppm", image, image_width, image_height);
 }
 
+//Method that renders a line of the image using the camera parameters and multithreading (method that each thread will call from render_mt_old)
 void camera::render_line(const hittable &world, int j, color **image)
 {
     image[image_height - j - 1] = new color[image_width];
@@ -151,6 +161,7 @@ void camera::render_line(const hittable &world, int j, color **image)
     count_thread();
 }
 
+//Method that initializes the camera parameters (calculates the private variables)
 void camera::initialize()
 {
     image_height = int(image_width / aspect_ratio);
@@ -192,6 +203,7 @@ void camera::initialize()
     percent_modulo = image_height *image_width / 200;
 }
 
+//Method that returns a ray from the camera origin to a pixel location (i, j)
 ray camera::get_ray(int i, int j) const
 {
     // Construct a camera ray originating from the origin and directed at randomly sampled
@@ -206,46 +218,103 @@ ray camera::get_ray(int i, int j) const
     return ray(ray_origin, ray_direction);
 }
 
+//Method that returns a random vector in the unit square
 vec3 camera::sample_square() const
 {
     // Returns the vector to a random point in the [-.5,-.5]-[+.5,+.5] unit square.
     return vec3(random_double() - 0.5, random_double() - 0.5, 0);
 }
 
+//Method that returns a random point in the camera defocus disk
 point3 camera::defocus_disk_sample() const
 {
-    // Returns a random point in the camera defocus disk.
+    // Returns a random point in the camera defocus disk. (defocus disk is a disk in the camera plane where the rays are focused on)
     auto p = random_in_unit_disk();
     return center + (p[0] * defocus_disk_u) + (p[1] * defocus_disk_v);
 }
 
+// //Method that returns the color of a ray (recursive method)
+// color camera::ray_color(const ray &r, int depth, const hittable &world) const
+// {
+//     if (depth <= 0)
+//     {
+//         return color(0, 0, 0);
+//     }
+
+//     hit_record rec;
+
+//     if (world.hit(r, interval(0.001, infinity), rec))
+//     {
+//         ray scattered;
+//         color attenuation;
+//         int result = rec.mat->scatter(r, rec, attenuation, scattered);
+//         if (result == 1)
+//             return attenuation * ray_color(scattered, depth - 1, world);
+//         else if (result == 2)
+//             // hit a light source
+//             return dynamic_cast<light *>(rec.mat.get())->emitted();
+//         else
+//             return color(0, 0, 0);
+//     }
+
+//     // If no object was hit, return the background color. (Ambient light)
+//     // currently the ambient light is a function that makes a sky gradient (blue to white)
+//     double ambient_light_volume = 0.0;
+//     vec3 unit_direction = unit_vector(r.direction());
+//     auto a = 0.5 * (unit_direction.y() + 1.0);
+//     return ambient_light_volume * ((1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0));
+// }
+
+
+// iterative version of ray_color (slightly faster like 1-2% faster)
 color camera::ray_color(const ray &r, int depth, const hittable &world) const
 {
-    if (depth <= 0)
-    {
-        return color(0, 0, 0);
-    }
-
-    hit_record rec;
-
-    if (world.hit(r, interval(0.001, infinity), rec))
-    {
-        ray scattered;
-        color attenuation;
-        int result = rec.mat->scatter(r, rec, attenuation, scattered);
-        if (result == 1)
-            return attenuation * ray_color(scattered, depth - 1, world);
-        else if (result == 2)
-            // hit a light source
-            return dynamic_cast<light *>(rec.mat.get())->emitted();
-        else
-            return color(0, 0, 0);
-    }
-
-    // If no object was hit, return the background color. (Ambient light)
-    // currently the ambient light is a function that makes a sky gradient (blue to white)
+    color result_color(0, 0, 0);  // Start with a black color
+    color attenuation(1, 1, 1);   // Total attenuation of light
+    ray current_ray = r;          // Start with the initial ray
+    int current_depth = depth;    // Track the current depth
     double ambient_light_volume = 0.0;
-    vec3 unit_direction = unit_vector(r.direction());
-    auto a = 0.5 * (unit_direction.y() + 1.0);
-    return ambient_light_volume * ((1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0));
+
+    while (current_depth > 0)
+    {
+        hit_record rec;
+
+        // Check if the ray hits something in the world
+        if (world.hit(current_ray, interval(0.001, infinity), rec))
+        {
+            ray scattered;
+            color temp_attenuation;
+            int result = rec.mat->scatter(current_ray, rec, temp_attenuation, scattered);
+
+            if (result == 1)
+            {
+                // Accumulate the attenuation and continue with the scattered ray
+                attenuation = attenuation * temp_attenuation;
+                current_ray = scattered;  // Update to the scattered ray
+                current_depth--;          // Decrease the depth
+            }
+            else if (result == 2)
+            {
+                // Hit a light source, add the emitted light to the result and break
+                result_color += attenuation * dynamic_cast<light *>(rec.mat.get())->emitted();
+                break;
+            }
+            else
+            {
+                // Return black if scattering failed
+                return color(0, 0, 0);
+            }
+        }
+        else
+        {
+            // If no hit, return the background color (ambient light)
+            vec3 unit_direction = unit_vector(current_ray.direction());
+            auto a = 0.5 * (unit_direction.y() + 1.0);
+            color ambient_color = ambient_light_volume * ((1.0 - a) * color(1.0, 1.0, 1.0) + a * color(0.5, 0.7, 1.0));
+            result_color += attenuation * ambient_color;
+            break;
+        }
+    }
+
+    return result_color;
 }

@@ -2,6 +2,7 @@
 
 #include "headers/tppm.hpp"
 
+//writes a ppm image from a 2D array of vec3s [height][width]
 void write_ppm(const char * filename, color ** image, int width, int height){  // note that the image is stored in a 2D array of vec3s [height][width]
     std::ofstream file;
     file.open(filename);
@@ -15,6 +16,7 @@ void write_ppm(const char * filename, color ** image, int width, int height){  /
 
 }
 
+//writes a ppm image from a 3D array of uint8_t [height][width][rgb]
 void write_ppm(const char * filename, uint8_t *** image, int width, int height){ // note that the image is stored in a 3d array of uint8_t [height][width][rgb]
     std::ofstream file;
     file.open(filename);

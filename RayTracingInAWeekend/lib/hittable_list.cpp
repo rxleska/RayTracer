@@ -5,11 +5,13 @@ hittable_list::hittable_list(shared_ptr<hittable> object) { add(object); }
 
 void hittable_list::clear() { objects.clear(); }
 
+// Add an object to the list
 void hittable_list::add(shared_ptr<hittable> object)
 {
     objects.push_back(object);
 }
 
+// Check if the ray hits any object in the list
 bool hittable_list::hit(const ray &r, interval ray_t, hit_record &rec) const {
     hit_record temp_rec;
     bool hit_anything = false;
