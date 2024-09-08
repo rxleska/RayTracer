@@ -34,6 +34,6 @@ I started by following book 1 directly, then I worked on adding custom features 
 
 ## preconfigured scenes 
 - [x] Cornell Box (2 rectangular prisums)
-    - Seen here 1000x1000px, 1000 samples per pixel, 100 Max bounce Depth ![Cornell Box](BestImages\CornellBox1000sols1000px100bnc.png)
+    - Seen here 1000x1000px, 1000 samples per pixel, 100 Max bounce Depth ![Cornell Box](.\BestImages\CornellBox1000sols1000px100bnc.png)
 - [x] Ray Tracing in One Weekend Cover (modified to have metal ball be gold and there is a light in the sky)
-    - Seen here 3840x2160px, 64 samples per pixel, 100 Max bounce Depth ![Ray Tracing in One Weekend Cover](BestImages\4k64x.png)
+    - Seen here 3840x2160px, 64 samples per pixel, 100 Max bounce Depth ![Ray Tracing in One Weekend Cover](.\BestImages\4k64x.png)
