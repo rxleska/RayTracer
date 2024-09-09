@@ -79,7 +79,8 @@ void CornellBox(hittable_list &world, camera &cam){
     world.add(make_shared<polygon>(point3(549.6, 0.0, 559.2), point3(0.0, 548.8, 559.2), point3(556.0, 548.8, 559.2), white));
 
     //right wall
-    auto green = make_shared<lambertian>(color(0.12, 0.45, 0.15));
+    // auto green = make_shared<lambertian>(color(0.12, 0.45, 0.15));
+    auto green = make_shared<lambertian>(color(0.12, 0.45, 0.15)*(1/0.45));
     /*
     0.0   0.0 559.2   
     0.0   0.0   0.0
@@ -90,7 +91,8 @@ void CornellBox(hittable_list &world, camera &cam){
     world.add(make_shared<polygon>(point3(0.0, 0.0, 559.2), point3(0.0, 548.8, 0.0), point3(0.0, 548.8, 559.2), green));
 
     //left wall
-    auto red = make_shared<lambertian>(color(0.65, 0.05, 0.05));
+    // auto red = make_shared<lambertian>(color(0.65, 0.05, 0.05));
+    auto red = make_shared<lambertian>(color(0.65, 0.05, 0.05)*(1/0.65));
     /*
     552.8   0.0   0.0 
     549.6   0.0 559.2
@@ -221,6 +223,7 @@ void CornellBox(hittable_list &world, camera &cam){
     cam.lookat   = point3(278, 278, 0);
     cam.focus_dist = 35; 
     cam.defocus_angle = 0.0;
+    cam.aspect_ratio      = 9.0 / 9.0;
 }
 
 void RTIAW(hittable_list &world, camera &cam){
@@ -277,7 +280,7 @@ void RTIAW(hittable_list &world, camera &cam){
     world.add(make_shared<sphere>(point3(4, 1, 0), 1.0, material3));
 
     auto material4 = make_shared<light>(color(1,1,1));
-    world.add(make_shared<sphere>(point3(0,510,400), 500, material4));
+    world.add(make_shared<sphere>(point3(0,510,400), 200, material4));
 
     cam.vfov     = 20;
     cam.lookfrom = point3(13,2,3);
@@ -286,6 +289,9 @@ void RTIAW(hittable_list &world, camera &cam){
 
     cam.defocus_angle = 0.6;
     cam.focus_dist    = 10.0;
+
+    cam.aspect_ratio      = 16.0 / 9.0;
+
 }
 
 
@@ -295,19 +301,19 @@ int main(int argc, char** argv){
 
     
 
-
     // define the camera
     // camera cam(aspect_ratio, WIDTH, 100, 50, 90, point3(-2,2,1), point3(0,0,-1), vec3(0,1,0));
     camera cam = camera();
+    cam.aspect_ratio      = 16.0 / 9.0; //defualt aspect ratio (changed by the scene)
 
     // RTIAW(world, cam);
     CornellBox(world, cam);
 
-    // cam.aspect_ratio      = 16.0 / 9.0;
-    cam.aspect_ratio      = 9.0 / 9.0;
-    cam.image_width       = 500;
-    cam.samples_per_pixel = 16;
-    cam.max_depth         = 20;
+    // 
+    // cam.aspect_ratio      = 9.0 / 9.0;
+    cam.image_width       = 750;
+    cam.samples_per_pixel = 500;
+    cam.max_depth         = 50;
 
     cam.thread_count = 20;
 
