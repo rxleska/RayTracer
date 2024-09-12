@@ -7,7 +7,7 @@ bool polygon::hit(const ray& r, interval ray_t, hit_record& rec) const {
     vec3 normal = cross(vertices[1] - vertices[0], vertices[2] - vertices[0]);
     
     // if angle between ray and normal is greater than 90 degrees return miss (backface culling (culling is the process of discarding objects that are not visible to the camera, we don't want to render the back of the polygons))
-    if (dot(normal, r.direction()) >= 0) {
+    if (dot(normal, r.direction()) >= -0.00001) {
         return false;
     }
 
