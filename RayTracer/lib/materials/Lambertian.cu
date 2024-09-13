@@ -20,5 +20,5 @@ __device__ int Lambertian::scatter(const Ray &ray_in, const HitRecord &rec, Vec3
 
     //set the attenuation (color modification)
     attenuation = albedo;
-    return 0;
+    return 1;
 }

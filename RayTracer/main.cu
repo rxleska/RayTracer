@@ -70,7 +70,7 @@ __device__ Vec3 getColor(const Ray &r, Scene **world, curandState *local_rand_st
 }
 
 __global__ void free_world(Hitable **d_list, Scene **d_world, Camera **d_camera) {
-    for(int i=0; i < 22*22+1+3; i++) {
+    for(int i=0; i < 22*22+1+1; i++) {
         delete ((Sphere *)d_list[i])->mat;
         delete d_list[i];
     }
@@ -95,7 +95,8 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return;
-    int pixel_index = j*max_x + i;
+
+    int pixel_index = (max_y - j - 1)*max_x + i;
     curandState local_rand_state = rand_state[pixel_index];
     Vec3 col(0,0,0);
     for(int s=0; s < ns; s++) {
@@ -144,7 +145,7 @@ __global__ void create_world(Hitable **d_list, Scene **d_world, Camera **d_camer
         d_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
         // d_list[i++] = new sphere(vec3(4, 1, 0),  1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
         *rand_state = local_rand_state;
-        *d_world  = new Scene(d_list, 22*22+1+3);
+        *d_world  = new Scene(d_list, 22*22+1+1);
 
         Vec3 lookfrom(13,2,3);
         Vec3 lookat(0,0,0);
@@ -164,7 +165,7 @@ __global__ void create_world(Hitable **d_list, Scene **d_world, Camera **d_camer
 int main() {
     int nx = 1920/2;
     int ny = 1080/2;
-    int ns = 25;
+    int ns = 200;
     int tx = 20;
     int ty = 12;
 
@@ -222,7 +223,7 @@ int main() {
     start = clock();
 
     //open file
-    FILE *f = fopen("image.ppm", "w");
+    FILE *f = fopen("image.ppm", "wb");
     fprintf(f, "P6 %d %d 255\n", nx, ny);
     uint8_t *fb2 = (uint8_t *)malloc(fb_size*3);
     //direct memory copy
