@@ -1,7 +1,7 @@
 #include "headers/Sphere.hpp"
 #include <cmath>
 
-bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
+__device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
     // using the quadratic formula to solve for t in the equation of a ray-sphere intersection
 
     //formula for sphere ray intersection taken from wikipedia https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection
@@ -19,6 +19,6 @@ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
     rec.t = t;
     rec.p = r.pointAt(t);
     rec.normal = (rec.p - center) / radius;
-    // rec.mat = mat; todo add material to sphere
+    rec.mat = mat; 
     return true;
 }
