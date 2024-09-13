@@ -6,7 +6,7 @@ CC = nvcc
 # -arch=sm_87: specifies the architecture of the GPU 87 Ampere GPUs (3050 Laptops) (also supports sm_80 and sm_86)
 # -rdc=true: enables relocatable device code (required for multiple files)
 # CFLAGS = -arch=sm_89 -rdc=true
-CFLAGS = -arch=sm_87 -rdc=true
+CFLAGS = -G -arch=sm_80 -rdc=true
 
 
 

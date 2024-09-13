@@ -39,9 +39,7 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 
 __global__ void rand_init(curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        printf("rand_init kernel launched\n");
         curand_init(1984, 0, 0, rand_state);
-        printf("curand_init executed\n");
     }
 }
 
@@ -89,6 +87,7 @@ __global__ void render_init(int max_x, int max_y, curandState *rand_state) {
     // curand_init(1984, pixel_index, 0, &rand_state[pixel_index]);
     // BUGFIX, see Issue#2: Each thread gets different seed, same sequence for
     // performance improvement of about 2x!
+    // curand_init(1984, pixel_index, 0, &rand_state[pixel_index]);
     curand_init(1984+pixel_index, 0, 0, &rand_state[pixel_index]);
 }
 
@@ -106,7 +105,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
         col = col + getColor(r, world, &local_rand_state);
     }
     rand_state[pixel_index] = local_rand_state;
-    col = col * (1/float(ns));
+    col = col * (1.0f/float(ns));
     col.x = sqrt(col.x);
     col.y = sqrt(col.y);
     col.z = sqrt(col.z);
@@ -163,8 +162,8 @@ __global__ void create_world(Hitable **d_list, Scene **d_world, Camera **d_camer
 
 
 int main() {
-    int nx = 1920*2;
-    int ny = 1080*2;
+    int nx = 1920/2;
+    int ny = 1080/2;
     int ns = 25;
     int tx = 20;
     int ty = 12;
@@ -194,7 +193,8 @@ int main() {
 
     // make our world of hitables & the camera
     Hitable **d_list;
-    int num_hitables = 22*22+1+3;
+    // int num_hitables = 22*22+1+3;
+    int num_hitables = 22*22+1+1;
     checkCudaErrors(cudaMalloc((void **)&d_list, num_hitables*sizeof(Hitable *)));
     Scene **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Scene *)));
