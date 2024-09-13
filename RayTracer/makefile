@@ -3,7 +3,11 @@ CC = nvcc
 
 # compiler flags:
 # -arch=sm_89: specifies the architecture of the GPU 89 ADA GPUs (4070 TI)
-CFLAGS = -arch=sm_89 -v
+# -arch=sm_87: specifies the architecture of the GPU 87 Ampere GPUs (3050 Laptops) (also supports sm_80 and sm_86)
+# -rdc=true: enables relocatable device code (required for multiple files)
+# CFLAGS = -arch=sm_89 -rdc=true
+CFLAGS = -arch=sm_87 -rdc=true
+
 
 
 PROCESSING = bin/Ray.o bin/Vec3.o bin/Camera.o
@@ -12,10 +16,10 @@ HITTABLES  = bin/Sphere.o  bin/Scene.o
 
 all: run 
 
-run: bin/ bin/main.o $(PROCESSING) $(MATERIALS) $(HITTABLES)
+run: bin bin/main.o $(PROCESSING) $(MATERIALS) $(HITTABLES)
 	$(CC) $(CFLAGS) -o run bin/main.o $(PROCESSING) $(MATERIALS) $(HITTABLES)
 
-bin/:
+bin:
 	mkdir bin
 
 bin/main.o: main.cu 

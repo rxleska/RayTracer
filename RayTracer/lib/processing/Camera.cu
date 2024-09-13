@@ -21,3 +21,12 @@ __device__ Ray Camera::get_ray(float s, float t, curandState *state) {
     Vec3 offset = (u * rd.x) + (v * rd.y);
     return Ray(origin + offset, lower_left_corner + horizontal*s + vertical*t - origin - offset);
 }
+
+
+__device__ Vec3 Camera::random_in_unit_disk(curandState *state) {
+    Vec3 p;
+    do {
+        p = Vec3(curand_uniform(state),curand_uniform(state),0) * 2.0f - Vec3(1,1,0);
+    } while (p.dot(p) >= 1.0f);
+    return p;
+}

@@ -1,7 +1,7 @@
 #include "headers/Scene.hpp"
 
 #include "headers/Hitable.hpp"
-#include "../processing/Ray.cu"
+#include "../processing/headers/Ray.hpp"
 
 __device__ Scene::Scene(){
     hitable_count = 0;

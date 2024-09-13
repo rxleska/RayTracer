@@ -31,18 +31,26 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }
 }
 
+// __global__ void rand_init(curandState *rand_state) {
+//     if (threadIdx.x == 0 && blockIdx.x == 0) {
+//         curand_init(1984, 0, 0, rand_state);
+//     }
+// }
+
 __global__ void rand_init(curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
+        printf("rand_init kernel launched\n");
         curand_init(1984, 0, 0, rand_state);
+        printf("curand_init executed\n");
     }
 }
 
-__device__ Vec3 getColor(const Ray &r, Scene &world, curandState *local_rand_state) {
+__device__ Vec3 getColor(const Ray &r, Scene **world, curandState *local_rand_state) {
     Ray cur_ray = r;
     Vec3 cur_attenuation = Vec3(1.0,1.0,1.0);
     for(int i = 0; i < 50; i++) {
         HitRecord rec;
-        if (world.hit(cur_ray, 0.001f, FLT_MAX, rec)) {
+        if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec)) {
             Ray scattered;
             Vec3 attenuation;
             if(rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state)) {
@@ -63,13 +71,13 @@ __device__ Vec3 getColor(const Ray &r, Scene &world, curandState *local_rand_sta
     return Vec3(0.0,0.0,0.0); // exceeded recursion
 }
 
-__global__ void free_world(Hitable **d_list, Scene *d_world, Camera *d_camera) {
+__global__ void free_world(Hitable **d_list, Scene **d_world, Camera **d_camera) {
     for(int i=0; i < 22*22+1+3; i++) {
         delete ((Sphere *)d_list[i])->mat;
         delete d_list[i];
     }
-    delete d_world;
-    delete d_camera;
+    delete *d_world;
+    delete *d_camera;
 }
 
 __global__ void render_init(int max_x, int max_y, curandState *rand_state) {
@@ -84,7 +92,7 @@ __global__ void render_init(int max_x, int max_y, curandState *rand_state) {
     curand_init(1984+pixel_index, 0, 0, &rand_state[pixel_index]);
 }
 
-__global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera *cam, Scene &world, curandState *rand_state) {
+__global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return;
@@ -94,7 +102,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera *cam, S
     for(int s=0; s < ns; s++) {
         float u = float(i + curand_uniform(&local_rand_state)) / float(max_x);
         float v = float(j + curand_uniform(&local_rand_state)) / float(max_y);
-        Ray r = cam->get_ray(u, v, &local_rand_state);
+        Ray r = (*cam)->get_ray(u, v, &local_rand_state);
         col = col + getColor(r, world, &local_rand_state);
     }
     rand_state[pixel_index] = local_rand_state;
@@ -109,7 +117,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera *cam, S
 
 #define RND (curand_uniform(&local_rand_state))
 
-__global__ void create_world(Hitable **d_list, Scene *d_world, Camera *d_camera, int nx, int ny, curandState *rand_state) {
+__global__ void create_world(Hitable **d_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         d_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
@@ -137,13 +145,19 @@ __global__ void create_world(Hitable **d_list, Scene *d_world, Camera *d_camera,
         d_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
         // d_list[i++] = new sphere(vec3(4, 1, 0),  1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
         *rand_state = local_rand_state;
-        d_world  = new Scene(d_list, 22*22+1+3);
+        *d_world  = new Scene(d_list, 22*22+1+3);
 
         Vec3 lookfrom(13,2,3);
         Vec3 lookat(0,0,0);
         float dist_to_focus = 10.0; (lookfrom-lookat).length();
         float aperture = 0.1;
-        new (d_camera) Camera(lookfrom, lookat, Vec3(0, 1, 0), 30.0, float(nx) / float(ny), aperture, dist_to_focus);
+        *d_camera   = new Camera(lookfrom,
+                                 lookat,
+                                 Vec3(0,1,0),
+                                 30.0,
+                                 float(nx)/float(ny),
+                                 aperture,
+                                 dist_to_focus);
     }
 }
 
@@ -182,9 +196,9 @@ int main() {
     Hitable **d_list;
     int num_hitables = 22*22+1+3;
     checkCudaErrors(cudaMalloc((void **)&d_list, num_hitables*sizeof(Hitable *)));
-    Scene *d_world;
+    Scene **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Scene *)));
-    Camera *d_camera;
+    Camera **d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(Camera *)));
     create_world<<<1,1>>>(d_list, d_world, d_camera, nx, ny, d_rand_state2);
     checkCudaErrors(cudaGetLastError());
@@ -198,7 +212,7 @@ int main() {
     render_init<<<blocks, threads>>>(nx, ny, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
-    render<<<blocks, threads>>>(fb, nx, ny,  ns, d_camera, *d_world, d_rand_state);
+    render<<<blocks, threads>>>(fb, nx, ny,  ns, d_camera, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();
