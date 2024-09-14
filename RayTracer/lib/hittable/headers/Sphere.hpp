@@ -9,6 +9,7 @@ class Sphere: public Hitable{
         Vec3 center;
         float radius;
         Material * mat;
+        float area; //stored for faster computation
 
 
         // blank constructor

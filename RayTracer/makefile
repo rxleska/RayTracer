@@ -11,8 +11,8 @@ CFLAGS = -arch=sm_89 -rdc=true -G
 
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
-MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj
-HITTABLES  = bin/Sphere.obj  bin/Scene.obj
+MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj
+HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon.obj
 
 all: run 
 
@@ -50,6 +50,9 @@ bin/Metal.obj: lib/materials/Metal.cu lib/materials/headers/Metal.hpp lib/materi
 bin/Dielectric.obj: lib/materials/Dielectric.cu lib/materials/headers/Dielectric.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/materials/Dielectric.cu -o bin/Dielectric.obj
 
+bin/Light.obj: lib/materials/Light.cu lib/materials/headers/Light.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/materials/Light.cu -o bin/Light.obj
+
 
 # Hittable Objects
 
@@ -58,6 +61,9 @@ bin/Sphere.obj: lib/hittable/Sphere.cu lib/hittable/headers/Sphere.hpp lib/proce
 
 bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.obj
+
+bin/Polygon.obj: lib/hittable/Polygon.cu lib/hittable/headers/Polygon.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/hittable/Polygon.cu -o bin/Polygon.obj
 
 
 

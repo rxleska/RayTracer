@@ -1,0 +1,103 @@
+
+#include "headers/Polygon.hpp"
+#include "assert.h"
+
+#ifndef F_EPSILON
+#define F_EPSILON 0.0001f
+#endif
+
+
+__device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat): vertices(vertices), num_vertices(num_vertices), mat(mat) {
+    if(num_vertices < 3){
+        num_vertices = 0;
+        assert(false);
+    }
+
+    if(!is_coplanar()){
+        num_vertices = 0;
+        assert(false);
+    }
+
+    calculate_normal_and_area();
+}
+
+
+// function to check if a ray hits the sphere
+__device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
+    //check if the ray is parallel to the plane
+    float denom = normal.dot(r.direction);
+    if(denom > -F_EPSILON){
+        return false;
+    }
+
+    //calculate the intersection point
+    float t = (vertices[0] - r.origin).dot(normal) / denom;
+    if(t < t_min || t > t_max){
+        return false;
+    }
+
+    Vec3 p = r.pointAt(t);
+
+    //check if the point is inside the polygon by calculating the area of the polygon formed by the point and the vertices
+    float totalArea = 0.0f;
+    for(int i = 0; i < num_vertices; i++){
+        // Vec3 v1 = vertices[i] - p;
+        // Vec3 v2 = vertices[(i+1)%num_vertices] - p;
+        Vec3 v1 = vertices[(i+1)%num_vertices] - vertices[i];
+        Vec3 v2 = p - vertices[i];
+        totalArea += 0.5f * v1.cross(v2).length();
+    }
+
+    if(totalArea > area + area*F_EPSILON){
+        return false;
+    }
+    
+    rec.t = t;
+    rec.p = p;
+    rec.normal = normal;
+    rec.front_face = true; //wouldn't have hit the polygon if it was not facing the front
+    rec.mat = mat;
+    return true;
+}
+
+__device__ bool Polygon::is_coplanar() const{
+    Vec3 currentCross;
+    for (int i = 0; i < num_vertices - 3; i++) {
+        Vec3 v1 = vertices[i + 1] - vertices[i];
+        Vec3 v2 = vertices[i + 2] - vertices[i];
+        Vec3 normal = v1.cross(v2).normalized();
+        if (i == 0) {
+            currentCross = normal;  // store the first cross product
+        } else {
+            if (fabs(currentCross.dot(normal)) > F_EPSILON) { // or use fabs(currentCross.dot(normal)) > F_EPSILON
+                return false;
+            }
+        }
+    }
+    return true;
+}
+
+__device__ void Polygon::calculate_normal_and_area(){
+    Vec3 v1 = vertices[1] - vertices[0];
+    Vec3 v2 = vertices[num_vertices-1] - vertices[0];
+    normal = v1.cross(v2);
+
+    // calculate the area of the polygon
+    //choose center of polygon as reference point
+    Vec3 center = Vec3(0,0,0);
+    for(int i = 0; i < num_vertices; i++){
+        center = center + vertices[i];
+    }
+    center = center / float(num_vertices);
+
+    //for each triangle in the polygon calculate 
+    area = 0.0f;
+    for(int i = 0; i < num_vertices; i++){
+        Vec3 v1 = vertices[i] - center;
+        Vec3 v2 = vertices[(i+1)%num_vertices] - center;
+        area += 0.5f * v1.cross(v2).length();
+    }
+
+    //normalize the normal
+    normal = normal.normalized();
+}
