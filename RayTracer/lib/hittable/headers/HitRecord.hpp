@@ -19,12 +19,14 @@ class HitRecord{
         Vec3 normal;
         // Material material;
         Material *mat;
+        // bool to check if the ray hit the front face or the back face of the object
+        bool front_face;
 
         // blank constructor
-        __device__ HitRecord() : t(0), p(Vec3()), normal(Vec3()), mat(nullptr) {}
+        __device__ HitRecord() : t(0), p(Vec3()), normal(Vec3()), mat(nullptr), front_face(false) {}
 
         // constructor with parameters
-        __device__ HitRecord(float t, Vec3 p, Vec3 normal, Material *mat) : t(t), p(p), normal(normal), mat(mat) {}
+        __device__ HitRecord(float t, Vec3 p, Vec3 normal, Material *mat, bool is_front_face) : t(t), p(p), normal(normal), mat(mat), front_face(is_front_face) {}
 }; 
 
 

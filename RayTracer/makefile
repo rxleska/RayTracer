@@ -10,49 +10,54 @@ CFLAGS = -arch=sm_89 -rdc=true -G
 
 
 
-PROCESSING = bin/Ray.o bin/Vec3.o bin/Camera.o
-MATERIALS  = bin/Lambertian.o
-HITTABLES  = bin/Sphere.o  bin/Scene.o
+PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
+MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj
+HITTABLES  = bin/Sphere.obj  bin/Scene.obj
 
 all: run 
 
-run: bin bin/main.o $(PROCESSING) $(MATERIALS) $(HITTABLES)
-	$(CC) $(CFLAGS) -o run bin/main.o $(PROCESSING) $(MATERIALS) $(HITTABLES)
+run: bin bin/main.obj $(PROCESSING) $(MATERIALS) $(HITTABLES)
+	$(CC) $(CFLAGS) -o run bin/main.obj --link $(PROCESSING) $(MATERIALS) $(HITTABLES) 
 
 bin:
 	mkdir bin
 
-bin/main.o: main.cu 
-	$(CC) $(CFLAGS) -c main.cu -o bin/main.o
+bin/main.obj: main.cu 
+	$(CC) $(CFLAGS) -c main.cu -o bin/main.obj
 
 # Processing Objects
 
-bin/Ray.o: lib/processing/Ray.cu lib/processing/headers/Ray.hpp
-	$(CC) $(CFLAGS) -c lib/processing/Ray.cu -o bin/Ray.o
+bin/Ray.obj: lib/processing/Ray.cu lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/processing/Ray.cu -o bin/Ray.obj
 
-bin/Vec3.o: lib/processing/Vec3.cu lib/processing/headers/Vec3.hpp
-	$(CC) $(CFLAGS) -c lib/processing/Vec3.cu -o bin/Vec3.o
+bin/Vec3.obj: lib/processing/Vec3.cu lib/processing/headers/Vec3.hpp
+	$(CC) $(CFLAGS) -c lib/processing/Vec3.cu -o bin/Vec3.obj
 
-bin/Camera.o: lib/processing/Camera.cu lib/processing/headers/Camera.hpp lib/processing/headers/Ray.hpp
-	$(CC) $(CFLAGS) -c lib/processing/Camera.cu -o bin/Camera.o
+bin/Camera.obj: lib/processing/Camera.cu lib/processing/headers/Camera.hpp lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/processing/Camera.cu -o bin/Camera.obj
 
 
 
 
 # Material Objects
 
-bin/Lambertian.o: lib/materials/Lambertian.cu lib/materials/headers/Lambertian.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
-	$(CC) $(CFLAGS) -c lib/materials/Lambertian.cu -o bin/Lambertian.o
+bin/Lambertian.obj: lib/materials/Lambertian.cu lib/materials/headers/Lambertian.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/materials/Lambertian.cu -o bin/Lambertian.obj
 
+bin/Metal.obj: lib/materials/Metal.cu lib/materials/headers/Metal.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/materials/Metal.cu -o bin/Metal.obj
+
+bin/Dielectric.obj: lib/materials/Dielectric.cu lib/materials/headers/Dielectric.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/materials/Dielectric.cu -o bin/Dielectric.obj
 
 
 # Hittable Objects
 
-bin/Sphere.o: lib/hittable/Sphere.cu lib/hittable/headers/Sphere.hpp lib/processing/headers/Ray.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp
-	$(CC) $(CFLAGS) -c lib/hittable/Sphere.cu -o bin/Sphere.o
+bin/Sphere.obj: lib/hittable/Sphere.cu lib/hittable/headers/Sphere.hpp lib/processing/headers/Ray.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/hittable/Sphere.cu -o bin/Sphere.obj
 
-bin/Scene.o: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
-	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.o
+bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.obj
 
 
 

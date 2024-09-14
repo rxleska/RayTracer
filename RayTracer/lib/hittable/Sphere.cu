@@ -1,6 +1,10 @@
 #include "headers/Sphere.hpp"
 #include <cmath>
 
+#ifndef F_EPSILON
+#define F_EPSILON 0.000001
+#endif
+
 __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
     // using the quadratic formula to solve for t in the equation of a ray-sphere intersection
 
@@ -19,6 +23,8 @@ __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& r
     rec.t = t;
     rec.p = r.pointAt(t);
     rec.normal = (rec.p - center) / radius;
+    rec.front_face = rec.normal.dot(r.direction) < F_EPSILON;
+    rec.normal = rec.front_face ? rec.normal : rec.normal * -1.0f;
     rec.mat = mat; 
     return true;
 }

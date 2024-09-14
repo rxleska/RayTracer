@@ -6,6 +6,8 @@
 // materials
 #include "lib/materials/headers/Material.hpp"
 #include "lib/materials/headers/Lambertian.hpp"
+#include "lib/materials/headers/Metal.hpp"
+#include "lib/materials/headers/Dielectric.hpp"
 // processing
 #include "lib/processing/headers/Camera.hpp"
 #include "lib/processing/headers/Ray.hpp"
@@ -70,7 +72,7 @@ __device__ Vec3 getColor(const Ray &r, Scene **world, curandState *local_rand_st
 }
 
 __global__ void free_world(Hitable **d_list, Scene **d_world, Camera **d_camera) {
-    for(int i=0; i < 22*22+1+1; i++) {
+    for(int i=0; i < (*d_world)->hitable_count; i++) {
         delete ((Sphere *)d_list[i])->mat;
         delete d_list[i];
     }
@@ -127,30 +129,30 @@ __global__ void create_world(Hitable **d_list, Scene **d_world, Camera **d_camer
             for(int b = -11; b < 11; b++) {
                 float choose_mat = RND;
                 Vec3 center(a+RND,0.2,b+RND);
-                d_list[i++] = new Sphere(center, 0.2,new Lambertian(Vec3(RND*RND, RND*RND, RND*RND)));
-                // if(choose_mat < 0.8f) {
-                //     d_list[i++] = new Sphere(center, 0.2,
-                //                              new lambertian(vec3(RND*RND, RND*RND, RND*RND)));
-                // }
-                // else if(choose_mat < 0.95f) {
-                //     d_list[i++] = new Sphere(center, 0.2,
-                //                              new metal(vec3(0.5f*(1.0f+RND), 0.5f*(1.0f+RND), 0.5f*(1.0f+RND)), 0.5f*RND));
-                // }
-                // else {
-                //     d_list[i++] = new Sphere(center, 0.2, new dielectric(1.5));
-                // }
+                // d_list[i++] = new Sphere(center, 0.2,new Lambertian(Vec3(RND*RND, RND*RND, RND*RND)));
+                if(choose_mat < 0.8f) {
+                    d_list[i++] = new Sphere(center, 0.2,
+                                             new Lambertian(Vec3(RND*RND, RND*RND, RND*RND)));
+                }
+                else if(choose_mat < 0.95f) {
+                    d_list[i++] = new Sphere(center, 0.2,
+                                             new Metal(Vec3(0.5f*(1.0f+RND), 0.5f*(1.0f+RND), 0.5f*(1.0f+RND)), 0.5f*RND));
+                }
+                else {
+                    d_list[i++] = new Sphere(center, 0.2, new Dielectric(1.5));
+                }
             }
         }
-        // d_list[i++] = new sphere(vec3(0, 1,0),  1.0, new dielectric(1.5));
+        d_list[i++] = new Sphere(Vec3(0, 1,0),  1.0, new Dielectric(1.5));
         d_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
-        // d_list[i++] = new sphere(vec3(4, 1, 0),  1.0, new metal(vec3(0.7, 0.6, 0.5), 0.0));
+        d_list[i++] = new Sphere(Vec3(4, 1, 0),  1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
         *rand_state = local_rand_state;
-        *d_world  = new Scene(d_list, 22*22+1+1);
+        *d_world  = new Scene(d_list, 22*22+1+3);
 
         Vec3 lookfrom(13,2,3);
         Vec3 lookat(0,0,0);
         float dist_to_focus = 10.0; (lookfrom-lookat).length();
-        float aperture = 0.1;
+        float aperture = 0.0;
         *d_camera   = new Camera(lookfrom,
                                  lookat,
                                  Vec3(0,1,0),
@@ -165,7 +167,7 @@ __global__ void create_world(Hitable **d_list, Scene **d_world, Camera **d_camer
 int main() {
     int nx = 1920/2;
     int ny = 1080/2;
-    int ns = 200;
+    int ns = 25;
     int tx = 20;
     int ty = 12;
 
@@ -195,7 +197,7 @@ int main() {
     // make our world of hitables & the camera
     Hitable **d_list;
     // int num_hitables = 22*22+1+3;
-    int num_hitables = 22*22+1+1;
+    int num_hitables = 22*22+1+3;
     checkCudaErrors(cudaMalloc((void **)&d_list, num_hitables*sizeof(Hitable *)));
     Scene **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Scene *)));
