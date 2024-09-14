@@ -49,10 +49,10 @@ __global__ void rand_init_singleton(curandState *rand_state) {
     }
 }
 
-__device__ Vec3 getColor(const Ray &r, Scene **world, curandState *local_rand_state) {
+__device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
     Vec3 cur_attenuation = Vec3(1.0,1.0,1.0);
-    for(int i = 0; i < 100; i++) {
+    for(int i = 0; i < (*cam)->bounces; i++) {
         HitRecord rec;
         if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec)) {
             Ray scattered;
@@ -70,11 +70,10 @@ __device__ Vec3 getColor(const Ray &r, Scene **world, curandState *local_rand_st
             }
         }
         else {
-            float ambient = 1.0f;
+            float ambient = (*cam)->ambient_light_level;
             Vec3 unit_direction = (cur_ray.direction).normalized();
             float t = 0.5f*(unit_direction.y + 1.0f);
-            // Vec3 c = Vec3(1.0, 1.0, 1.0)*(1.0f-t) + Vec3(0.5, 0.7, 1.0)*t;
-            Vec3 c = Vec3(0.0, 0.0, 1.0);
+            Vec3 c = Vec3(1.0, 1.0, 1.0)*(1.0f-t) + Vec3(0.5, 0.7, 1.0)*t;
             return cur_attenuation * (c*ambient);
         }
     }
@@ -106,14 +105,21 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     int pixel_index = (max_y - j - 1)*max_x + i;
     curandState local_rand_state = rand_state[pixel_index];
     Vec3 col(0,0,0);
-    for(int s=0; s < ns; s++) {
+    bool edge_hit = false;
+    bool edge_hit_check = false;
+    int samples = (*cam)->samples;
+    for(int s=0; s < samples; s++) {
         float u = float(i + curand_uniform(&local_rand_state)) / float(max_x);
         float v = float(j + curand_uniform(&local_rand_state)) / float(max_y);
         Ray r = (*cam)->get_ray(u, v, &local_rand_state);
-        col = col + getColor(r, world, &local_rand_state);
+        col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
+        if(edge_hit_check && !edge_hit) {
+            edge_hit = true;
+            samples = samples * (*cam)->msaa_x;
+        }
     }
     rand_state[pixel_index] = local_rand_state;
-    col = col / float(ns);
+    col = col / float(samples);
 
     fb[pixel_index*3+0] = uint8_t(int(255.99*sqrt(col.x)));
     fb[pixel_index*3+1] = uint8_t(int(255.99*sqrt(col.y)));
@@ -208,9 +214,6 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
         vertices_poly[2] = Vec3(10, 10, 0);
         device_object_list[i++] = new Polygon(vertices_poly, 3, new Lambertian(Vec3(0.9, 0.2, 0.1)));
 
-        //log polygon vertice count
-        printf("Polygon vertices count: %d\n", ((Polygon *)device_object_list[i-1])->num_vertices);
-
 
         *rand_state = local_rand_state;
         *d_world  = new Scene(device_object_list, i);
@@ -226,6 +229,10 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
+        (*d_camera)->ambient_light_level = 0.8f;
+        (*d_camera)->msaa_x = 16;
+        (*d_camera)->samples = 250;
+        (*d_camera)->bounces = 100;
     }
 }
 
@@ -462,20 +469,20 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
 
 __global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
 
-    // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
     // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
-    create_Cornell_Box_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    // create_Cornell_Box_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
 }
 
 
 int main() {
-    // int nx = 1920/2;
+    int nx = 1920*2;
     // int nx = 500*1;
-    int nx = 750;
-    // int ny = 1080/2;
+    // int nx = 750;
+    int ny = 1080*2;
     // int ny = 500*1;
-    int ny = 750;
-    int ns = 100;
+    // int ny = 750;
+    int ns = 250;
     int tx = 20;
     int ty = 12;
 

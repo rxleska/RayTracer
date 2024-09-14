@@ -39,15 +39,19 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     Vec3 p = r.pointAt(t);
 
     //check if the point is inside the polygon by calculating the area of the polygon formed by the point and the vertices
+    bool edge_hit = false;
     float totalArea = 0.0f;
     for(int i = 0; i < num_vertices; i++){
         // Vec3 v1 = vertices[i] - p;
         // Vec3 v2 = vertices[(i+1)%num_vertices] - p;
         Vec3 v1 = vertices[(i+1)%num_vertices] - vertices[i];
         Vec3 v2 = p - vertices[i];
-        totalArea += 0.5f * v1.cross(v2).length();
+        float a = 0.5f * v1.cross(v2).length();
+        if(a < area*F_EPSILON*0.1f){
+            edge_hit = true;
+        }
+        totalArea += a;
     }
-
     if(totalArea > area + area*F_EPSILON){
         return false;
     }
@@ -57,6 +61,7 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     rec.normal = normal;
     rec.front_face = true; //wouldn't have hit the polygon if it was not facing the front
     rec.mat = mat;
+    rec.edge_hit = edge_hit;
     return true;
 }
 

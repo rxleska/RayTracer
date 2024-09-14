@@ -25,6 +25,10 @@ __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& r
     rec.normal = (rec.p - center) / radius;
     rec.front_face = rec.normal.dot(r.direction) < F_EPSILON;
     rec.normal = rec.front_face ? rec.normal : rec.normal * -1.0f;
+
+    //if normal and ray direction are close to 90 degrees, set edge_hit to true
+    rec.edge_hit = rec.normal.dot(r.direction) < 0.01f;
+
     rec.mat = mat; 
     return true;
 }

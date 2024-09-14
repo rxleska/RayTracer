@@ -20,6 +20,12 @@ class Camera{
         Vec3 vertical;
         Vec3 u, v, w;
         float lens_radius;
+        float ambient_light_level = 0.0f;
+        int samples = 1;
+        int bounces = 50;
+        int x_res = 800;
+        int y_res = 800;
+        int msaa_x = 4;
     private:
         __device__ Vec3 random_in_unit_disk(curandState *state);
 };
