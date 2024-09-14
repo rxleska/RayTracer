@@ -101,3 +101,21 @@ __device__ void Polygon::calculate_normal_and_area(){
     //normalize the normal
     normal = normal.normalized();
 }
+
+
+__device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat){
+    Vec3 * vertices = new Vec3[3];
+    vertices[0] = v1;
+    vertices[1] = v2;
+    vertices[2] = v3;
+    return new Polygon(vertices, 3, mat);
+}
+
+__device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat){
+    Vec3 * vertices = new Vec3[4];
+    vertices[0] = v1;
+    vertices[1] = v2;
+    vertices[2] = v3;
+    vertices[3] = v4;
+    return new Polygon(vertices, 4, mat);
+}

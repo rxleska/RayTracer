@@ -9,27 +9,27 @@ The goal of this subsection is to create a ray tracer from scratch in C++. I wil
     More information here
 
 
-### Subgoal 2 implement a quadtree for spatial partitioning (instead of bounding box hierarchies)
+### Subgoal 2 implement a quadtree (Octree since 3d) for spatial partitioning (instead of bounding box hierarchies)
     More information here
 
 
-### Subgoal 3 - TBD - I want one more deviation from the textbook implementation but I am not sure what it will be yet. 
+### Subgoal 3 - TBD - need more ideas
     More information here 
 
 
 ## Features
-- [ ] Basic ray tracing
-- [ ] Materials
-    - [ ] Lambertian
-    - [ ] Metal
-    - [ ] Dielectric
-    - [ ] Diffuse light
+- [X] Basic ray tracing
+- [-] Materials
+    - [X] Lambertian
+    - [X] Metal
+    - [X] Dielectric
+    - [X] Diffuse light
     - [ ] png/image mapped materials (child of Lambertian)
-- [ ] Camera
-    - [ ] positionable
-    - [ ] focusable
-    - [ ] aperture
-- [ ] Multi-threading
+- [X] Camera
+    - [X] positionable
+    - [X] focusable
+    - [X] aperture
+- [X] Multi-threading
 - [ ] Optimization Data Structures
     - [ ] Octree 
 - [ ] hittable objects

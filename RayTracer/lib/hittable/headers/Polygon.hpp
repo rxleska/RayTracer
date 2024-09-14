@@ -22,8 +22,9 @@ class Polygon: public Hitable{
         __device__ bool is_coplanar() const;
 
         __device__ void calculate_normal_and_area();
-
-
 };
+
+__device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat);
+__device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat);
 
 #endif

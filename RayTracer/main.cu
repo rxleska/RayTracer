@@ -246,12 +246,10 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         0.0 0.0 559.2
         549.6 0.0 559.2
         */
-        Vec3 * vertices_floor = new Vec3[4];
-        vertices_floor[0] = Vec3(552.8, 0.0, 0.0);
-        vertices_floor[1] = Vec3(0.0, 0.0, 0.0);
-        vertices_floor[2] = Vec3(0.0, 0.0, 559.2);
-        vertices_floor[3] = Vec3(549.6, 0.0, 559.2);
-        device_object_list[i++] = new Polygon(vertices_floor, 4, white);
+        // device_object_list[i++] = Quad(Vec3(552.8, 0.0, 0.0),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 0.0, 559.2),Vec3(552.8, 0.0, 559.2), white);
+        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 0.0, 559.2), white);
+        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(0.0, 0.0, 559.2),Vec3(552.8, 0.0, 559.2), white);
+        
 
         //ceiling light 
         /*
@@ -260,12 +258,10 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         213.0 548.8 332.0
         213.0 548.8 227.0
         */
-        Vec3 * vertices_ceiling_light = new Vec3[4];
-        vertices_ceiling_light[0] = Vec3(343.0, 548.0, 227.0);
-        vertices_ceiling_light[1] = Vec3(343.0, 548.0, 332.0);
-        vertices_ceiling_light[2] = Vec3(213.0, 548.0, 332.0);
-        vertices_ceiling_light[3] = Vec3(213.0, 548.0, 227.0);
-        device_object_list[i++] = new Polygon(vertices_ceiling_light, 4, light);
+        // device_object_list[i++] = Quad(Vec3(343.0, 548, 227.0),Vec3(343.0, 548, 332.0),Vec3(213.0, 548, 332.0),Vec3(213.0, 548, 227.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
+
 
         //Ceiling
         /*
@@ -274,12 +270,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         0.0 548.8 559.2
         0.0 548.8   0.0
         */
-        Vec3 * vertices_ceiling = new Vec3[4];
-        vertices_ceiling[0] = Vec3(556.0, 548.8, 0.0);
-        vertices_ceiling[1] = Vec3(556.0, 548.8, 559.2);
-        vertices_ceiling[2] = Vec3(0.0, 548.8, 559.2);
-        vertices_ceiling[3] = Vec3(0.0, 548.8, 0.0);
-        device_object_list[i++] = new Polygon(vertices_ceiling, 4, white);
+        // device_object_list[i++] = Quad(Vec3(556.0, 548.8, 0.0),Vec3(556.0, 548.8, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(0.0, 548.8, 0.0), white);
+        device_object_list[i++] = Triangle(Vec3(556.0, 548.8, 0.0),Vec3(556.0, 548.8, 559.2),Vec3(0.0, 548.8, 559.2), white);
+        device_object_list[i++] = Triangle(Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 559.2),Vec3(0.0, 548.8, 0.0), white);
 
         //back wall
         /*
@@ -288,12 +281,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         0.0 548.8 559.2
         556.0 548.8 559.2
         */
-        Vec3 *vertices_back_wall = new Vec3[4];
-        vertices_back_wall[0] = Vec3(549.6, 0.0, 559.2);
-        vertices_back_wall[1] = Vec3(0.0, 0.0, 559.2);
-        vertices_back_wall[2] = Vec3(0.0, 548.8, 559.2);
-        vertices_back_wall[3] = Vec3(556.0, 548.8, 559.2);
-        device_object_list[i++] = new Polygon(vertices_back_wall, 4, white);
+        // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), white);
 
         //right wall
         /*
@@ -302,14 +292,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         0.0 548.8   0.0
         0.0 548.8 559.2
         */
-        Vec3 *vertices_right_wall = new Vec3[4];
-        vertices_right_wall[0] = Vec3(0.0, 0.0, 559.2);
-        vertices_right_wall[1] = Vec3(0.0, 0.0, 0.0);
-        vertices_right_wall[2] = Vec3(0.0, 548.8, 0.0);
-        // vertices_right_wall[2] = Vec3(0.0, 560, 0.0);
-        vertices_right_wall[3] = Vec3(0.0, 548.8, 559.2);
-        // vertices_right_wall[3] = Vec3(0.0, 560, 559.2);
-        device_object_list[i++] = new Polygon(vertices_right_wall, 4, green);
+        // device_object_list[i++] = Quad(Vec3(0.0, 0.0, 559.2),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 548.8, 559.2), green);
+        device_object_list[i++] = Triangle(Vec3(0.0, 0.0, 559.2),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 548.8, 0.0), green);
+        device_object_list[i++] = Triangle(Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 548.8, 559.2), green);
 
         //left wall
         /*
@@ -318,14 +303,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         556.0 548.8 559.2
         556.0 548.8   0.0
         */
-        Vec3 *vertices_left_wall = new Vec3[4];
-        vertices_left_wall[0] = Vec3(552.8, 0.0, 0.0);
-        vertices_left_wall[1] = Vec3(549.6, 0.0, 559.2);
-        vertices_left_wall[2] = Vec3(556.0, 548.8, 559.2);
-        vertices_left_wall[3] = Vec3(556.0, 548.8, 0.0);
-        // vertices_left_wall[2] = Vec3(556.0, 560, 559.2);
-        // vertices_left_wall[3] = Vec3(556.0, 560, 0.0);
-        device_object_list[i++] = new Polygon(vertices_left_wall, 4, red);
+        // device_object_list[i++] = Quad(Vec3(552.8, 0.0, 0.0),Vec3(549.6, 0.0, 559.2),Vec3(556.0, 548.8, 559.2),Vec3(556.0, 548.8, 0.0), red);
+        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(549.6, 0.0, 559.2),Vec3(556.0, 548.8, 559.2), red);
+        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(556.0, 548.8, 559.2),Vec3(556.0, 548.8, 0.0), red);
 
         // //camera wall (we can see through this due to the directionality of polygons)
         // //uses white material
@@ -335,12 +315,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         // 0.0 548.8 0
         // 556.0 548.8 0
         // */
-        Vec3 * vertices_camera_wall = new Vec3[4];
-        vertices_camera_wall[0] = Vec3(549.6, 0.0, 0.0);
-        vertices_camera_wall[1] = Vec3(556.0, 548.8, 0.0);
-        vertices_camera_wall[2] = Vec3(0.0, 548.8, 0.0);
-        vertices_camera_wall[3] = Vec3(0.0, 0.0, 0.0);
-        device_object_list[i++] = new Polygon(vertices_camera_wall, 4, white);
+        // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
 
         //short block
         //uses white material
@@ -351,12 +328,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         240.0 165.0 272.0
         290.0 165.0 114.0
         */
-        Vec3 * vertices_short_block_wall1 = new Vec3[4];
-        vertices_short_block_wall1[0] = Vec3(130.0, 165.0, 65.0);
-        vertices_short_block_wall1[1] = Vec3(82.0, 165.0, 225.0);
-        vertices_short_block_wall1[2] = Vec3(240.0, 165.0, 272.0);
-        vertices_short_block_wall1[3] = Vec3(290.0, 165.0, 114.0);
-        device_object_list[i++] = new Polygon(vertices_short_block_wall1, 4, white);
+        // device_object_list[i++] = Quad(Vec3(130.0, 165.0, 65.0),Vec3(82.0, 165.0, 225.0),Vec3(240.0, 165.0, 272.0),Vec3(290.0, 165.0, 114.0), white);
+        device_object_list[i++] = Triangle(Vec3(130.0, 165.0, 65.0),Vec3(82.0, 165.0, 225.0),Vec3(240.0, 165.0, 272.0), white);
+        device_object_list[i++] = Triangle(Vec3(130.0, 165.0, 65.0),Vec3(240.0, 165.0, 272.0),Vec3(290.0, 165.0, 114.0), white);
         
         
         //wall2
@@ -366,12 +340,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         240.0 165.0 272.0
         240.0   0.0 272.0
         */
-        Vec3 * vertices_short_block_wall2 = new Vec3[4];
-        vertices_short_block_wall2[0] = Vec3(290.0, 0.0, 114.0);
-        vertices_short_block_wall2[1] = Vec3(290.0, 165.0, 114.0);
-        vertices_short_block_wall2[2] = Vec3(240.0, 165.0, 272.0);
-        vertices_short_block_wall2[3] = Vec3(240.0, 0.0, 272.0);
-        device_object_list[i++] = new Polygon(vertices_short_block_wall2, 4, white);
+        //device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
+        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0), white);
+        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
         
         
         //wall3
@@ -381,12 +352,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         290.0 165.0 114.0
         290.0   0.0 114.0
         */
-        Vec3 * vertices_short_block_wall3 = new Vec3[4];
-        vertices_short_block_wall3[0] = Vec3(130.0, 0.0, 65.0);
-        vertices_short_block_wall3[1] = Vec3(130.0, 165.0, 65.0);
-        vertices_short_block_wall3[2] = Vec3(290.0, 165.0, 114.0);
-        vertices_short_block_wall3[3] = Vec3(290.0, 0.0, 114.0);
-        device_object_list[i++] = new Polygon(vertices_short_block_wall3, 4, white);
+        // device_object_list[i++] = Quad(Vec3(130.0, 0.0, 65.0),Vec3(130.0, 165.0, 65.0),Vec3(290.0, 165.0, 114.0),Vec3(290.0, 0.0, 114.0), white);
+        device_object_list[i++] = Triangle(Vec3(130.0, 0.0, 65.0),Vec3(130.0, 165.0, 65.0),Vec3(290.0, 165.0, 114.0), white);
+        device_object_list[i++] = Triangle(Vec3(130.0, 0.0, 65.0),Vec3(290.0, 165.0, 114.0),Vec3(290.0, 0.0, 114.0), white);
         
         
         //wall4
@@ -396,12 +364,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         130.0 165.0  65.0
         130.0   0.0  65.0
         */
-        Vec3 * vertices_short_block_wall4 = new Vec3[4];
-        vertices_short_block_wall4[0] = Vec3(82.0, 0.0, 225.0);
-        vertices_short_block_wall4[1] = Vec3(82.0, 165.0, 225.0);
-        vertices_short_block_wall4[2] = Vec3(130.0, 165.0, 65.0);
-        vertices_short_block_wall4[3] = Vec3(130.0, 0.0, 65.0);
-        device_object_list[i++] = new Polygon(vertices_short_block_wall4, 4, white);
+        // device_object_list[i++] = Quad(Vec3(82.0, 0.0, 225.0),Vec3(82.0, 165.0, 225.0),Vec3(130.0, 165.0, 65.0),Vec3(130.0, 0.0, 65.0), white);
+        device_object_list[i++] = Triangle(Vec3(82.0, 0.0, 225.0),Vec3(82.0, 165.0, 225.0),Vec3(130.0, 165.0, 65.0), white);
+        device_object_list[i++] = Triangle(Vec3(82.0, 0.0, 225.0),Vec3(130.0, 165.0, 65.0),Vec3(130.0, 0.0, 65.0), white);
         
         
         //wall5
@@ -411,12 +376,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         82.0 165.0 225.0
         82.0   0.0 225.0
         */
-        Vec3 * vertices_short_block_wall5 = new Vec3[4];
-        vertices_short_block_wall5[0] = Vec3(240.0, 0.0, 272.0);
-        vertices_short_block_wall5[1] = Vec3(240.0, 165.0, 272.0);
-        vertices_short_block_wall5[2] = Vec3(82.0, 165.0, 225.0);
-        vertices_short_block_wall5[3] = Vec3(82.0, 0.0, 225.0);
-        device_object_list[i++] = new Polygon(vertices_short_block_wall5, 4, white);
+        // device_object_list[i++] = Quad(Vec3(240.0, 0.0, 272.0),Vec3(240.0, 165.0, 272.0),Vec3(82.0, 165.0, 225.0),Vec3(82.0, 0.0, 225.0), white);
+        device_object_list[i++] = Triangle(Vec3(240.0, 0.0, 272.0),Vec3(240.0, 165.0, 272.0),Vec3(82.0, 165.0, 225.0), white);
+        device_object_list[i++] = Triangle(Vec3(240.0, 0.0, 272.0),Vec3(82.0, 165.0, 225.0),Vec3(82.0, 0.0, 225.0), white);
 
         
 
@@ -429,12 +391,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         314.0 330.0 456.0
         472.0 330.0 406.0
         */
-        Vec3 * vertices_tall_block_wall1 = new Vec3[4];
-        vertices_tall_block_wall1[0] = Vec3(423.0, 330.0, 247.0);
-        vertices_tall_block_wall1[1] = Vec3(265.0, 330.0, 296.0);
-        vertices_tall_block_wall1[2] = Vec3(314.0, 330.0, 456.0);
-        vertices_tall_block_wall1[3] = Vec3(472.0, 330.0, 406.0);
-        device_object_list[i++] = new Polygon(vertices_tall_block_wall1, 4, white);
+        // device_object_list[i++] = Quad(Vec3(423.0, 330.0, 247.0),Vec3(265.0, 330.0, 296.0),Vec3(314.0, 330.0, 456.0),Vec3(472.0, 330.0, 406.0), white);
+        device_object_list[i++] = Triangle(Vec3(423.0, 330.0, 247.0),Vec3(265.0, 330.0, 296.0),Vec3(314.0, 330.0, 456.0), white);
+        device_object_list[i++] = Triangle(Vec3(423.0, 330.0, 247.0),Vec3(314.0, 330.0, 456.0),Vec3(472.0, 330.0, 406.0), white);
         
         
         //wall2
@@ -444,12 +403,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         472.0 330.0 406.0
         472.0   0.0 406.0
         */
-        Vec3 * vertices_tall_block_wall2 = new Vec3[4];
-        vertices_tall_block_wall2[0] = Vec3(423.0, 0.0, 247.0);
-        vertices_tall_block_wall2[1] = Vec3(423.0, 330.0, 247.0);
-        vertices_tall_block_wall2[2] = Vec3(472.0, 330.0, 406.0);
-        vertices_tall_block_wall2[3] = Vec3(472.0, 0.0, 406.0);
-        device_object_list[i++] = new Polygon(vertices_tall_block_wall2, 4, white);
+        // device_object_list[i++] = Quad(Vec3(423.0, 0.0, 247.0),Vec3(423.0, 330.0, 247.0),Vec3(472.0, 330.0, 406.0),Vec3(472.0, 0.0, 406.0), white);
+        device_object_list[i++] = Triangle(Vec3(423.0, 0.0, 247.0),Vec3(423.0, 330.0, 247.0),Vec3(472.0, 330.0, 406.0), white);
+        device_object_list[i++] = Triangle(Vec3(423.0, 0.0, 247.0),Vec3(472.0, 330.0, 406.0),Vec3(472.0, 0.0, 406.0), white);
         
         //wall3
         /*
@@ -458,12 +414,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         314.0 330.0 456.0
         314.0   0.0 456.0
         */
-        Vec3 * vertices_tall_block_wall3 = new Vec3[4];
-        vertices_tall_block_wall3[0] = Vec3(472.0, 0.0, 406.0);
-        vertices_tall_block_wall3[1] = Vec3(472.0, 330.0, 406.0);
-        vertices_tall_block_wall3[2] = Vec3(314.0, 330.0, 456.0);
-        vertices_tall_block_wall3[3] = Vec3(314.0, 0.0, 456.0);
-        device_object_list[i++] = new Polygon(vertices_tall_block_wall3, 4, white);
+        // device_object_list[i++] = Quad(Vec3(472.0, 0.0, 406.0),Vec3(472.0, 330.0, 406.0),Vec3(314.0, 330.0, 456.0),Vec3(314.0, 0.0, 456.0), white);
+        device_object_list[i++] = Triangle(Vec3(472.0, 0.0, 406.0),Vec3(472.0, 330.0, 406.0),Vec3(314.0, 330.0, 456.0), white);
+        device_object_list[i++] = Triangle(Vec3(472.0, 0.0, 406.0),Vec3(314.0, 330.0, 456.0),Vec3(314.0, 0.0, 456.0), white);
         
         
         //wall4
@@ -473,12 +426,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         265.0 330.0 296.0
         265.0   0.0 296.0
         */
-        Vec3 * vertices_tall_block_wall4 = new Vec3[4];
-        vertices_tall_block_wall4[0] = Vec3(314.0, 0.0, 456.0);
-        vertices_tall_block_wall4[1] = Vec3(314.0, 330.0, 456.0);
-        vertices_tall_block_wall4[2] = Vec3(265.0, 330.0, 296.0);
-        vertices_tall_block_wall4[3] = Vec3(265.0, 0.0, 296.0);
-        device_object_list[i++] = new Polygon(vertices_tall_block_wall4, 4, white);
+        // device_object_list[i++] = Quad(Vec3(314.0, 0.0, 456.0),Vec3(314.0, 330.0, 456.0),Vec3(265.0, 330.0, 296.0),Vec3(265.0, 0.0, 296.0), white);
+        device_object_list[i++] = Triangle(Vec3(314.0, 0.0, 456.0),Vec3(314.0, 330.0, 456.0),Vec3(265.0, 330.0, 296.0), white);
+        device_object_list[i++] = Triangle(Vec3(314.0, 0.0, 456.0),Vec3(265.0, 330.0, 296.0),Vec3(265.0, 0.0, 296.0), white);
         
         //wall5
         /*
@@ -487,12 +437,9 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         423.0 330.0 247.0
         423.0   0.0 247.0
         */
-        Vec3 * vertices_tall_block_wall5 = new Vec3[4];
-        vertices_tall_block_wall5[0] = Vec3(265.0, 0.0, 296.0);
-        vertices_tall_block_wall5[1] = Vec3(265.0, 330.0, 296.0);
-        vertices_tall_block_wall5[2] = Vec3(423.0, 330.0, 247.0);
-        vertices_tall_block_wall5[3] = Vec3(423.0, 0.0, 247.0);
-        device_object_list[i++] = new Polygon(vertices_tall_block_wall5, 4, white);
+        // device_object_list[i++] = Quad(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
+        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
+        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
 
 
         *rand_state = local_rand_state;
@@ -523,10 +470,12 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 
 int main() {
     // int nx = 1920/2;
-    int nx = 500*1;
+    // int nx = 500*1;
+    int nx = 750;
     // int ny = 1080/2;
-    int ny = 500*1;
-    int ns = 25;
+    // int ny = 500*1;
+    int ny = 750;
+    int ns = 100;
     int tx = 20;
     int ty = 12;
 
