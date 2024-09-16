@@ -5,13 +5,19 @@ CC = nvcc
 # -arch=sm_89: specifies the architecture of the GPU 89 ADA GPUs (4070 TI)
 # -arch=sm_87: specifies the architecture of the GPU 87 Ampere GPUs (3050 Laptops) (also supports sm_80 and sm_86)
 # -rdc=true: enables relocatable device code (required for multiple files)
-CFLAGS = -arch=sm_89 -rdc=true -G
+# CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -G -arch=sm_80 -rdc=true
+# CFLAGS = -arch=sm_89 -rdc=true -Xptxas -O2 -Xcompiler -O2
+CFLAGS = -arch=sm_89 -rdc=true -G
+
+# testing -G flag removes all optimizations (really slow)
+# no flags defaults to all optimizations
+
 
 
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
-MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj
+MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj
 HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon.obj
 
 all: run 
@@ -52,6 +58,9 @@ bin/Dielectric.obj: lib/materials/Dielectric.cu lib/materials/headers/Dielectric
 
 bin/Light.obj: lib/materials/Light.cu lib/materials/headers/Light.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/materials/Light.cu -o bin/Light.obj
+
+bin/LambertianBordered.obj: lib/materials/LambertianBordered.cu lib/materials/headers/LambertianBordered.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/materials/LambertianBordered.cu -o bin/LambertianBordered.obj
 
 
 # Hittable Objects

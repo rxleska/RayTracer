@@ -10,6 +10,7 @@
 #include "lib/materials/headers/Metal.hpp"
 #include "lib/materials/headers/Dielectric.hpp"
 #include "lib/materials/headers/Light.hpp"
+#include "lib/materials/headers/LambertianBordered.hpp"
 // processing
 #include "lib/processing/headers/Camera.hpp"
 #include "lib/processing/headers/Ray.hpp"
@@ -58,6 +59,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             Ray scattered;
             Vec3 attenuation;
             int did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
+            edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
                 cur_attenuation = cur_attenuation * attenuation;
                 cur_ray = scattered;
@@ -113,6 +115,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
         float v = float(j + curand_uniform(&local_rand_state)) / float(max_y);
         Ray r = (*cam)->get_ray(u, v, &local_rand_state);
         col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
+
         if(edge_hit_check && !edge_hit) {
             edge_hit = true;
             samples = samples * (*cam)->msaa_x;
@@ -230,8 +233,8 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
                                  aperture,
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.8f;
-        (*d_camera)->msaa_x = 16;
-        (*d_camera)->samples = 250;
+        (*d_camera)->msaa_x = 4;
+        (*d_camera)->samples = 100;
         (*d_camera)->bounces = 100;
     }
 }
@@ -241,10 +244,12 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         curandState local_rand_state = *rand_state;
         int i = 0;
 
-        Material *white = new Lambertian(Vec3(1.0, 1.0, 1.0));
+        Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
         Material *light = new Light(Vec3(1.0, 1.0, 1.0), 1.0);
-        Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
-        Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
+        // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
+        // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
+        Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
+        Material *red = new LambertianBordered(Vec3(0.65, 0.05, 0.05));
 
         //floor 
         /*
@@ -266,8 +271,8 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         213.0 548.8 227.0
         */
         // device_object_list[i++] = Quad(Vec3(343.0, 548, 227.0),Vec3(343.0, 548, 332.0),Vec3(213.0, 548, 332.0),Vec3(213.0, 548, 227.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(343.0, 545, 332.0),Vec3(213.0, 545, 332.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
 
 
         //Ceiling
@@ -459,30 +464,34 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
         *d_camera   = new Camera(lookfrom,
                                  lookat,
                                  Vec3(0,1,0),
-                                 65.0,
+                                 70.0,
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
+        (*d_camera)->ambient_light_level = 0.0f;
+        (*d_camera)->msaa_x = 2;
+        (*d_camera)->samples = 50;
+        (*d_camera)->bounces = 50;
     }
 }
 
 
 __global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
 
-    create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
     // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
-    // create_Cornell_Box_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    create_Cornell_Box_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
 }
 
 
 int main() {
-    int nx = 1920*2;
+    // int nx = 1920/2;
     // int nx = 500*1;
-    // int nx = 750;
-    int ny = 1080*2;
+    int nx = 400;
+    // int ny = 1080/2;
     // int ny = 500*1;
-    // int ny = 750;
-    int ns = 250;
+    int ny = 400;
+    int ns = 50;
     int tx = 20;
     int ty = 12;
 

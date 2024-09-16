@@ -32,10 +32,45 @@ The goal of this subsection is to create a ray tracer from scratch in C++. I wil
 - [X] Multi-threading
 - [ ] Optimization Data Structures
     - [ ] Octree 
-- [ ] hittable objects
-    - [ ] Sphere
-    - [ ] Polygons (imo this is better than creating quadralaterals if you have a quadtree or another spatial partitioning method) (also look into more than 3 index polygons)
+- [X] hittable objects
+    - [X] Sphere
+    - [X] Polygons (imo this is better than creating quadralaterals if you have a quadtree or another spatial partitioning method) (also look into more than 3 index polygons)
 
 - [ ] other ideas
     - [ ] live render preview 
-    - [ ] dynamic sample rate anti-aliasing (edges of objects send signal to increase sample rate like msaa)
+    - [X] dynamic sample rate anti-aliasing (edges of objects send signal to increase sample rate like msaa)
+    - [ ] Perlin noise
+
+
+
+## Assignment Requirements
+To earn a grade of at least C- in this course, your ray tracer must include this basic functionality:
+
+    A camera with configurable position, orientation, and field of view
+    Anti-aliasing
+    Ray/sphere intersections
+    Ray/triangle intersections
+    The ability to load textures (file format(s) of your choice; may use third-party libraries)
+    Textured spheres and triangles
+    The ability to load and render triangle meshes (file format(s) of your choice; may use third-party libraries for loading)
+    A spatial subdivision acceleration structure of your choice
+    Specular, diffuse, and dielectric materials (per first volume of Ray Tracing in One Weekend series)
+    Emissive materials (lights)
+
+In addition, for a C- you must implement at least X points worth of features from the following list (point values coming soon; these range from very easy to fairly complex):
+
+    High dynamic range images
+    Volume rendering (smoke, clouds, etc.)
+    Quads
+    Quadrics
+    Spectral rendering
+    BRDF materials (Bi-directional reflectance distribution functions)
+    Subsurface scattering (BSSRDFs)
+    Motion blur
+    Defocus blur/depth of field
+    Object instancing
+    Perlin noise
+    Cube maps
+    Importance sampling
+    Round pixels
+    Other features you discover through reading, YouTube, etc. (tell me about them and they'll be added to this list explicitly)
