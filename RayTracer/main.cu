@@ -116,7 +116,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
         Ray r = (*cam)->get_ray(u, v, &local_rand_state);
         col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
 
-        if(edge_hit_check && !edge_hit) {
+        if(!edge_hit && edge_hit_check) {
             edge_hit = true;
             samples = samples * (*cam)->msaa_x;
         }
@@ -234,7 +234,7 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.8f;
         (*d_camera)->msaa_x = 4;
-        (*d_camera)->samples = 100;
+        (*d_camera)->samples = 500;
         (*d_camera)->bounces = 100;
     }
 }
@@ -470,8 +470,8 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 50;
-        (*d_camera)->bounces = 50;
+        (*d_camera)->samples = 128;
+        (*d_camera)->bounces = 100;
     }
 }
 
@@ -487,13 +487,17 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     // int nx = 1920/2;
     // int nx = 500*1;
-    int nx = 400;
+    int nx = 1024;
     // int ny = 1080/2;
     // int ny = 500*1;
-    int ny = 400;
-    int ns = 50;
-    int tx = 20;
-    int ty = 12;
+    int ny = 1024;
+    int ns = 500;
+    // int tx = 20;
+    // int ty = 12;
+    // int tx = 16;
+    // int ty = 10;
+    int tx = 128;
+    int ty = 1;
 
     std::cerr << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
@@ -521,7 +525,7 @@ int main() {
     // make our world of hitables & the camera
     Hitable **device_object_list;
     // int num_hitables = 22*22+1+3;
-    int num_hitables = 22*22+1+3;
+    int num_hitables = MAX_OBJECTS;
     checkCudaErrors(cudaMalloc((void **)&device_object_list, num_hitables*sizeof(Hitable *)));
     Scene **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Scene *)));

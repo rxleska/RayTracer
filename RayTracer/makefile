@@ -8,7 +8,8 @@ CC = nvcc
 # CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -G -arch=sm_80 -rdc=true
 # CFLAGS = -arch=sm_89 -rdc=true -Xptxas -O2 -Xcompiler -O2
-CFLAGS = -arch=sm_89 -rdc=true -G
+# CFLAGS = -arch=sm_89 -rdc=true -G
+CFLAGS = -arch=sm_80 -rdc=true
 
 # testing -G flag removes all optimizations (really slow)
 # no flags defaults to all optimizations
@@ -79,8 +80,13 @@ bin/Polygon.obj: lib/hittable/Polygon.cu lib/hittable/headers/Polygon.hpp lib/hi
 clean:
 	rm -rf bin/ run
 
+rebuild: clean all
+
 clean-win:
 	del /s /q bin\ run.exe	
+
+rebuild-win: clean-win all
+
 
 san: run.exe
 	compute-sanitizer --force-blocking-launches --generate-coredump ./run.exe

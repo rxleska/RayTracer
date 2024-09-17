@@ -3,6 +3,7 @@
 #include "headers/Hitable.hpp"
 #include "../processing/headers/Ray.hpp"
 
+
 __device__ Scene::Scene(){
     hitable_count = 0;
     hitable_capacity = 10;
@@ -21,7 +22,7 @@ __device__ void Scene::resize(int new_capacity){
         new_hitables[i] = hitables[i];
     }
     // delete[] hitables;
-    cudaFree(hitables);
+    free(hitables);
     hitables = new_hitables;
     hitable_capacity = new_capacity;
 
