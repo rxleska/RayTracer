@@ -32,3 +32,12 @@ __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& r
     rec.mat = mat; 
     return true;
 }
+
+__device__ void Sphere::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
+    x_min = center.x - radius;
+    x_max = center.x + radius;
+    y_min = center.y - radius;
+    y_max = center.y + radius;
+    z_min = center.z - radius;
+    z_max = center.z + radius;
+}

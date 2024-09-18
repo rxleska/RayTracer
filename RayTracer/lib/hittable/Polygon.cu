@@ -65,6 +65,24 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     return true;
 }
 
+#ifndef F_MAX
+#define F_MAX 3.402823466e+38F
+#endif
+
+__device__ void Polygon::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
+    // get float max and min
+    x_min = y_min = z_min = F_MAX;
+    x_max = y_max = z_max = -F_MAX;
+    for(int i = 0; i < num_vertices; i++){
+        x_min = fminf(x_min, vertices[i].x);
+        x_max = fmaxf(x_max, vertices[i].x);
+        y_min = fminf(y_min, vertices[i].y);
+        y_max = fmaxf(y_max, vertices[i].y);
+        z_min = fminf(z_min, vertices[i].z);
+        z_max = fmaxf(z_max, vertices[i].z);
+    }
+}
+
 __device__ bool Polygon::is_coplanar() const{
     Vec3 currentCross;
     for (int i = 0; i < num_vertices - 3; i++) {

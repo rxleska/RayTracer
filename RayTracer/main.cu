@@ -470,7 +470,7 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 128;
+        (*d_camera)->samples = 64;
         (*d_camera)->bounces = 100;
     }
 }
@@ -491,12 +491,12 @@ int main() {
     // int ny = 1080/2;
     // int ny = 500*1;
     int ny = 1024;
-    int ns = 500;
+    int ns = 64;
     // int tx = 20;
     // int ty = 12;
     // int tx = 16;
     // int ty = 10;
-    int tx = 128;
+    int tx = 512;
     int ty = 1;
 
     std::cerr << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";

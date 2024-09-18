@@ -19,6 +19,9 @@ class Polygon: public Hitable{
         // function to check if a ray hits the sphere
         __device__ virtual bool hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const override;
 
+        // function to get the bounding box of the Polygon
+        __device__ virtual void getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const;
+
         __device__ bool is_coplanar() const;
 
         __device__ void calculate_normal_and_area();
