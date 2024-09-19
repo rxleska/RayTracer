@@ -13,7 +13,8 @@ enum MaterialType
     LAMBERTIAN, //everywhere scatter
     METAL, // reflect
     DIELECTRIC, // refract
-    LIGHT // emit light
+    LIGHT, // emit light
+    TEXTURED // textured material
 };
 
 //min function for floats
