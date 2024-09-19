@@ -41,3 +41,17 @@ __device__ void Sphere::getBounds(float& x_min, float& x_max, float& y_min, floa
     z_min = center.z - radius;
     z_max = center.z + radius;
 }
+
+
+__device__ bool Sphere::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const{
+    return (
+        // check if sphere mins are below box maxes
+        // check if sphere maxes are above box mins
+        (center.x - radius < x_max) &&
+        (center.x + radius > x_min) &&
+        (center.y - radius < y_max) &&
+        (center.y + radius > y_min) &&
+        (center.z - radius < z_max) &&
+        (center.z + radius > z_min) 
+    );
+}

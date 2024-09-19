@@ -36,12 +36,12 @@ __device__ void Scene::addHitable(Hitable *hittable){
 __device__ bool Scene::hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const{
     HitRecord current_hit;
     bool has_hit = false;
-    float closest = t_max;
+    // float closest = t_max;
     for (int i = 0; i < hitable_count; i++) {
-        if (hitables[i]->hit(ray, t_min, closest, current_hit)) {
+        if (hitables[i]->hit(ray, t_min, t_max, rec)) {
             has_hit = true;
-            closest = current_hit.t;
-            rec = current_hit;
+            t_max = current_hit.t;
+            // rec = current_hit;
         }
     }
 
@@ -53,4 +53,8 @@ __device__ Scene::Scene(Hitable **hitables, int hitable_count){
     this->hitable_capacity = hitable_count;
     this->hitables = hitables;
 
+}
+
+__device__ void Scene::empty(){
+    hitable_count = 0;
 }

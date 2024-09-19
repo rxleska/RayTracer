@@ -142,3 +142,25 @@ __device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat){
     vertices[3] = v4;
     return new Polygon(vertices, 4, mat);
 }
+
+__device__ bool Polygon::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const{
+    float px_min;
+    float px_max;
+    float py_min;
+    float py_max;
+    float pz_min;
+    float pz_max;
+    getBounds(px_min, px_max, py_min, py_max, pz_min, pz_max);
+    // TODO confirm if this method works (I think there are cases where this isn't true but maybe not)
+    return(
+        // check if polygon mins are below box maxes
+        // check if polygon maxes are above box mins
+        (px_min < x_max) &&
+        (px_max > x_min) &&
+        (py_min < y_max) &&
+        (py_max > y_min) &&
+        (pz_min < z_max) &&
+        (pz_max > z_min)
+    );
+
+}

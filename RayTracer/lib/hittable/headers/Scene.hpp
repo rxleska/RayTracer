@@ -12,6 +12,7 @@ class Scene{
         __device__ void resize(int new_capacity);
         __device__ void addHitable(Hitable *hittable);
         __device__ bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const;
+        __device__ void empty();
         
         
         int hitable_count;
