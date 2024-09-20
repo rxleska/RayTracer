@@ -1,17 +1,18 @@
 #include "headers/Octree.hpp" 
 
+#include <iostream>
 
 #ifndef F_MAX
 #define F_MAX 3.402823466e+38F
 #endif
 
 __device__ Octree::Octree() : Scene(){
-    children = (Octree**)malloc(sizeof(Octree*) * 8);
+    children = (Octree**)malloc( 8 * sizeof(Octree*));
 }
 
 
 __device__ Octree::Octree(Hitable **hitables, int hitable_count) : Scene(hitables, hitable_count){
-    children = (Octree**)malloc(sizeof(Octree*) * 8);
+    children = (Octree**)malloc(8 * sizeof(Octree*));
 }
 
 
@@ -86,34 +87,36 @@ __device__ void Octree::subdivide(int depth){
         children[i]->center.y = (children[i]->y_min + children[i]->y_max) / 2;
         children[i]->center.z = (children[i]->z_min + children[i]->z_max) / 2;
 
+
+        // log child capactiy
+        printf("Child %d: x_min: %f, x_max: %f, y_min: %f, y_max: %f, z_min: %f, z_max: %f, cap: %d, cur %d\n", i, children[i]->x_min, children[i]->x_max, children[i]->y_min, children[i]->y_max, children[i]->z_min, children[i]->z_max, children[i]->hitable_capacity, children[i]->hitable_count);
+        
         // for each hitable in the octree
-        for(int i = 0; i < hitable_count; i++){
-            Hitable * h = hitables[i];
+        for(int j = 0; j < hitable_count; j++){
+            printf("Checking hitable %d\n", j);
+            Hitable * h = hitables[j];
             if(h->insideBox(
                 children[i]->x_min, children[i]->x_max,
                 children[i]->y_min, children[i]->y_max,
                 children[i]->z_min, children[i]->z_max
             )){
                 children[i]->addHitable(h);
+                printf("Added hitable to child %d\n", i);
             }
         }
     }
 
-    // remove all nodes from the parent 
+    // remove all nodes from the parent
     empty();
 
-    //TODO could free memory here
+    free(hitables);
     
     //call subdivide on each child
-    for(int i = 0; i < 8; i++){
-        children[i]->max_depth = max_depth;
+    for(int k = 0; k < 8; k++){
+        children[k]->max_depth = max_depth;
         // children[i]->parent = this;
-        children[i]->subdivide(depth + 1);
+        children[k]->subdivide(depth + 1);
     }
-
-
-    
-
 }
 __device__ int  Octree::closest_child(const Vec3 point) const{
     Vec3 transposed = point - center;

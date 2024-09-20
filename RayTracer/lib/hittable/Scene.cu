@@ -3,10 +3,12 @@
 #include "headers/Hitable.hpp"
 #include "../processing/headers/Ray.hpp"
 
+#include <iostream>
 
 __device__ Scene::Scene(){
     hitable_count = 0;
     hitable_capacity = 10;
+    printf("Scene constructor\n");
     // hitables = new Hitable*[hitable_capacity]; // c++ new operator not supported in cuda
     hitables = (Hitable**)malloc(sizeof(Hitable*) * hitable_capacity);
 }
@@ -16,6 +18,7 @@ __host__ void Scene::free_memory(){
 }
 
 __device__ void Scene::resize(int new_capacity){
+    printf("Resizing\n");
     // Hitable **new_hitables = new Hitable*[new_capacity];
     Hitable **new_hitables = (Hitable**)malloc(sizeof(Hitable*) * new_capacity);
     for (int i = 0; i < hitable_count; i++) {
@@ -52,6 +55,7 @@ __device__ Scene::Scene(Hitable **hitables, int hitable_count){
     this->hitable_capacity = hitable_count;
     this->hitables = hitables;
 
+    printf("Scene constructor\n");
 }
 
 __device__ void Scene::empty(){

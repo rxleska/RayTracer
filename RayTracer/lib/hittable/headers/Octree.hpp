@@ -14,6 +14,7 @@ class Octree : public Scene {
 
         __device__ Octree();
         __device__ Octree(Hitable **hitables, int hitable_count);
+        
         __device__ void init();
         __device__ void subdivide(int depth);
         __device__ int closest_child(const Vec3 point) const;

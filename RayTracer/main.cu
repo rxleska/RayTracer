@@ -169,8 +169,17 @@ __device__ void create_test_Octree(Hitable **device_object_list, Octree **d_worl
         //log normal
         printf("Polygon normal: %f %f %f\n", ((Polygon *)device_object_list[i-1])->normal.x, ((Polygon *)device_object_list[i-1])->normal.y, ((Polygon *)device_object_list[i-1])->normal.z);
 
+        printf("rand initing\n");
         *rand_state = local_rand_state;
+        // *d_world  = new Octree(device_object_list, i);
+        printf("rand inited\n");
         *d_world  = new Octree(device_object_list, i);
+        //initialize Octree
+        printf("Initializing Octree\n");
+        (*d_world)->max_depth = 4;
+        printf("Max depth set\n");
+        (*d_world)->init();
+        printf("Octree initialized\n");
 
         Vec3 lookfrom(0,5,10);
         Vec3 lookat(0,0,0);
@@ -228,6 +237,8 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_wor
 
         *rand_state = local_rand_state;
         *d_world  = new Octree(device_object_list, i);
+        (*d_world)->max_depth = 4;
+        (*d_world)->init();
 
         Vec3 lookfrom(13,2,3);
         Vec3 lookat(0,0,0);
@@ -461,13 +472,17 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
 
-
+        printf("rand initing\n");
         *rand_state = local_rand_state;
         // *d_world  = new Octree(device_object_list, i);
+        printf("rand inited\n");
         *d_world  = new Octree(device_object_list, i);
         //initialize Octree
+        printf("Initializing Octree\n");
         (*d_world)->max_depth = 32;
+        printf("Max depth set\n");
         (*d_world)->init();
+        printf("Octree initialized\n");
 
         Vec3 lookfrom(278.0f, 278.0f, -400.0f);
         Vec3 lookat(278.0f, 278.0f, 0.0f);
@@ -489,10 +504,11 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
 
 
 __global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
-
-    // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
-    // create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
-    create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    }
 }
 
 

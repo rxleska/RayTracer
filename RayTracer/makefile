@@ -30,7 +30,7 @@ run: bin bin/main.obj $(PROCESSING) $(MATERIALS) $(HITTABLES)
 bin:
 	mkdir bin
 
-bin/main.obj: main.cu 
+bin/main.obj: main.cu lib/processing/headers/Ray.hpp lib/processing/headers/Vec3.hpp lib/processing/headers/Camera.hpp lib/materials/headers/Lambertian.hpp lib/materials/headers/Metal.hpp lib/materials/headers/Dielectric.hpp lib/materials/headers/Light.hpp lib/materials/headers/LambertianBordered.hpp lib/hittable/headers/Sphere.hpp lib/hittable/headers/Scene.hpp lib/hittable/headers/Polygon.hpp lib/hittable/headers/Octree.hpp
 	$(CC) $(CFLAGS) -c main.cu -o bin/main.obj
 
 # Processing Objects
@@ -74,7 +74,7 @@ bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable
 	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.obj
 
 bin/Polygon.obj: lib/hittable/Polygon.cu lib/hittable/headers/Polygon.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
-	$(CC) $(CFLAGS) -c lib/hittable/Polygon.cu -o bin/Polygon.obj\
+	$(CC) $(CFLAGS) -c lib/hittable/Polygon.cu -o bin/Polygon.obj
 
 bin/Octree.obj: lib/hittable/Octree.cu lib/hittable/headers/Octree.hpp lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Octree.cu -o bin/Octree.obj
@@ -92,5 +92,17 @@ clean-win:
 rebuild-win: clean-win all
 
 
-san: run.exe
-	compute-sanitizer --force-blocking-launches --generate-coredump ./run.exe
+san: run
+	compute-sanitizer --force-blocking-launches --generate-coredump ./run
+
+initcheck: run 
+	compute-sanitizer --tool initcheck ./run
+
+memcheck: run
+	compute-sanitizer --tool memcheck ./run
+
+racecheck: run
+	compute-sanitizer --tool racecheck ./run
+
+synccheck: run
+	compute-sanitizer --tool synccheck ./run
