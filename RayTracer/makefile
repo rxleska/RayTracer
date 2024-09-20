@@ -10,7 +10,7 @@ CC = nvcc
 # CFLAGS = -arch=sm_89 -rdc=true -Xptxas -O2 -Xcompiler -O2
 # CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -arch=sm_80 -rdc=true
-CFLAGS = -arch=sm_89 -rdc=true
+CFLAGS = -arch=sm_89 -rdc=true -G -g
 
 # testing -G flag removes all optimizations (really slow)
 # no flags defaults to all optimizations
@@ -20,7 +20,7 @@ CFLAGS = -arch=sm_89 -rdc=true
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
 MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj
-HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon.obj
+HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon.obj bin/Octree.obj
 
 all: run 
 
@@ -74,7 +74,10 @@ bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable
 	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.obj
 
 bin/Polygon.obj: lib/hittable/Polygon.cu lib/hittable/headers/Polygon.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
-	$(CC) $(CFLAGS) -c lib/hittable/Polygon.cu -o bin/Polygon.obj
+	$(CC) $(CFLAGS) -c lib/hittable/Polygon.cu -o bin/Polygon.obj\
+
+bin/Octree.obj: lib/hittable/Octree.cu lib/hittable/headers/Octree.hpp lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/hittable/Octree.cu -o bin/Octree.obj
 
 
 

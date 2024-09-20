@@ -1,9 +1,10 @@
 // hittable
 #include "lib/hittable/headers/Hitable.hpp"
 #include "lib/hittable/headers/HitRecord.hpp"
-#include "lib/hittable/headers/Scene.hpp"
+#include "lib/hittable/headers/Octree.hpp"
 #include "lib/hittable/headers/Sphere.hpp"
 #include "lib/hittable/headers/Polygon.hpp"
+#include "lib/hittable/headers/Octree.hpp"
 // materials
 #include "lib/materials/headers/Material.hpp"
 #include "lib/materials/headers/Lambertian.hpp"
@@ -50,7 +51,7 @@ __global__ void rand_init_singleton(curandState *rand_state) {
     }
 }
 
-__device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
+__device__ Vec3 getColor(const Ray &r, Camera **cam, Octree **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
     Vec3 cur_attenuation = Vec3(1.0,1.0,1.0);
     for(int i = 0; i < (*cam)->bounces; i++) {
@@ -82,7 +83,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
     return Vec3(0.0,0.0,0.0); // exceeded recursion
 }
 
-__global__ void free_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera) {
+__global__ void free_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera) {
     for(int i=0; i < (*d_world)->hitable_count; i++) {
         delete ((Sphere *)device_object_list[i])->mat;
         delete device_object_list[i];
@@ -99,7 +100,13 @@ __global__ void rand_init_render(int max_x, int max_y, curandState *rand_state) 
     curand_init(1984+pixel_index, 0, 0, &rand_state[pixel_index]);
 }
 
-__global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
+__device__ float clamp(float x, float min, float max) {
+    if(x < min) return min;
+    if(x > max) return max;
+    return x;
+}
+
+__global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Octree **world, curandState *rand_state) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return;
@@ -123,16 +130,17 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     }
     rand_state[pixel_index] = local_rand_state;
     col = col / float(samples);
+    
 
-    fb[pixel_index*3+0] = uint8_t(int(255.99*sqrt(col.x)));
-    fb[pixel_index*3+1] = uint8_t(int(255.99*sqrt(col.y)));
-    fb[pixel_index*3+2] = uint8_t(int(255.99*sqrt(col.z)));
+    fb[pixel_index*3+0] = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
+    fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
+    fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
 }
 
 #define RND (curand_uniform(&local_rand_state))
 
 
-__device__ void create_test_scene(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
+__device__ void create_test_Octree(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
@@ -162,7 +170,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         printf("Polygon normal: %f %f %f\n", ((Polygon *)device_object_list[i-1])->normal.x, ((Polygon *)device_object_list[i-1])->normal.y, ((Polygon *)device_object_list[i-1])->normal.z);
 
         *rand_state = local_rand_state;
-        *d_world  = new Scene(device_object_list, i);
+        *d_world  = new Octree(device_object_list, i);
 
         Vec3 lookfrom(0,5,10);
         Vec3 lookat(0,0,0);
@@ -178,7 +186,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
     }
 }
 
-__device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
+__device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
@@ -219,7 +227,7 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
 
 
         *rand_state = local_rand_state;
-        *d_world  = new Scene(device_object_list, i);
+        *d_world  = new Octree(device_object_list, i);
 
         Vec3 lookfrom(13,2,3);
         Vec3 lookat(0,0,0);
@@ -239,13 +247,13 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
     }
 }
 
-__device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
+__device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
 
         Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
-        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 1.0);
+        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 1.5);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
@@ -455,7 +463,11 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
 
 
         *rand_state = local_rand_state;
-        *d_world  = new Scene(device_object_list, i);
+        // *d_world  = new Octree(device_object_list, i);
+        *d_world  = new Octree(device_object_list, i);
+        //initialize Octree
+        (*d_world)->max_depth = 32;
+        (*d_world)->init();
 
         Vec3 lookfrom(278.0f, 278.0f, -400.0f);
         Vec3 lookat(278.0f, 278.0f, 0.0f);
@@ -476,11 +488,11 @@ __device__ void create_Cornell_Box_scene(Hitable **device_object_list, Scene **d
 }
 
 
-__global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
+__global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
 
     // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
-    // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
-    create_Cornell_Box_scene(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    // create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+    create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
 }
 
 
@@ -513,7 +525,7 @@ int main() {
     // allocate random state for each pixel
     curandState *d_rand_state;
     checkCudaErrors(cudaMalloc((void **)&d_rand_state, num_pixels*sizeof(curandState)));
-    // initialize random state for scene generation
+    // initialize random state for Octree generation
     curandState *d_rand_state2;
     checkCudaErrors(cudaMalloc((void **)&d_rand_state2, 1*sizeof(curandState)));
 
@@ -527,8 +539,8 @@ int main() {
     // int num_hitables = 22*22+1+3;
     int num_hitables = MAX_OBJECTS;
     checkCudaErrors(cudaMalloc((void **)&device_object_list, num_hitables*sizeof(Hitable *)));
-    Scene **d_world;
-    checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Scene *)));
+    Octree **d_world;
+    checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Octree *)));
     Camera **d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(Camera *)));
     create_world<<<1,1>>>(device_object_list, d_world, d_camera, nx, ny, d_rand_state2);

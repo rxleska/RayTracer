@@ -34,13 +34,12 @@ __device__ void Scene::addHitable(Hitable *hittable){
     hitables[hitable_count++] = hittable;
 }
 __device__ bool Scene::hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const{
-    HitRecord current_hit;
     bool has_hit = false;
     // float closest = t_max;
     for (int i = 0; i < hitable_count; i++) {
         if (hitables[i]->hit(ray, t_min, t_max, rec)) {
             has_hit = true;
-            t_max = current_hit.t;
+            t_max = rec.t;
             // rec = current_hit;
         }
     }

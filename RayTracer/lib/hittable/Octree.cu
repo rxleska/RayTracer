@@ -5,11 +5,7 @@
 #define F_MAX 3.402823466e+38F
 #endif
 
-__device__ Octree::Octree(){
-    hitable_count = 0;
-    hitable_capacity = 10;
-    hitables = (Hitable**)malloc(sizeof(Hitable*) * hitable_capacity);
-
+__device__ Octree::Octree() : Scene(){
     children = (Octree**)malloc(sizeof(Octree*) * 8);
 }
 
@@ -111,7 +107,7 @@ __device__ void Octree::subdivide(int depth){
     //call subdivide on each child
     for(int i = 0; i < 8; i++){
         children[i]->max_depth = max_depth;
-        children[i]->parent = this;
+        // children[i]->parent = this;
         children[i]->subdivide(depth + 1);
     }
 
@@ -152,16 +148,65 @@ __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord 
     else{
         //determine the closest nodes to the ray origin
         int indexClosest = closest_child(ray.origin);
+
         if(children[indexClosest]->hit(ray, t_min, t_max, rec)){
             return true;
+        }
+        //find next closest child
+        //ideaology find the closest plane (based around center) to the ray in the direction of the ray
+        Ray newRay = ray;
+        float t_max = 0;
+        for(int i = 0; i < 3; i++){ //a ray at max can pass through 4/8 children of a rectangular prism
+            int plane = closest_plane(newRay, t_max);
+            if(plane == 3){
+                break;
+            }
+            indexClosest ^= 1 << plane; //flip the bit of the plane that was hit
+            if(children[indexClosest]->hit(ray, t_min, t_max, rec)){
+                return true;
+            }
+            //update the ray to the next closest plane
+            newRay.origin = ray.origin + ray.direction * t_max + ray.direction * 0.0001f;
         }
 
-        //flip x
-        //TODO WORKING HERE
-        if(children[indexClosest]->hit(ray, t_min, t_max, rec)){
-            return true;
-        }
     }
 
     return has_hit;
+}
+
+
+__device__ int Octree::closest_plane(const Ray &ray, float t) const{
+        //return 0,1,2 or 3 (0:x) (1:y) (2:z) (none:3)
+
+        //find t to each plane
+        float t_x_min = (center.x - ray.origin.x) / ray.direction.x;
+        float t_x_max = (center.x - ray.origin.x) / ray.direction.x;
+        float t_y_min = (center.y - ray.origin.y) / ray.direction.y;
+
+        //if any are negative set to max
+        if(t_x_min < 0){
+            t_x_min = F_MAX;
+        }
+        if(t_x_max < 0){
+            t_x_max = F_MAX;
+        }
+        if(t_y_min < 0){
+            t_y_min = F_MAX;
+        }
+
+        // TODO check if there is a faster way to do this
+        float t_min = fminf(t_x_min, fminf(t_x_max, t_y_min));
+        if (t_min == F_MAX){
+            return 3;
+        }
+        if(t_min == t_x_min){
+            return 0;
+        }
+        if(t_min == t_x_max){
+            return 1;
+        }
+        if(t_min == t_y_min){
+            return 2;
+        }
+        return 3;
 }
