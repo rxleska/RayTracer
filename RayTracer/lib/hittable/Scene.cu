@@ -7,8 +7,8 @@
 
 __device__ Scene::Scene(){
     hitable_count = 0;
-    hitable_capacity = 10;
-    printf("Scene constructor\n");
+    hitable_capacity = 2;
+    // printf("Scene constructor\n");
     // hitables = new Hitable*[hitable_capacity]; // c++ new operator not supported in cuda
     hitables = (Hitable**)malloc(sizeof(Hitable*) * hitable_capacity);
 }
@@ -53,10 +53,12 @@ __device__ bool Scene::hit(const Ray &ray, float t_min, float t_max, HitRecord &
 __device__ Scene::Scene(Hitable **hitables, int hitable_count){
     this->hitable_count = hitable_count;
     this->hitable_capacity = hitable_count;
-    this->hitables = hitables;
-
-    printf("Scene constructor\n");
+    this->hitables = (Hitable**)malloc(sizeof(Hitable*) * hitable_count);
+    for (int i = 0; i < hitable_count; i++) {
+        this->hitables[i] = hitables[i];
+    }
 }
+
 
 __device__ void Scene::empty(){
     hitable_count = 0;

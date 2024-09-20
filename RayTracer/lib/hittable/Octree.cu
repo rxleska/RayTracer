@@ -38,7 +38,14 @@ __device__ void Octree::init(){
     subdivide(0);
 }
 __device__ void Octree::subdivide(int depth){
+    printf("Subdividing at depth %d\n", depth);
     if(depth > max_depth){
+        is_leaf = true;
+        return;
+    }
+
+
+    if(hitable_count <= 1){
         is_leaf = true;
         return;
     }
@@ -89,11 +96,11 @@ __device__ void Octree::subdivide(int depth){
 
 
         // log child capactiy
-        printf("Child %d: x_min: %f, x_max: %f, y_min: %f, y_max: %f, z_min: %f, z_max: %f, cap: %d, cur %d\n", i, children[i]->x_min, children[i]->x_max, children[i]->y_min, children[i]->y_max, children[i]->z_min, children[i]->z_max, children[i]->hitable_capacity, children[i]->hitable_count);
+        // printf("Child %d: x_min: %f, x_max: %f, y_min: %f, y_max: %f, z_min: %f, z_max: %f, cap: %d, cur %d\n", i, children[i]->x_min, children[i]->x_max, children[i]->y_min, children[i]->y_max, children[i]->z_min, children[i]->z_max, children[i]->hitable_capacity, children[i]->hitable_count);
         
         // for each hitable in the octree
         for(int j = 0; j < hitable_count; j++){
-            printf("Checking hitable %d\n", j);
+            // printf("Checking hitable %d\n", j);
             Hitable * h = hitables[j];
             if(h->insideBox(
                 children[i]->x_min, children[i]->x_max,
@@ -101,7 +108,6 @@ __device__ void Octree::subdivide(int depth){
                 children[i]->z_min, children[i]->z_max
             )){
                 children[i]->addHitable(h);
-                printf("Added hitable to child %d\n", i);
             }
         }
     }
@@ -109,6 +115,7 @@ __device__ void Octree::subdivide(int depth){
     // remove all nodes from the parent
     empty();
 
+    // so are we allocating this or not?
     free(hitables);
     
     //call subdivide on each child

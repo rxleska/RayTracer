@@ -505,14 +505,16 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
 
 __global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        // create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
     }
 }
 
 
 int main() {
+    //increase stack size
+    cudaDeviceSetLimit(cudaLimitStackSize, 4096);
     // int nx = 1920/2;
     // int nx = 500*1;
     int nx = 1024;
@@ -562,6 +564,10 @@ int main() {
     create_world<<<1,1>>>(device_object_list, d_world, d_camera, nx, ny, d_rand_state2);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+
+
+    // print world created 
+    printf("World created\n");
 
     clock_t start, stop;
     start = clock();
