@@ -10,7 +10,7 @@ CC = nvcc
 # CFLAGS = -arch=sm_89 -rdc=true -Xptxas -O2 -Xcompiler -O2
 # CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -arch=sm_80 -rdc=true
-CFLAGS = -arch=sm_89 -rdc=true
+CFLAGS = -arch=sm_89 -rdc=true -G -g
 
 # testing -G flag removes all optimizations (really slow)
 # no flags defaults to all optimizations
@@ -19,7 +19,7 @@ CFLAGS = -arch=sm_89 -rdc=true
 
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
-MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj
+MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj
 HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon.obj bin/Octree.obj
 
 all: run 
@@ -63,6 +63,9 @@ bin/Light.obj: lib/materials/Light.cu lib/materials/headers/Light.hpp lib/materi
 
 bin/LambertianBordered.obj: lib/materials/LambertianBordered.cu lib/materials/headers/LambertianBordered.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/materials/LambertianBordered.cu -o bin/LambertianBordered.obj
+
+bin/Textured.obj: lib/materials/Textured.cu lib/materials/headers/Textured.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/materials/Textured.cu -o bin/Textured.obj
 
 
 # Hittable Objects

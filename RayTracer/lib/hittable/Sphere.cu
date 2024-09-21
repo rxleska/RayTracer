@@ -7,6 +7,10 @@
 
 #include <iostream>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 
 __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
     // using the quadratic formula to solve for t in the equation of a ray-sphere intersection
@@ -33,6 +37,12 @@ __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& r
     rec.edge_hit = rec.normal.dot(r.direction) < 0.01f;
 
     rec.mat = mat; 
+
+    if(mat->type == MaterialType::TEXTURED){
+        rec.u = 0.5f + atan2(rec.normal.z, rec.normal.x) / (2.0f * M_PI);
+        rec.v = 0.5f - asin(rec.normal.y) / M_PI;
+    }
+
     return true;
 }
 

@@ -12,6 +12,7 @@
 #include "lib/materials/headers/Dielectric.hpp"
 #include "lib/materials/headers/Light.hpp"
 #include "lib/materials/headers/LambertianBordered.hpp"
+#include "lib/materials/headers/Textured.hpp"
 // processing
 #include "lib/processing/headers/Camera.hpp"
 #include "lib/processing/headers/Ray.hpp"
@@ -48,6 +49,15 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 __global__ void rand_init_singleton(curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curand_init(1984, 0, 0, rand_state);
+    }
+}
+
+__global__ void init_texture(Vec3 ***textures, float *texture, int width, int height, int texture_index) {
+    if (threadIdx.x == 0 && blockIdx.x == 0) {
+        (*textures)[texture_index] = new Vec3[width * height];
+        for (int i = 0; i < width * height; i++) {
+            (*textures)[texture_index][i] = Vec3(texture[i*3], texture[i*3+1], texture[i*3+2]);
+        }
     }
 }
 
@@ -140,388 +150,17 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 #define RND (curand_uniform(&local_rand_state))
 
 
-__device__ void create_test_Octree(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
+#include "lib/Scenes/TestScene.hpp"
+#include "lib/Scenes/RTIAW.hpp"
+#include "lib/Scenes/CornellBox.hpp"
+#include "lib/Scenes/CornellRoomOfMirrors.hpp"
+
+__global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        curandState local_rand_state = *rand_state;
-        device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
-                               new Lambertian(Vec3(0.7, 0.5, 0.5)));
-        int i = 1;
-
-        //sample sphere blue ball
-        device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, new Lambertian(Vec3(0.1, 0.2, 0.5)));
-
-        //test polygon
-        //cuda malloc a vertices array
-        Vec3 * vertices_poly = new Vec3[4];
-        vertices_poly[0] = Vec3( 0,  0, -5);
-        vertices_poly[1] = Vec3(10,  0, -5);
-        vertices_poly[2] = Vec3(10, 10, -5);
-        vertices_poly[3] = Vec3( 0, 10, -5);
-        // device_object_list[i++] = new Polygon(vertices_poly, 4, new Lambertian(Vec3(0.9, 0.2, 0.1)));
-        device_object_list[i++] = new Polygon(vertices_poly, 4, new Metal(Vec3(0.7f, 0.5f, 0.3f), 0.0));
-        
-
-        
-        //log polygon vertice count
-        printf("Polygon vertices count: %d\n", ((Polygon *)device_object_list[i-1])->num_vertices);
-        //log polygon area
-        printf("Polygon area: %f\n", ((Polygon *)device_object_list[i-1])->area);
-        //log normal
-        printf("Polygon normal: %f %f %f\n", ((Polygon *)device_object_list[i-1])->normal.x, ((Polygon *)device_object_list[i-1])->normal.y, ((Polygon *)device_object_list[i-1])->normal.z);
-        
-        Vec3 lookfrom(0,5,10);
-
-        printf("rand initing\n");
-        *rand_state = local_rand_state;
-        // *d_world  = new Octree(device_object_list, i);
-        printf("rand inited\n");
-        *d_world  = new Octree(device_object_list, i);
-        //initialize Octree
-        printf("Initializing Octree\n");
-        (*d_world)->max_depth = 4;
-        printf("Max depth set\n");
-        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
-        printf("Octree initialized\n");
-
-        Vec3 lookat(0,0,0);
-        float dist_to_focus = 10.0; (lookfrom-lookat).length();
-        float aperture = 0.0;
-        *d_camera   = new Camera(lookfrom,
-                                 lookat,
-                                 Vec3(0,1,0),
-                                 60.0,
-                                 float(nx)/float(ny),
-                                 aperture,
-                                 dist_to_focus);
-    }
-}
-
-__device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        curandState local_rand_state = *rand_state;
-        int i = 0;
-        // device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
-        //                        new Lambertian(Vec3(0.5, 0.5, 0.5)));
-
-
-        device_object_list[i++] = Quad(Vec3(-500, 0, -500), Vec3(-500, 0, 500), Vec3(500, 0, 500), Vec3(500, 0, -500), new Lambertian(Vec3(0.5,0.5,0.5)));
-
-
-        for(int a = -11; a < 11; a++) {
-            for(int b = -11; b < 11; b++) {
-                float choose_mat = RND;
-                Vec3 center(a+RND,0.2,b+RND);
-                // device_object_list[i++] = new Sphere(center, 0.2,new Lambertian(Vec3(RND*RND, RND*RND, RND*RND)));
-                if(choose_mat < 0.8f) {
-                    device_object_list[i++] = new Sphere(center, 0.2,
-                                             new Lambertian(Vec3(RND*RND, RND*RND, RND*RND)));
-                }
-                else if(choose_mat < 0.95f) {
-                    device_object_list[i++] = new Sphere(center, 0.2,
-                                             new Metal(Vec3(0.5f*(1.0f+RND), 0.5f*(1.0f+RND), 0.5f*(1.0f+RND)), 0.5f*RND));
-                }
-                else {
-                    device_object_list[i++] = new Sphere(center, 0.2, new Dielectric(1.5));
-                }
-            }
-        }
-        device_object_list[i++] = new Sphere(Vec3(0, 1,0),  1.0, new Dielectric(1.5));
-        device_object_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
-        device_object_list[i++] = new Sphere(Vec3(4, 1, 0),  1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
-
-        //add sun light
-        device_object_list[i++] = new Sphere(Vec3(0,510,400), 200, new Light(Vec3(1.0, 1.0, 1.0), 1.0));
-
-        //test polygon
-        //cuda malloc a vertices array
-        Vec3 * vertices_poly = new Vec3[3];
-        vertices_poly[0] = Vec3(0, 0, 0);
-        vertices_poly[1] = Vec3(0, 10, 0);
-        vertices_poly[2] = Vec3(10, 10, 0);
-        device_object_list[i++] = new Polygon(vertices_poly, 3, new Lambertian(Vec3(0.9, 0.2, 0.1)));
-
-        Vec3 lookfrom(13,2,3);
-
-        *rand_state = local_rand_state;
-        *d_world  = new Octree(device_object_list, i);
-        (*d_world)->max_depth = 10;
-        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
-
-
-        Vec3 lookat(0,0,0);
-        float dist_to_focus = 10.0; (lookfrom-lookat).length();
-        float aperture = 0.0;
-        *d_camera   = new Camera(lookfrom,
-                                 lookat,
-                                 Vec3(0,1,0),
-                                 30.0,
-                                 float(nx)/float(ny),
-                                 aperture,
-                                 dist_to_focus);
-        (*d_camera)->ambient_light_level = 0.8f;
-        (*d_camera)->msaa_x = 4;
-        (*d_camera)->samples = 200;
-        (*d_camera)->bounces = 100;
-    }
-}
-
-__device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        curandState local_rand_state = *rand_state;
-        int i = 0;
-
-        Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
-        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 1.5);
-        // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
-        // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
-        Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
-        Material *red = new LambertianBordered(Vec3(0.65, 0.05, 0.05));
-
-        //floor 
-        /*
-        552.8 0.0   0.0   
-        0.0 0.0   0.0
-        0.0 0.0 559.2
-        549.6 0.0 559.2
-        */
-        // device_object_list[i++] = Quad(Vec3(552.8, 0.0, 0.0),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 0.0, 559.2),Vec3(552.8, 0.0, 559.2), white);
-        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 0.0, 559.2), white);
-        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(0.0, 0.0, 559.2),Vec3(552.8, 0.0, 559.2), white);
-        
-
-        //ceiling light 
-        /*
-        343.0 548.8 227.0 
-        343.0 548.8 332.0
-        213.0 548.8 332.0
-        213.0 548.8 227.0
-        */
-        // device_object_list[i++] = Quad(Vec3(343.0, 548, 227.0),Vec3(343.0, 548, 332.0),Vec3(213.0, 548, 332.0),Vec3(213.0, 548, 227.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(343.0, 545, 332.0),Vec3(213.0, 545, 332.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
-
-
-        //Ceiling
-        /*
-        556.0 548.8 0.0   
-        556.0 548.8 559.2
-        0.0 548.8 559.2
-        0.0 548.8   0.0
-        */
-        // device_object_list[i++] = Quad(Vec3(556.0, 548.8, 0.0),Vec3(556.0, 548.8, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(0.0, 548.8, 0.0), white);
-        device_object_list[i++] = Triangle(Vec3(556.0, 548.8, 0.0),Vec3(556.0, 548.8, 559.2),Vec3(0.0, 548.8, 559.2), white);
-        device_object_list[i++] = Triangle(Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 559.2),Vec3(0.0, 548.8, 0.0), white);
-
-        //back wall
-        /*
-        549.6   0.0 559.2 
-        0.0   0.0 559.2
-        0.0 548.8 559.2
-        556.0 548.8 559.2
-        */
-        // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), white);
-
-        //right wall
-        /*
-        0.0   0.0 559.2   
-        0.0   0.0   0.0
-        0.0 548.8   0.0
-        0.0 548.8 559.2
-        */
-        // device_object_list[i++] = Quad(Vec3(0.0, 0.0, 559.2),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 548.8, 559.2), green);
-        device_object_list[i++] = Triangle(Vec3(0.0, 0.0, 559.2),Vec3(0.0, 0.0, 0.0),Vec3(0.0, 548.8, 0.0), green);
-        device_object_list[i++] = Triangle(Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 548.8, 559.2), green);
-
-        //left wall
-        /*
-        552.8   0.0   0.0 
-        549.6   0.0 559.2
-        556.0 548.8 559.2
-        556.0 548.8   0.0
-        */
-        // device_object_list[i++] = Quad(Vec3(552.8, 0.0, 0.0),Vec3(549.6, 0.0, 559.2),Vec3(556.0, 548.8, 559.2),Vec3(556.0, 548.8, 0.0), red);
-        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(549.6, 0.0, 559.2),Vec3(556.0, 548.8, 559.2), red);
-        device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(556.0, 548.8, 559.2),Vec3(556.0, 548.8, 0.0), red);
-
-        // //camera wall (we can see through this due to the directionality of polygons)
-        // //uses white material
-        // /*
-        // 549.6   0.0 0 
-        // 0.0   0.0 0
-        // 0.0 548.8 0
-        // 556.0 548.8 0
-        // */
-        // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
-
-        //short block
-        //uses white material
-        //wall1
-        /*
-        130.0 165.0  65.0 
-        82.0 165.0 225.0
-        240.0 165.0 272.0
-        290.0 165.0 114.0
-        */
-        // device_object_list[i++] = Quad(Vec3(130.0, 165.0, 65.0),Vec3(82.0, 165.0, 225.0),Vec3(240.0, 165.0, 272.0),Vec3(290.0, 165.0, 114.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 165.0, 65.0),Vec3(82.0, 165.0, 225.0),Vec3(240.0, 165.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 165.0, 65.0),Vec3(240.0, 165.0, 272.0),Vec3(290.0, 165.0, 114.0), white);
-        
-        
-        //wall2
-        /*
-        290.0   0.0 114.0
-        290.0 165.0 114.0
-        240.0 165.0 272.0
-        240.0   0.0 272.0
-        */
-        //device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
-        
-        
-        //wall3
-        /*
-        130.0   0.0  65.0
-        130.0 165.0  65.0
-        290.0 165.0 114.0
-        290.0   0.0 114.0
-        */
-        // device_object_list[i++] = Quad(Vec3(130.0, 0.0, 65.0),Vec3(130.0, 165.0, 65.0),Vec3(290.0, 165.0, 114.0),Vec3(290.0, 0.0, 114.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 0.0, 65.0),Vec3(130.0, 165.0, 65.0),Vec3(290.0, 165.0, 114.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 0.0, 65.0),Vec3(290.0, 165.0, 114.0),Vec3(290.0, 0.0, 114.0), white);
-        
-        
-        //wall4
-        /*
-        82.0   0.0 225.0
-        82.0 165.0 225.0
-        130.0 165.0  65.0
-        130.0   0.0  65.0
-        */
-        // device_object_list[i++] = Quad(Vec3(82.0, 0.0, 225.0),Vec3(82.0, 165.0, 225.0),Vec3(130.0, 165.0, 65.0),Vec3(130.0, 0.0, 65.0), white);
-        device_object_list[i++] = Triangle(Vec3(82.0, 0.0, 225.0),Vec3(82.0, 165.0, 225.0),Vec3(130.0, 165.0, 65.0), white);
-        device_object_list[i++] = Triangle(Vec3(82.0, 0.0, 225.0),Vec3(130.0, 165.0, 65.0),Vec3(130.0, 0.0, 65.0), white);
-        
-        
-        //wall5
-        /*
-        240.0   0.0 272.0
-        240.0 165.0 272.0
-        82.0 165.0 225.0
-        82.0   0.0 225.0
-        */
-        // device_object_list[i++] = Quad(Vec3(240.0, 0.0, 272.0),Vec3(240.0, 165.0, 272.0),Vec3(82.0, 165.0, 225.0),Vec3(82.0, 0.0, 225.0), white);
-        device_object_list[i++] = Triangle(Vec3(240.0, 0.0, 272.0),Vec3(240.0, 165.0, 272.0),Vec3(82.0, 165.0, 225.0), white);
-        device_object_list[i++] = Triangle(Vec3(240.0, 0.0, 272.0),Vec3(82.0, 165.0, 225.0),Vec3(82.0, 0.0, 225.0), white);
-
-        
-
-        //tall block
-        //uses white material
-        //wall1
-        /*
-        423.0 330.0 247.0
-        265.0 330.0 296.0
-        314.0 330.0 456.0
-        472.0 330.0 406.0
-        */
-        // device_object_list[i++] = Quad(Vec3(423.0, 330.0, 247.0),Vec3(265.0, 330.0, 296.0),Vec3(314.0, 330.0, 456.0),Vec3(472.0, 330.0, 406.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 330.0, 247.0),Vec3(265.0, 330.0, 296.0),Vec3(314.0, 330.0, 456.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 330.0, 247.0),Vec3(314.0, 330.0, 456.0),Vec3(472.0, 330.0, 406.0), white);
-        
-        
-        //wall2
-        /*
-        423.0   0.0 247.0
-        423.0 330.0 247.0
-        472.0 330.0 406.0
-        472.0   0.0 406.0
-        */
-        // device_object_list[i++] = Quad(Vec3(423.0, 0.0, 247.0),Vec3(423.0, 330.0, 247.0),Vec3(472.0, 330.0, 406.0),Vec3(472.0, 0.0, 406.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 0.0, 247.0),Vec3(423.0, 330.0, 247.0),Vec3(472.0, 330.0, 406.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 0.0, 247.0),Vec3(472.0, 330.0, 406.0),Vec3(472.0, 0.0, 406.0), white);
-        
-        //wall3
-        /*
-        472.0   0.0 406.0
-        472.0 330.0 406.0
-        314.0 330.0 456.0
-        314.0   0.0 456.0
-        */
-        // device_object_list[i++] = Quad(Vec3(472.0, 0.0, 406.0),Vec3(472.0, 330.0, 406.0),Vec3(314.0, 330.0, 456.0),Vec3(314.0, 0.0, 456.0), white);
-        device_object_list[i++] = Triangle(Vec3(472.0, 0.0, 406.0),Vec3(472.0, 330.0, 406.0),Vec3(314.0, 330.0, 456.0), white);
-        device_object_list[i++] = Triangle(Vec3(472.0, 0.0, 406.0),Vec3(314.0, 330.0, 456.0),Vec3(314.0, 0.0, 456.0), white);
-        
-        
-        //wall4
-        /*
-        314.0   0.0 456.0
-        314.0 330.0 456.0
-        265.0 330.0 296.0
-        265.0   0.0 296.0
-        */
-        // device_object_list[i++] = Quad(Vec3(314.0, 0.0, 456.0),Vec3(314.0, 330.0, 456.0),Vec3(265.0, 330.0, 296.0),Vec3(265.0, 0.0, 296.0), white);
-        device_object_list[i++] = Triangle(Vec3(314.0, 0.0, 456.0),Vec3(314.0, 330.0, 456.0),Vec3(265.0, 330.0, 296.0), white);
-        device_object_list[i++] = Triangle(Vec3(314.0, 0.0, 456.0),Vec3(265.0, 330.0, 296.0),Vec3(265.0, 0.0, 296.0), white);
-        
-        //wall5
-        /*
-        265.0   0.0 296.0
-        265.0 330.0 296.0
-        423.0 330.0 247.0
-        423.0   0.0 247.0
-        */
-        // device_object_list[i++] = Quad(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
-
-
-        Vec3 lookfrom(278.0f, 278.0f, -400.0f);
-
-
-        printf("rand initing\n");
-        *rand_state = local_rand_state;
-        // *d_world  = new Octree(device_object_list, i);
-        printf("rand inited\n");
-        *d_world  = new Octree(device_object_list, i);
-        //initialize Octree
-        printf("Initializing Octree\n");
-        (*d_world)->max_depth = 3;
-        printf("Max depth set\n");
-        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
-        printf("Octree initialized\n");
-
-        Vec3 lookat(278.0f, 278.0f, 0.0f);
-        float dist_to_focus = 15.0; (lookfrom-lookat).length();
-        float aperture = 0.0;
-        *d_camera   = new Camera(lookfrom,
-                                 lookat,
-                                 Vec3(0,1,0),
-                                 70.0,
-                                 float(nx)/float(ny),
-                                 aperture,
-                                 dist_to_focus);
-        (*d_camera)->ambient_light_level = 0.0f;
-        (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 64;
-        (*d_camera)->bounces = 100;
-
-
-        // printf("World created\n");
-        // (*d_world)->debug_print();
-    }
-}
-
-
-__global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures);
         // create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state);
     }
 }
 
@@ -529,10 +168,10 @@ __global__ void create_world(Hitable **device_object_list, Octree **d_world, Cam
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 1920;
+    int nx = 512;
     // int nx = 500*1;
     // int nx = 1024;
-    int ny = 1080;
+    int ny = 512;
     // int ny = 500*1;
     // int ny = 1024;
     int ns = 100;
@@ -571,6 +210,27 @@ int main() {
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 
+    //LOAD IMAGES
+    int num_textures = 1;
+    Vec3 ***textures; //array of texture arrays
+    checkCudaErrors(cudaMallocManaged((void **)&textures, num_textures*sizeof(Vec3 **)));
+
+    //load image
+    // int im1_w, im1_h;
+    // im1_w = 474;
+    // im1_h = 327;
+    // float *im1 = load_texture("ExampleImage.ppm", im1_w, im1_h);
+    // //copy to device
+    // float *d_im1;
+    // checkCudaErrors(cudaMalloc((void **)&d_im1, im1_w*im1_h*3*sizeof(float)));
+    // checkCudaErrors(cudaMemcpy(d_im1, im1, im1_w*im1_h*3*sizeof(float), cudaMemcpyHostToDevice));
+    // init_texture<<<1,1>>>(textures, d_im1, im1_w, im1_h, 0);
+    // checkCudaErrors(cudaGetLastError());
+    // checkCudaErrors(cudaDeviceSynchronize());
+
+
+
+
     // make our world of hitables & the camera
     Hitable **device_object_list;
     // int num_hitables = 22*22+1+3;
@@ -580,7 +240,7 @@ int main() {
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Octree *)));
     Camera **d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(Camera *)));
-    create_world<<<1,1>>>(device_object_list, d_world, d_camera, nx, ny, d_rand_state2);
+    create_world<<<1,1>>>(device_object_list, d_world, d_camera, nx, ny, d_rand_state2, textures, num_textures);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
 

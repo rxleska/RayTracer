@@ -64,6 +64,10 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     rec.normal = normal;
     rec.front_face = true; //wouldn't have hit the polygon if it was not facing the front
     rec.mat = mat;
+    rec.u = 0.5; //TODO implement texture mapping //dificult to implement texture mapping for n-polygons (easy for 3 and 4)
+    rec.v = 0.5;
+
+
     rec.edge_hit = edge_hit;
     return true;
 }

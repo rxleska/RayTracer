@@ -23,6 +23,8 @@ class HitRecord{
         bool front_face;
         // MSAA EDGE CHECK (for antialiasing)
         bool edge_hit;
+        // u,v coordinates of the hit point on the object
+        float u, v; // only generate if the object uses a texture
 
         // blank constructor
         __device__ HitRecord() : t(0), p(Vec3()), normal(Vec3()), mat(nullptr), front_face(false), edge_hit(false) {}
