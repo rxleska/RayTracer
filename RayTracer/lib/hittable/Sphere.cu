@@ -1,6 +1,7 @@
 #include "headers/Sphere.hpp"
 #include <cmath>
 
+
 #ifndef F_EPSILON
 #define F_EPSILON 0.000001
 #endif
@@ -10,6 +11,8 @@
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
+
+#include "../materials/headers/Textured.hpp"
 
 
 __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
@@ -39,8 +42,9 @@ __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& r
     rec.mat = mat; 
 
     if(mat->type == MaterialType::TEXTURED){
-        rec.u = 0.5f + atan2(rec.normal.z, rec.normal.x) / (2.0f * M_PI);
+        rec.u = ((Textured*)mat)->rot + atan2(rec.normal.z, rec.normal.x) / (2.0f * M_PI);
         rec.v = 0.5f - asin(rec.normal.y) / M_PI;
+        rec.edge_hit = true; // increase anti-aliasing always on textured spheres
     }
 
     return true;

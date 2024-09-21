@@ -52,14 +52,35 @@ __global__ void rand_init_singleton(curandState *rand_state) {
     }
 }
 
-__global__ void init_texture(Vec3 ***textures, float *texture, int width, int height, int texture_index) {
-    if (threadIdx.x == 0 && blockIdx.x == 0) {
-        (*textures)[texture_index] = new Vec3[width * height];
-        for (int i = 0; i < width * height; i++) {
-            (*textures)[texture_index][i] = Vec3(texture[i*3], texture[i*3+1], texture[i*3+2]);
-        }
+__global__ void init_texture(Vec3 *textures, float *texture, int width, int height) {
+    int idx = blockIdx.x * blockDim.x + threadIdx.x;
+    if (idx < width * height) {
+        textures[idx] = Vec3(texture[idx * 3], texture[idx * 3 + 1], texture[idx * 3 + 2]);
     }
 }
+
+
+__host__ void allocate_texture(const char *filename, Vec3 **textures, int texture_index) {
+    int width, height;
+    float *im1 = load_texture(filename, width, height);
+
+    // Allocate memory for device image and copy
+    float *d_im1;
+    checkCudaErrors(cudaMalloc((void **)&d_im1, width * height * 3 * sizeof(float)));
+    checkCudaErrors(cudaMemcpy(d_im1, im1, width * height * 3 * sizeof(float), cudaMemcpyHostToDevice));
+
+    // Allocate memory for the texture on device and initialize in parallel
+    Vec3 *d_texture;
+    checkCudaErrors(cudaMalloc((void **)&d_texture, width * height * sizeof(Vec3)));
+    init_texture<<<(width * height + 255) / 256, 256>>>(d_texture, d_im1, width, height);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+
+    checkCudaErrors(cudaMemcpy(&textures[texture_index], &d_texture, sizeof(Vec3 *), cudaMemcpyHostToDevice));
+
+    free(im1);
+}
+
 
 __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
@@ -155,7 +176,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 #include "lib/Scenes/CornellBox.hpp"
 #include "lib/Scenes/CornellRoomOfMirrors.hpp"
 
-__global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures){
+__global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures);
         create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures);
@@ -168,10 +189,10 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512;
+    int nx = 512*2;
     // int nx = 500*1;
     // int nx = 1024;
-    int ny = 512;
+    int ny = 512*2;
     // int ny = 500*1;
     // int ny = 1024;
     int ns = 100;
@@ -211,11 +232,11 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
 
     //LOAD IMAGES
-    int num_textures = 1;
-    Vec3 ***textures; //array of texture arrays
-    checkCudaErrors(cudaMallocManaged((void **)&textures, num_textures*sizeof(Vec3 **)));
+    // int num_textures = 1;
+    // Vec3 ***textures; //array of texture arrays
+    // checkCudaErrors(cudaMallocManaged((void **)&textures, num_textures*sizeof(Vec3 **)));
 
-    //load image
+    // //load image
     // int im1_w, im1_h;
     // im1_w = 474;
     // im1_h = 327;
@@ -228,6 +249,32 @@ int main() {
     // checkCudaErrors(cudaGetLastError());
     // checkCudaErrors(cudaDeviceSynchronize());
 
+    //LOAD IMAGES
+    int num_textures = 2;
+    Vec3 **textures; // array of texture arrays
+    checkCudaErrors(cudaMalloc((void **)&textures, num_textures * sizeof(Vec3 *)));
+
+    // Load image
+    allocate_texture("imTexts/Monkey.ppm", textures, 0);
+    allocate_texture("imTexts/ExampleImage.ppm", textures, 1);
+
+    
+    // int im1_w = 474, im1_h = 327;
+    // float *im1 = load_texture("imTexts/Monkey.ppm", im1_w, im1_h);
+
+    // // Allocate memory for device image and copy
+    // float *d_im1;
+    // checkCudaErrors(cudaMalloc((void **)&d_im1, im1_w * im1_h * 3 * sizeof(float)));
+    // checkCudaErrors(cudaMemcpy(d_im1, im1, im1_w * im1_h * 3 * sizeof(float), cudaMemcpyHostToDevice));
+
+    // // Allocate memory for the texture on device and initialize in parallel
+    // Vec3 *d_texture;
+    // checkCudaErrors(cudaMalloc((void **)&d_texture, im1_w * im1_h * sizeof(Vec3)));
+    // init_texture<<<(im1_w * im1_h + 255) / 256, 256>>>(d_texture, d_im1, im1_w, im1_h);
+    // checkCudaErrors(cudaGetLastError());
+    // checkCudaErrors(cudaDeviceSynchronize());
+
+    // checkCudaErrors(cudaMemcpy(&textures[0], &d_texture, sizeof(Vec3 *), cudaMemcpyHostToDevice));
 
 
 
