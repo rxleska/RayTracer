@@ -50,12 +50,12 @@ __device__ bool Sphere::insideBox(float x_min, float x_max, float y_min, float y
     return (
         // check if sphere mins are below box maxes
         // check if sphere maxes are above box mins
-        (center.x - radius < x_max) &&
-        (center.x + radius > x_min) &&
-        (center.y - radius < y_max) &&
-        (center.y + radius > y_min) &&
-        (center.z - radius < z_max) &&
-        (center.z + radius > z_min) 
+        (center.x - radius <= x_max + F_EPSILON) &&
+        (center.x + radius >= x_min - F_EPSILON) &&
+        (center.y - radius <= y_max + F_EPSILON) &&
+        (center.y + radius >= y_min - F_EPSILON) &&
+        (center.z - radius <= z_max + F_EPSILON) &&
+        (center.z + radius >= z_min - F_EPSILON) 
     );
 }
 

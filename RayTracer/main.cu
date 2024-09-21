@@ -199,9 +199,14 @@ __device__ void create_test_Octree(Hitable **device_object_list, Octree **d_worl
 __device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
-        device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
-                               new Lambertian(Vec3(0.5, 0.5, 0.5)));
-        int i = 1;
+        int i = 0;
+        // device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
+        //                        new Lambertian(Vec3(0.5, 0.5, 0.5)));
+
+
+        device_object_list[i++] = Quad(Vec3(-500, 0, -500), Vec3(-500, 0, 500), Vec3(500, 0, 500), Vec3(500, 0, -500), new Lambertian(Vec3(0.5,0.5,0.5)));
+
+
         for(int a = -11; a < 11; a++) {
             for(int b = -11; b < 11; b++) {
                 float choose_mat = RND;
@@ -239,7 +244,7 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_wor
 
         *rand_state = local_rand_state;
         *d_world  = new Octree(device_object_list, i);
-        (*d_world)->max_depth = 4;
+        (*d_world)->max_depth = 10;
         (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
 
 
@@ -255,7 +260,7 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_wor
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.8f;
         (*d_camera)->msaa_x = 4;
-        (*d_camera)->samples = 500;
+        (*d_camera)->samples = 200;
         (*d_camera)->bounces = 100;
     }
 }
@@ -514,9 +519,9 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
 
 __global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
     }
 }
 
@@ -524,13 +529,13 @@ __global__ void create_world(Hitable **device_object_list, Octree **d_world, Cam
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    // int nx = 1920/2;
+    int nx = 1920;
     // int nx = 500*1;
-    int nx = 1024;
-    // int ny = 1080/2;
+    // int nx = 1024;
+    int ny = 1080;
     // int ny = 500*1;
-    int ny = 1024;
-    int ns = 64;
+    // int ny = 1024;
+    int ns = 100;
     // int tx = 20;
     // int ty = 12;
     // int tx = 16;
@@ -548,6 +553,11 @@ int main() {
     // allocate Frame Buffer (fb)
     uint8_t *fb;
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
+
+    // timing
+    clock_t start, stop;
+    start = clock();
+
 
     // allocate random state for each pixel
     curandState *d_rand_state;
@@ -577,8 +587,11 @@ int main() {
 
     // print world created 
     printf("World created\n");
+    stop = clock();
+    double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
+    std::cerr << "took " << timer_seconds << " seconds.\n";
 
-    clock_t start, stop;
+
     start = clock();
     // Render our buffer
     dim3 blocks(nx/tx+1,ny/ty+1);
@@ -590,7 +603,7 @@ int main() {
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();
-    double timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
+    timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
     std::cerr << "took " << timer_seconds << " seconds.\n";
 
     start = clock();

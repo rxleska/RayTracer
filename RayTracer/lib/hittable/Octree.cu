@@ -31,12 +31,12 @@ __device__ void Octree::init(float camx, float camy, float camz){
         z_max = fmaxf(z_max, z_max_temp);
     }
 
-    x_min = fminf(x_min, camx)-10.0f;
-    x_max = fmaxf(x_max, camx)+15.0f;
-    y_min = fminf(y_min, camy)-10.0f;
-    y_max = fmaxf(y_max, camy)+15.0f;
-    z_min = fminf(z_min, camz)-10.0f;
-    z_max = fmaxf(z_max, camz)+15.0f;
+    x_min = fminf(x_min, camx)-10.0354f;
+    x_max = fmaxf(x_max, camx)+15.0354f;
+    y_min = fminf(y_min, camy)-10.0354f;
+    y_max = fmaxf(y_max, camy)+15.0354f;
+    z_min = fminf(z_min, camz)-10.0354f;
+    z_max = fmaxf(z_max, camz)+15.0354f;
 
 
 
@@ -48,7 +48,7 @@ __device__ void Octree::init(float camx, float camy, float camz){
 }
 __device__ void Octree::subdivide(int depth){
     // printf("Subdividing at depth %d\n", depth);
-    if(depth > max_depth){
+    if(depth >= max_depth){
         // printf("Max depth reached\n");
         is_leaf = true;
         return;
