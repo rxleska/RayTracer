@@ -16,7 +16,7 @@ __device__ Octree::Octree(Hitable **hitables, int hitable_count) : Scene(hitable
 }
 
 
-__device__ void Octree::init(){
+__device__ void Octree::init(float camx, float camy, float camz){
     x_min = y_min = z_min = F_MAX;
     x_max = y_max = z_max = -F_MAX;
 
@@ -31,6 +31,15 @@ __device__ void Octree::init(){
         z_max = fmaxf(z_max, z_max_temp);
     }
 
+    x_min = fminf(x_min, camx)-10.0f;
+    x_max = fmaxf(x_max, camx)+15.0f;
+    y_min = fminf(y_min, camy)-10.0f;
+    y_max = fmaxf(y_max, camy)+15.0f;
+    z_min = fminf(z_min, camz)-10.0f;
+    z_max = fmaxf(z_max, camz)+15.0f;
+
+
+
     center.x = (x_min + x_max) / 2;
     center.y = (y_min + y_max) / 2;
     center.z = (z_min + z_max) / 2;
@@ -38,22 +47,24 @@ __device__ void Octree::init(){
     subdivide(0);
 }
 __device__ void Octree::subdivide(int depth){
-    printf("Subdividing at depth %d\n", depth);
+    // printf("Subdividing at depth %d\n", depth);
     if(depth > max_depth){
+        // printf("Max depth reached\n");
         is_leaf = true;
         return;
     }
 
 
     if(hitable_count <= 1){
+        // printf("Max depth reached\n");
         is_leaf = true;
         return;
     }
 
     // for each child node of the octree
-    float xlen = x_max - x_min;
-    float ylen = y_max - y_min;
-    float zlen = z_max - z_min;
+    // float xlen = x_max - x_min;
+    // float ylen = y_max - y_min;
+    // float zlen = z_max - z_min;
     int xi = 0;
     int yi = 0;
     int zi = 0;
@@ -65,28 +76,28 @@ __device__ void Octree::subdivide(int depth){
         // create the child node
         children[i] = new Octree();
         if(xi){ //xi = 1 use higher
-            children[i]->x_min = x_min + xlen / 2;
+            children[i]->x_min = center.x;
             children[i]->x_max = x_max;
         }
         else{ //xi = 0 use lower
             children[i]->x_min = x_min;
-            children[i]->x_max = x_min + xlen / 2;
+            children[i]->x_max = center.x;
         }
         if(yi){//yi = 1 use higher
-            children[i]->y_min = y_min + ylen / 2;
+            children[i]->y_min = center.y;
             children[i]->y_max = y_max;
         }
         else{//yi = 0 use lower
             children[i]->y_min = y_min;
-            children[i]->y_max = y_min + ylen / 2;
+            children[i]->y_max = center.y;
         }
         if(zi){//zi = 1 use higher
-            children[i]->z_min = z_min + zlen / 2;
+            children[i]->z_min = center.z;
             children[i]->z_max = z_max;
         }
         else{//zi = 0 use lower
             children[i]->z_min = z_min;
-            children[i]->z_max = z_min + zlen / 2;
+            children[i]->z_max = center.z;
         }
 
         //create mid points
@@ -107,6 +118,7 @@ __device__ void Octree::subdivide(int depth){
                 children[i]->y_min, children[i]->y_max,
                 children[i]->z_min, children[i]->z_max
             )){
+                // printf("adding hitable %d\n", j);
                 children[i]->addHitable(h);
             }
         }
@@ -137,10 +149,12 @@ __device__ int  Octree::closest_child(const Vec3 point) const{
 __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const{
     float t;
     if(!ray.hitsBox(x_min, x_max, y_min, y_max, z_min, z_max, t)){
+        // printf("No box hit\n");
         return false;
     }
 
     if(t > t_max){
+        // printf("No box hit t_max\n");
         return false;
     }
 
@@ -148,7 +162,9 @@ __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord 
 
     if(is_leaf){
         //check all hitables
+        // printf("Hit leaf\n");
         for(int i = 0; i < hitable_count; i++){
+                // printf("Hit hittable\n");
             if(hitables[i]->hit(ray, t_min, t_max, rec)){
                 has_hit = true;
                 t_max = rec.t;
@@ -160,24 +176,51 @@ __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord 
         int indexClosest = closest_child(ray.origin);
 
         if(children[indexClosest]->hit(ray, t_min, t_max, rec)){
+            // printf("Hit child\n");
             return true;
         }
         //find next closest child
         //ideaology find the closest plane (based around center) to the ray in the direction of the ray
-        Ray newRay = ray;
-        float t_max = 0;
+
+        float plane_ts[3];
+
+        // x flip 
+        plane_ts[0] = (center.x - ray.origin.x) / ray.direction.x;
+        // y flip
+        plane_ts[1] = (center.y - ray.origin.y) / ray.direction.y;
+        // z flip
+        plane_ts[2] = (center.z - ray.origin.z) / ray.direction.z;
+
+
+        for(int iterator = 0; iterator < 3; iterator++){
+            if(plane_ts[iterator] < 0.00001f){
+                plane_ts[iterator] = F_MAX;
+            }
+        }
+
         for(int i = 0; i < 3; i++){ //a ray at max can pass through 4/8 children of a rectangular prism
-            int plane = closest_plane(newRay, t_max);
+            int plane = closest_plane(plane_ts);
             if(plane == 3){
+                // printf("No plane hit\n");
                 break;
             }
+            // printf("Plane hit: %d\n", plane);
             indexClosest ^= 1 << plane; //flip the bit of the plane that was hit
             if(children[indexClosest]->hit(ray, t_min, t_max, rec)){
+                // printf("Hit child\n");
                 return true;
             }
-            //update the ray to the next closest plane
-            newRay.origin = ray.origin + ray.direction * t_max + ray.direction * 0.0001f;
+            plane_ts[plane] = F_MAX;
         }
+
+        //SLOW METHOD CHECKS ALL CHILDREN
+        // for(int i = 0; i < 8; i++){
+        //     if(children[i]->hit(ray, t_min, t_max, rec)){
+        //         // printf("Hit child\n");
+        //         return true;
+        //     }
+        // }
+
 
     }
 
@@ -185,38 +228,35 @@ __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord 
 }
 
 
-__device__ int Octree::closest_plane(const Ray &ray, float t) const{
-        //return 0,1,2 or 3 (0:x) (1:y) (2:z) (none:3)
+__device__ int Octree::closest_plane(float *tvals) const {
+    // Return 0 for x-plane, 1 for y-plane, 2 for z-plane, or 3 if none
 
-        //find t to each plane
-        float t_x_min = (center.x - ray.origin.x) / ray.direction.x;
-        float t_x_max = (center.x - ray.origin.x) / ray.direction.x;
-        float t_y_min = (center.y - ray.origin.y) / ray.direction.y;
+    int plane = 3;
+    float t = F_MAX;
+    for(int i = 0; i < 3; i++){
+        if(tvals[i] < t){
+            t = tvals[i];
+            plane = i;
+        }
+    }
 
-        //if any are negative set to max
-        if(t_x_min < 0){
-            t_x_min = F_MAX;
-        }
-        if(t_x_max < 0){
-            t_x_max = F_MAX;
-        }
-        if(t_y_min < 0){
-            t_y_min = F_MAX;
-        }
+    return plane;
+}
 
-        // TODO check if there is a faster way to do this
-        float t_min = fminf(t_x_min, fminf(t_x_max, t_y_min));
-        if (t_min == F_MAX){
-            return 3;
+
+
+__device__ void Octree::debug_print() const{
+    printf("Octree: x_min: %f, x_max: %f, y_min: %f, y_max: %f, z_min: %f, z_max: %f\n", x_min, x_max, y_min, y_max, z_min, z_max);
+    if(is_leaf){
+        printf("Leaf:%d\n", hitable_count);
+        // for(int i = 0; i < hitable_count; i++){
+        //     hitables[i]->debug_print();
+        // }
+    }
+    else{
+        for(int i = 0; i < 8; i++){
+            children[i]->debug_print();
         }
-        if(t_min == t_x_min){
-            return 0;
-        }
-        if(t_min == t_x_max){
-            return 1;
-        }
-        if(t_min == t_y_min){
-            return 2;
-        }
-        return 3;
+    }
+    
 }

@@ -14,6 +14,8 @@ class Scene{
         __device__ bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const;
         __device__ void empty();
         
+        __device__ void debug_print() const;
+
         
         int hitable_count;
 

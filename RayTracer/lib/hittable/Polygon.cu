@@ -6,6 +6,9 @@
 #define F_EPSILON 0.0001f
 #endif
 
+#include <iostream>
+
+
 
 __device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat): vertices(vertices), num_vertices(num_vertices), mat(mat) {
     if(num_vertices < 3){
@@ -163,4 +166,13 @@ __device__ bool Polygon::insideBox(float x_min, float x_max, float y_min, float 
         (pz_max > z_min)
     );
 
+}
+
+__device__ void Polygon::debug_print() const{
+    printf("Polygon with %d vertices\n", num_vertices);
+    for(int i = 0; i < num_vertices; i++){
+        printf("Vertex %d: ", i);
+        printf("x: %f, y: %f, z: %f\n", vertices[i].x, vertices[i].y, vertices[i].z);
+    }
+    printf("Area: %f\n", area);
 }

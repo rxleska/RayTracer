@@ -25,6 +25,9 @@ class Sphere: public Hitable{
         __device__ virtual void getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const override;
         
         __device__ virtual bool insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const override;
+
+        __device__ virtual  void debug_print() const override;
+
 };
 
 

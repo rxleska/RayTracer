@@ -5,6 +5,7 @@
 
 #include <iostream>
 
+
 __device__ Scene::Scene(){
     hitable_count = 0;
     hitable_capacity = 2;
@@ -18,7 +19,7 @@ __host__ void Scene::free_memory(){
 }
 
 __device__ void Scene::resize(int new_capacity){
-    printf("Resizing\n");
+    // printf("Resizing\n");
     // Hitable **new_hitables = new Hitable*[new_capacity];
     Hitable **new_hitables = (Hitable**)malloc(sizeof(Hitable*) * new_capacity);
     for (int i = 0; i < hitable_count; i++) {
@@ -62,4 +63,11 @@ __device__ Scene::Scene(Hitable **hitables, int hitable_count){
 
 __device__ void Scene::empty(){
     hitable_count = 0;
+}
+
+
+__device__ void Scene::debug_print() const{
+    for(int i = 0; i < hitable_count; i++){
+        hitables[i]->debug_print();
+    }
 }

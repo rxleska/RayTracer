@@ -69,7 +69,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Octree **world, curandState
                 return cur_attenuation * attenuation;
             }
             else {
-                return Vec3(0.0,0.0,0.0);
+                return Vec3(0.0,0.0,1.0);
             }
         }
         else {
@@ -168,6 +168,8 @@ __device__ void create_test_Octree(Hitable **device_object_list, Octree **d_worl
         printf("Polygon area: %f\n", ((Polygon *)device_object_list[i-1])->area);
         //log normal
         printf("Polygon normal: %f %f %f\n", ((Polygon *)device_object_list[i-1])->normal.x, ((Polygon *)device_object_list[i-1])->normal.y, ((Polygon *)device_object_list[i-1])->normal.z);
+        
+        Vec3 lookfrom(0,5,10);
 
         printf("rand initing\n");
         *rand_state = local_rand_state;
@@ -178,10 +180,9 @@ __device__ void create_test_Octree(Hitable **device_object_list, Octree **d_worl
         printf("Initializing Octree\n");
         (*d_world)->max_depth = 4;
         printf("Max depth set\n");
-        (*d_world)->init();
+        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         printf("Octree initialized\n");
 
-        Vec3 lookfrom(0,5,10);
         Vec3 lookat(0,0,0);
         float dist_to_focus = 10.0; (lookfrom-lookat).length();
         float aperture = 0.0;
@@ -234,13 +235,14 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_wor
         vertices_poly[2] = Vec3(10, 10, 0);
         device_object_list[i++] = new Polygon(vertices_poly, 3, new Lambertian(Vec3(0.9, 0.2, 0.1)));
 
+        Vec3 lookfrom(13,2,3);
 
         *rand_state = local_rand_state;
         *d_world  = new Octree(device_object_list, i);
         (*d_world)->max_depth = 4;
-        (*d_world)->init();
+        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
 
-        Vec3 lookfrom(13,2,3);
+
         Vec3 lookat(0,0,0);
         float dist_to_focus = 10.0; (lookfrom-lookat).length();
         float aperture = 0.0;
@@ -472,6 +474,10 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
 
+
+        Vec3 lookfrom(278.0f, 278.0f, -400.0f);
+
+
         printf("rand initing\n");
         *rand_state = local_rand_state;
         // *d_world  = new Octree(device_object_list, i);
@@ -479,12 +485,11 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
         *d_world  = new Octree(device_object_list, i);
         //initialize Octree
         printf("Initializing Octree\n");
-        (*d_world)->max_depth = 32;
+        (*d_world)->max_depth = 3;
         printf("Max depth set\n");
-        (*d_world)->init();
+        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         printf("Octree initialized\n");
 
-        Vec3 lookfrom(278.0f, 278.0f, -400.0f);
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();
         float aperture = 0.0;
@@ -499,15 +504,19 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
         (*d_camera)->msaa_x = 2;
         (*d_camera)->samples = 64;
         (*d_camera)->bounces = 100;
+
+
+        // printf("World created\n");
+        // (*d_world)->debug_print();
     }
 }
 
 
 __global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
     }
 }
 

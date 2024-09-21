@@ -5,6 +5,9 @@
 #define F_EPSILON 0.000001
 #endif
 
+#include <iostream>
+
+
 __device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
     // using the quadratic formula to solve for t in the equation of a ray-sphere intersection
 
@@ -54,4 +57,8 @@ __device__ bool Sphere::insideBox(float x_min, float x_max, float y_min, float y
         (center.z - radius < z_max) &&
         (center.z + radius > z_min) 
     );
+}
+
+__device__ void Sphere::debug_print() const{
+    printf("Sphere: center: (%f, %f, %f) radius: %f\n", center.x, center.y, center.z, radius);
 }

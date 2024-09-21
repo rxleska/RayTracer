@@ -14,12 +14,15 @@ class Octree : public Scene {
 
         __device__ Octree();
         __device__ Octree(Hitable **hitables, int hitable_count);
-        
-        __device__ void init();
+
+        __device__ void init(float camx, float camy, float camz);
         __device__ void subdivide(int depth);
         __device__ int closest_child(const Vec3 point) const;
-        __device__ int closest_plane(const Ray &ray, float t) const;
+        __device__ int closest_plane(float *tvals) const;
         __device__ bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const;
+
+        __device__ void debug_print() const;
+
 
 
 };
