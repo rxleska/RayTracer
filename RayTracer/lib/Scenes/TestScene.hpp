@@ -18,7 +18,7 @@
 #include "../processing/headers/Ray.hpp"
 #include "../processing/headers/Vec3.hpp"
 
-__device__ void create_test_Octree(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures) {
+__device__ void create_test_scene(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,
@@ -53,13 +53,7 @@ __device__ void create_test_Octree(Hitable **device_object_list, Octree **d_worl
         *rand_state = local_rand_state;
         // *d_world  = new Octree(device_object_list, i);
         printf("rand inited\n");
-        *d_world  = new Octree(device_object_list, i);
-        //initialize Octree
-        printf("Initializing Octree\n");
-        (*d_world)->max_depth = 4;
-        printf("Max depth set\n");
-        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
-        printf("Octree initialized\n");
+        *d_world  = new Scene(device_object_list, i);
 
         Vec3 lookat(0,0,0);
         float dist_to_focus = 10.0; (lookfrom-lookat).length();
@@ -71,6 +65,10 @@ __device__ void create_test_Octree(Hitable **device_object_list, Octree **d_worl
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
+        (*d_camera)->ambient_light_level = 0.9f;
+        (*d_camera)->msaa_x = 2;
+        (*d_camera)->samples = 16;
+        (*d_camera)->bounces = 50;
     }
 }
 

@@ -61,7 +61,7 @@ __global__ void init_texture(Vec3 ***textures, float *texture, int width, int he
     }
 }
 
-__device__ Vec3 getColor(const Ray &r, Camera **cam, Octree **world, curandState *local_rand_state, bool &edge_hit) {
+__device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
     Vec3 cur_attenuation = Vec3(1.0,1.0,1.0);
     for(int i = 0; i < (*cam)->bounces; i++) {
@@ -93,7 +93,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Octree **world, curandState
     return Vec3(0.0,0.0,0.0); // exceeded recursion
 }
 
-__global__ void free_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera) {
+__global__ void free_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera) {
     for(int i=0; i < (*d_world)->hitable_count; i++) {
         delete ((Sphere *)device_object_list[i])->mat;
         delete device_object_list[i];
@@ -116,7 +116,7 @@ __device__ float clamp(float x, float min, float max) {
     return x;
 }
 
-__global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Octree **world, curandState *rand_state) {
+__global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return;
@@ -155,12 +155,12 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 #include "lib/Scenes/CornellBox.hpp"
 #include "lib/Scenes/CornellRoomOfMirrors.hpp"
 
-__global__ void create_world(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures){
+__global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures);
-        // create_test_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures);
         // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state);
     }
 }
 
@@ -236,7 +236,7 @@ int main() {
     // int num_hitables = 22*22+1+3;
     int num_hitables = MAX_OBJECTS;
     checkCudaErrors(cudaMalloc((void **)&device_object_list, num_hitables*sizeof(Hitable *)));
-    Octree **d_world;
+    Scene **d_world;
     checkCudaErrors(cudaMalloc((void **)&d_world, sizeof(Octree *)));
     Camera **d_camera;
     checkCudaErrors(cudaMalloc((void **)&d_camera, sizeof(Camera *)));

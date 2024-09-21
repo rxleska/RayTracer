@@ -19,7 +19,7 @@
 #include "../processing/headers/Vec3.hpp"
 
 
-__device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures){
+__device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
@@ -244,9 +244,9 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
         *d_world  = new Octree(device_object_list, i);
         //initialize Octree
         printf("Initializing Octree\n");
-        (*d_world)->max_depth = 3;
+        ((Octree*)*d_world)->max_depth = 4;
         printf("Max depth set\n");
-        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         printf("Octree initialized\n");
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
@@ -261,8 +261,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Octree *
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 64;
-        (*d_camera)->bounces = 100;
+        (*d_camera)->samples = 16;
+        (*d_camera)->bounces = 50;
 
 
         // printf("World created\n");

@@ -18,20 +18,20 @@
 #include "../processing/headers/Ray.hpp"
 #include "../processing/headers/Vec3.hpp"
 
-__device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
+__device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
 
         Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
-        Material *mirror = new Metal(Vec3(0.9, 0.9, 0.9), 0.0);
+        Material *mirror = new Metal(Vec3(0.9, 0.9, 0.9), 0.0001);
         Material *light = new Light(Vec3(1.0, 1.0, 1.0), 1.5);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         // Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
         // Material *red = new LambertianBordered(Vec3(0.65, 0.05, 0.05));
-        Material *green = new Metal(Vec3(0.12, 0.45, 0.15), 0.0);
-        Material *red = new Metal(Vec3(0.65, 0.05, 0.05), 0.0);
+        Material *green = new Metal(Vec3(0.12, 0.45, 0.15), 0.0001);
+        Material *red = new Metal(Vec3(0.65, 0.05, 0.05), 0.0001);
 
         //floor 
         /*
@@ -52,7 +52,7 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Octr
         213.0 548.8 332.0
         213.0 548.8 227.0
         */
-        // device_object_list[i++] = Quad(Vec3(343.0, 548, 227.0),Vec3(343.0, 548, 332.0),Vec3(213.0, 548, 332.0),Vec3(213.0, 548, 227.0), light);
+        device_object_list[i++] = Quad(Vec3(343.0, 548, 227.0),Vec3(343.0, 548, 332.0),Vec3(213.0, 548, 332.0),Vec3(213.0, 548, 227.0), light);
         device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(343.0, 545, 332.0),Vec3(213.0, 545, 332.0), light);
         device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
 
@@ -246,9 +246,9 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Octr
         *d_world  = new Octree(device_object_list, i);
         //initialize Octree
         printf("Initializing Octree\n");
-        (*d_world)->max_depth = 3;
+        ((Octree*)*d_world)->max_depth = 4;
         printf("Max depth set\n");
-        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         printf("Octree initialized\n");
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
@@ -263,7 +263,7 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Octr
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 32;
+        (*d_camera)->samples = 64;
         (*d_camera)->bounces = 20;
 
 

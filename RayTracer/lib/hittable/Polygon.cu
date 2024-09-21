@@ -162,12 +162,12 @@ __device__ bool Polygon::insideBox(float x_min, float x_max, float y_min, float 
     return(
         // check if polygon mins are below box maxes
         // check if polygon maxes are above box mins
-        (px_min < x_max) &&
-        (px_max > x_min) &&
-        (py_min < y_max) &&
-        (py_max > y_min) &&
-        (pz_min < z_max) &&
-        (pz_max > z_min)
+        (px_min < x_max + F_EPSILON) &&
+        (px_max > x_min - F_EPSILON) &&
+        (py_min < y_max + F_EPSILON) &&
+        (py_max > y_min - F_EPSILON) &&
+        (pz_min < z_max + F_EPSILON) &&
+        (pz_max > z_min - F_EPSILON)
     );
 
 }

@@ -19,7 +19,7 @@
 #include "../processing/headers/Vec3.hpp"
 
 
-__device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures) {
+__device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
@@ -68,8 +68,8 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Octree **d_wor
 
         *rand_state = local_rand_state;
         *d_world  = new Octree(device_object_list, i);
-        (*d_world)->max_depth = 10;
-        (*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+        ((Octree*)*d_world)->max_depth = 10;
+        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
 
 
         Vec3 lookat(0,0,0);
