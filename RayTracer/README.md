@@ -24,12 +24,14 @@ The goal of this subsection is to create a ray tracer from scratch in C++. I wil
     - [X] Metal
     - [X] Dielectric
     - [X] Diffuse light
-    - [ ] png/image mapped materials (child of Lambertian)
+    - [X] png/image mapped materials (child of Lambertian)
+    - [ ] Volume Materials (smoke, clouds, etc.)
 - [X] Camera
     - [X] positionable
     - [X] focusable
     - [X] aperture
 - [X] Multi-threading
+    - [X] Using Cuda for GPU acceleration
 - [X] Optimization Data Structures
     - [X] Octree 
 - [X] hittable objects
@@ -74,3 +76,22 @@ In addition, for a C- you must implement at least X points worth of features fro
     Importance sampling
     Round pixels
     Other features you discover through reading, YouTube, etc. (tell me about them and they'll be added to this list explicitly)
+
+
+
+
+## MESH LICENSES
+
+
+### Person Model
+Model Information:
+* title:	Low-poly Male Base Mesh
+* source:	https://sketchfab.com/3d-models/low-poly-male-base-mesh-7b9411ff0c624321baf4caac014bc0bd
+* author:	decodigo (https://sketchfab.com/decodigo)
+
+Model License:
+* license type:	CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)
+* requirements:	Author must be credited. Commercial use is allowed.
+
+If you use this 3D model in your project be sure to copy paste this credit wherever you share it:
+This work is based on "Low-poly Male Base Mesh" (https://sketchfab.com/3d-models/low-poly-male-base-mesh-7b9411ff0c624321baf4caac014bc0bd) by decodigo (https://sketchfab.com/decodigo) licensed under CC-BY-4.0 (http://creativecommons.org/licenses/by/4.0/)

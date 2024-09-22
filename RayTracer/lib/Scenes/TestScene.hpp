@@ -18,11 +18,16 @@
 #include "../processing/headers/Ray.hpp"
 #include "../processing/headers/Vec3.hpp"
 
-__device__ void create_test_scene(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures) {
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
+__device__ void create_test_scene(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         // device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,new Lambertian(Vec3(0.7, 0.5, 0.5)));
-        device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
+        // device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
+        device_object_list[0] = Quad(Vec3(-20, 0, -20), Vec3(20, 0, -20), Vec3(20, 0, 20), Vec3(-20, 0, 20), new Lambertian(Vec3(0.7, 0.7, 0.7)));
         int i = 1;
 
 
@@ -36,9 +41,9 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
 
 
 
-        Material * text1 = new Textured(textures[1], 474, 327);
-        // ((Textured*)text1)->rot = 0.25f;
-        device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
+        // Material * text1 = new Textured(textures[1], 474, 327);
+        // // ((Textured*)text1)->rot = 0.25f;
+        // device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
 
 
         
@@ -56,11 +61,24 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         uvmap[2] = Vec3(1, 1, 0);
         uvmap[3] = Vec3(0, 1, 0);
         // device_object_list[i++] = new Polygon(vertices_poly, 4, new Lambertian(Vec3(0.9, 0.2, 0.1)));
-        // device_object_list[i++] = new Polygon(vertices_poly, 4, new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
-        device_object_list[i++] = new Polygon(vertices_poly, 4, text1, uvmap);
+        device_object_list[i++] = new Polygon(vertices_poly, 4, new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
+        // device_object_list[i++] = new Polygon(vertices_poly, 4, text1, uvmap);
 
 
+        //test mesh
+        Material * red = new LambertianBordered(Vec3(0.9, 0.2, 0.1));
 
+        //rotate mesh about x axis by 90 degrees
+        for(int j = 0; j < mesh_lengths[0]; j++) {
+            float y = meshes[0][j].y;
+            float z = meshes[0][j].z;
+            meshes[0][j].y = y * cos(-M_PI/2) - z * sin(-M_PI/2);
+            meshes[0][j].z = y * sin(-M_PI/2) + z * cos(-M_PI/2);
+        }
+
+        for(int j = 0; j < mesh_lengths[0]/3; j++) {
+            device_object_list[i++] = Triangle(meshes[0][j*3], meshes[0][j*3 + 1], meshes[0][j*3 + 2], red);
+        }
         
 
         //test polygons
@@ -75,15 +93,18 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         //log normal
         // printf("Polygon normal: %f %f %f\n", ((Polygon *)device_object_list[i-1])->normal.x, ((Polygon *)device_object_list[i-1])->normal.y, ((Polygon *)device_object_list[i-1])->normal.z);
         
-        Vec3 lookfrom(0,0,10);
+        Vec3 lookfrom(5,10,10);
 
         // printf("rand initing\n");
         *rand_state = local_rand_state;
-        // *d_world  = new Octree(device_object_list, i);
-        // printf("rand inited\n");
-        *d_world  = new Scene(device_object_list, i);
+        *d_world  = new Octree(device_object_list, i);
+        ((Octree*)*d_world)->max_depth = 8;
+        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
 
-        Vec3 lookat(0,0,0);
+        // printf("rand inited\n");
+        // *d_world  = new Scene(device_object_list, i);
+
+        Vec3 lookat(0,3,0);
         float dist_to_focus = 10.0; (lookfrom-lookat).length();
         float aperture = 0.0;
         *d_camera   = new Camera(lookfrom,

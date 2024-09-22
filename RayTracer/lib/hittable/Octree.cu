@@ -55,7 +55,7 @@ __device__ void Octree::subdivide(int depth){
     }
 
 
-    if(hitable_count <= 1){
+    if(hitable_count <= 2){
         // printf("Max depth reached\n");
         is_leaf = true;
         return;
