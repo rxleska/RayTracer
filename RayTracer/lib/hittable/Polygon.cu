@@ -11,6 +11,21 @@
 
 
 __device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat): vertices(vertices), num_vertices(num_vertices), mat(mat) {
+    if(num_vertices < 3 && num_vertices > 20){
+        num_vertices = 0;
+        assert(false);
+    }
+
+    if(!is_coplanar()){
+        num_vertices = 0;
+        assert(false);
+    }
+
+    calculate_normal_and_area();
+}
+
+
+__device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat, Vec3 * uvmap) : vertices(vertices), num_vertices(num_vertices), mat(mat), uvmap(uvmap) {
     if(num_vertices < 3){
         num_vertices = 0;
         assert(false);
@@ -44,6 +59,18 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     //check if the point is inside the polygon by calculating the area of the polygon formed by the point and the vertices
     bool edge_hit = false;
     float totalArea = 0.0f;
+    
+
+    float bary[20]; //max number of vertices
+
+
+    //use 3rd coordinate of uvmap as barycentric coordinate
+    if(mat->type == MaterialType::TEXTURED){
+        for(int i = 0; i < num_vertices; i++){
+            bary[i] = 0.0f;
+        }
+    }
+
     for(int i = 0; i < num_vertices; i++){
         // Vec3 v1 = vertices[i] - p;
         // Vec3 v2 = vertices[(i+1)%num_vertices] - p;
@@ -54,18 +81,42 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
             edge_hit = true;
         }
         totalArea += a;
+        if(mat->type == MaterialType::TEXTURED){
+            bary[i] += a / (area*2);
+            bary[(i+1)%num_vertices] += a / (area*2);
+        }
     }
+
+
     if(totalArea > area + area*F_EPSILON){
         return false;
     }
+
+    if(mat->type == MaterialType::TEXTURED){
+        float bary_sum = 0.0f;
+        for(int i = 0; i < num_vertices; i++){
+            bary_sum += bary[i];
+        }
+        // printf("bary_sum: %f\n", bary_sum);
+    }
+
     
+    if(mat->type == MaterialType::TEXTURED){
+        rec.u = 0.0f;
+        rec.v = 0.0f;
+        for(int i = 0; i < num_vertices; i++){
+            
+            rec.u += bary[i] * uvmap[i].x;
+            rec.v += bary[i] * uvmap[i].y;
+        }
+        // printf("u: %f, v: %f\n", rec.u, rec.v);
+    }
+
     rec.t = t;
     rec.p = p;
     rec.normal = normal;
     rec.front_face = true; //wouldn't have hit the polygon if it was not facing the front
     rec.mat = mat;
-    rec.u = 0.5; //TODO implement texture mapping //dificult to implement texture mapping for n-polygons (easy for 3 and 4)
-    rec.v = 0.5;
 
 
     rec.edge_hit = edge_hit;
@@ -148,6 +199,32 @@ __device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat){
     vertices[2] = v3;
     vertices[3] = v4;
     return new Polygon(vertices, 4, mat);
+}
+
+__device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3){
+    Vec3 * vertices = new Vec3[3];
+    vertices[0] = v1;
+    vertices[1] = v2;
+    vertices[2] = v3;
+    Vec3 * uvmap = new Vec3[3];
+    uvmap[0] = uv1;
+    uvmap[1] = uv2;
+    uvmap[2] = uv3;
+    return new Polygon(vertices, 3, mat, uvmap);
+}
+__device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3, Vec3 uv4){
+    Vec3 * vertices = new Vec3[4];
+    vertices[0] = v1;
+    vertices[1] = v2;
+    vertices[2] = v3;
+    vertices[3] = v4;
+    Vec3 * uvmap = new Vec3[4];
+    uvmap[0] = uv1;
+    uvmap[1] = uv2;
+    uvmap[2] = uv3;
+    uvmap[3] = uv4;
+    return new Polygon(vertices, 4, mat, uvmap);
+
 }
 
 __device__ bool Polygon::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const{

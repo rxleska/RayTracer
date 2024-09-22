@@ -30,15 +30,15 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         //sample sphere blue ball
         // device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, new Lambertian(Vec3(0.1, 0.2, 0.5)));
 
-        Material * text = new Textured(textures[0], 474, 266);
-        ((Textured*)text)->rot = 0.25f;
-        device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, text);
+        // Material * text = new Textured(textures[0], 474, 266);
+        // ((Textured*)text)->rot = 0.25f;
+        // device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, text);
 
 
 
         Material * text1 = new Textured(textures[1], 474, 327);
-        ((Textured*)text1)->rot = 0.25f;
-        device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
+        // ((Textured*)text1)->rot = 0.25f;
+        // device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
 
 
         //test polygon
@@ -48,8 +48,15 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         vertices_poly[1] = Vec3(10,  0, -5);
         vertices_poly[2] = Vec3(10, 10, -5);
         vertices_poly[3] = Vec3( -10, 10, -5);
+
+        Vec3 * uvmap = new Vec3[4];
+        uvmap[0] = Vec3(0, 0, 0);
+        uvmap[1] = Vec3(1, 0, 0);
+        uvmap[2] = Vec3(1, 1, 0);
+        uvmap[3] = Vec3(0, 1, 0);
         // device_object_list[i++] = new Polygon(vertices_poly, 4, new Lambertian(Vec3(0.9, 0.2, 0.1)));
-        device_object_list[i++] = new Polygon(vertices_poly, 4, new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
+        // device_object_list[i++] = new Polygon(vertices_poly, 4, new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
+        device_object_list[i++] = new Polygon(vertices_poly, 4, text1, uvmap);
         
 
         

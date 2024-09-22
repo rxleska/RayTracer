@@ -30,14 +30,14 @@ The goal of this subsection is to create a ray tracer from scratch in C++. I wil
     - [X] focusable
     - [X] aperture
 - [X] Multi-threading
-- [ ] Optimization Data Structures
-    - [ ] Octree 
+- [X] Optimization Data Structures
+    - [X] Octree 
 - [X] hittable objects
     - [X] Sphere
     - [X] Polygons (imo this is better than creating quadralaterals if you have a quadtree or another spatial partitioning method) (also look into more than 3 index polygons)
 
 - [ ] other ideas
-    - [ ] live render preview 
+    - [ ] live render preview (probably not doing this one) 
     - [X] dynamic sample rate anti-aliasing (edges of objects send signal to increase sample rate like msaa)
     - [ ] Perlin noise
 

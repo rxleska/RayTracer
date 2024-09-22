@@ -12,10 +12,14 @@ class Polygon: public Hitable{
         Material * mat;
         Vec3 normal; //stored for faster computation
         float area; //stored for faster computation
+        Vec3 * uvmap; // u,v coordinates for texture mapping optional
+        bool use_uvmap = false;
 
         __device__ Polygon () : vertices(nullptr), num_vertices(0) {}
 
         __device__ Polygon (Vec3 * vertices, int num_vertices, Material * mat);
+
+        __device__ Polygon(Vec3 * vertices, int num_vertices, Material * mat, Vec3 * uvmap);
         // function to check if a ray hits the sphere
         __device__ virtual bool hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const override;
 
@@ -35,5 +39,12 @@ class Polygon: public Hitable{
 
 __device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat);
 __device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat);
+
+//uvmaped versions
+
+__device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3);
+__device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3, Vec3 uv4);
+
+
 
 #endif
