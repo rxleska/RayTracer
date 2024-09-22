@@ -30,7 +30,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         //sample sphere blue ball
         // device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, new Lambertian(Vec3(0.1, 0.2, 0.5)));
 
-        // Material * text = new Textured(textures[0], 474, 266);
+        Material * text = new Textured(textures[0], 474, 266);
         // ((Textured*)text)->rot = 0.25f;
         // device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, text);
 
@@ -38,9 +38,10 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
 
         Material * text1 = new Textured(textures[1], 474, 327);
         // ((Textured*)text1)->rot = 0.25f;
-        // device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
+        device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
 
 
+        
         //test polygon
         //cuda malloc a vertices array
         Vec3 * vertices_poly = new Vec3[4];
@@ -57,7 +58,14 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         // device_object_list[i++] = new Polygon(vertices_poly, 4, new Lambertian(Vec3(0.9, 0.2, 0.1)));
         // device_object_list[i++] = new Polygon(vertices_poly, 4, new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
         device_object_list[i++] = new Polygon(vertices_poly, 4, text1, uvmap);
+
+
+
         
+
+        //test polygons
+        // device_object_list[i++] = Triangle(vertices_poly[0], vertices_poly[1], vertices_poly[3], text1, uvmap[0], uvmap[1], uvmap[3]);
+        // device_object_list[i++] = Triangle(vertices_poly[1], vertices_poly[2], vertices_poly[3], text1, uvmap[1], uvmap[2], uvmap[3]);
 
         
         //log polygon vertice count
@@ -67,7 +75,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         //log normal
         // printf("Polygon normal: %f %f %f\n", ((Polygon *)device_object_list[i-1])->normal.x, ((Polygon *)device_object_list[i-1])->normal.y, ((Polygon *)device_object_list[i-1])->normal.z);
         
-        Vec3 lookfrom(3,2,10);
+        Vec3 lookfrom(0,0,10);
 
         // printf("rand initing\n");
         *rand_state = local_rand_state;

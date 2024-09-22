@@ -21,6 +21,11 @@ __device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat): 
         assert(false);
     }
 
+
+    if(mat->type == MaterialType::TEXTURED && num_vertices > 4){
+        printf("Image Textured Polygons only completely supported on 3 or 4 vertices, for better results please break up your polygon\n");
+    }
+
     calculate_normal_and_area();
 }
 
@@ -28,11 +33,13 @@ __device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat): 
 __device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat, Vec3 * uvmap) : vertices(vertices), num_vertices(num_vertices), mat(mat), uvmap(uvmap) {
     if(num_vertices < 3){
         num_vertices = 0;
+        printf("Polygon must have at least 3 vertices\n");
         assert(false);
     }
 
     if(!is_coplanar()){
         num_vertices = 0;
+        printf("Polygon is not coplanar\n");
         assert(false);
     }
 
@@ -67,7 +74,7 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     //use 3rd coordinate of uvmap as barycentric coordinate
     if(mat->type == MaterialType::TEXTURED){
         for(int i = 0; i < num_vertices; i++){
-            bary[i] = 0.0f;
+            bary[i] = area;
         }
     }
 
@@ -82,8 +89,8 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
         }
         totalArea += a;
         if(mat->type == MaterialType::TEXTURED){
-            bary[i] += a / (area*2);
-            bary[(i+1)%num_vertices] += a / (area*2);
+            bary[i] -= a ;
+            bary[(i+1)%num_vertices] -= a;
         }
     }
 
@@ -95,9 +102,11 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     if(mat->type == MaterialType::TEXTURED){
         float bary_sum = 0.0f;
         for(int i = 0; i < num_vertices; i++){
+            bary[i] = bary[i] / (num_vertices - 2);
+            bary[i] = bary[i] / area;
             bary_sum += bary[i];
         }
-        // printf("bary_sum: %f\n", bary_sum);
+        // printf("bary sum: %f\n", bary_sum);
     }
 
     
@@ -105,10 +114,14 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
         rec.u = 0.0f;
         rec.v = 0.0f;
         for(int i = 0; i < num_vertices; i++){
-            
             rec.u += bary[i] * uvmap[i].x;
             rec.v += bary[i] * uvmap[i].y;
         }
+        rec.u = rec.u * (num_vertices - 2) - (1.0f/ (num_vertices - 2));
+        rec.v = rec.v * (num_vertices - 2) - (1.0f/ (num_vertices - 2));
+
+
+
         // printf("u: %f, v: %f\n", rec.u, rec.v);
     }
 
@@ -141,22 +154,46 @@ __device__ void Polygon::getBounds(float& x_min, float& x_max, float& y_min, flo
     }
 }
 
-__device__ bool Polygon::is_coplanar() const{
+// __device__ bool Polygon::is_coplanar() const{
+//     Vec3 currentCross;
+//     for (int i = 0; i < num_vertices - 3; i++) {
+//         Vec3 v1 = vertices[i + 1] - vertices[i];
+//         Vec3 v2 = vertices[i + 2] - vertices[i];
+//         Vec3 normal = v1.cross(v2).normalized();
+//         if (i == 0) {
+//             currentCross = normal;  // store the first cross product
+//         } else {
+//             if (fabs(currentCross.dot(normal)) > F_EPSILON) { // or use fabs(currentCross.dot(normal)) > F_EPSILON
+//                 return false;
+//             }
+//         }
+//     }
+//     return true;
+// }
+
+__device__ bool Polygon::is_coplanar() const {
     Vec3 currentCross;
-    for (int i = 0; i < num_vertices - 3; i++) {
+    for (int i = 0; i < num_vertices - 2; i++) {  // Adjusted loop boundary
         Vec3 v1 = vertices[i + 1] - vertices[i];
         Vec3 v2 = vertices[i + 2] - vertices[i];
-        Vec3 normal = v1.cross(v2).normalized();
+        
+        Vec3 cross = v1.cross(v2);
+        if (cross.length() < F_EPSILON) {  // Avoid normalizing near-zero cross product
+            continue;  // Skip degenerate cases
+        }
+
+        Vec3 normal = cross.normalized();
         if (i == 0) {
-            currentCross = normal;  // store the first cross product
+            currentCross = normal;  // Store the first cross product
         } else {
-            if (fabs(currentCross.dot(normal)) > F_EPSILON) { // or use fabs(currentCross.dot(normal)) > F_EPSILON
+            if (fabs(currentCross.dot(normal)) < 1.0 - F_EPSILON) {  // Dot product threshold
                 return false;
             }
         }
     }
     return true;
 }
+
 
 __device__ void Polygon::calculate_normal_and_area(){
     Vec3 v1 = vertices[1] - vertices[0];
