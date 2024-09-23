@@ -10,7 +10,7 @@ CC = nvcc
 # CFLAGS = -arch=sm_89 -rdc=true -Xptxas -O2 -Xcompiler -O2
 # CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -arch=sm_80 -rdc=true
-CFLAGS = -arch=sm_89 -rdc=true
+CFLAGS = -arch=sm_80 -rdc=true
 # CFLAGS = -arch=sm_89 -rdc=true -G -g
 
 # testing -G flag removes all optimizations (really slow)
@@ -21,7 +21,7 @@ CFLAGS = -arch=sm_89 -rdc=true
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
 MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj
-HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon.obj bin/Octree.obj
+HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon_T.obj bin/Octree.obj
 
 SCENES = lib/Scenes/CornellBox.hpp lib/Scenes/CornellRoomOfMirrors.hpp lib/Scenes/RTIAW.hpp lib/Scenes/TestScene.hpp
 
@@ -33,7 +33,7 @@ run: bin bin/main.obj $(PROCESSING) $(MATERIALS) $(HITTABLES)
 bin:
 	mkdir bin
 
-bin/main.obj: main.cu lib/processing/headers/Ray.hpp lib/processing/headers/Vec3.hpp lib/processing/headers/Camera.hpp lib/materials/headers/Lambertian.hpp lib/materials/headers/Metal.hpp lib/materials/headers/Dielectric.hpp lib/materials/headers/Light.hpp lib/materials/headers/LambertianBordered.hpp lib/hittable/headers/Sphere.hpp lib/hittable/headers/Scene.hpp lib/hittable/headers/Polygon.hpp lib/hittable/headers/Octree.hpp $(SCENES)
+bin/main.obj: main.cu lib/processing/headers/Ray.hpp lib/processing/headers/Vec3.hpp lib/processing/headers/Camera.hpp lib/materials/headers/Lambertian.hpp lib/materials/headers/Metal.hpp lib/materials/headers/Dielectric.hpp lib/materials/headers/Light.hpp lib/materials/headers/LambertianBordered.hpp lib/hittable/headers/Sphere.hpp lib/hittable/headers/Scene.hpp lib/hittable/headers/Polygon_T.hpp lib/hittable/headers/Octree.hpp $(SCENES)
 	$(CC) $(CFLAGS) -c main.cu -o bin/main.obj
 
 # Processing Objects
@@ -79,8 +79,8 @@ bin/Sphere.obj: lib/hittable/Sphere.cu lib/hittable/headers/Sphere.hpp lib/proce
 bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.obj
 
-bin/Polygon.obj: lib/hittable/Polygon.cu lib/hittable/headers/Polygon.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
-	$(CC) $(CFLAGS) -c lib/hittable/Polygon.cu -o bin/Polygon.obj
+bin/Polygon_T.obj: lib/hittable/Polygon_T.cu lib/hittable/headers/Polygon_T.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/hittable/Polygon_T.cu -o bin/Polygon_T.obj
 
 bin/Octree.obj: lib/hittable/Octree.cu lib/hittable/headers/Octree.hpp lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Octree.cu -o bin/Octree.obj

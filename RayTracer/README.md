@@ -36,7 +36,7 @@ The goal of this subsection is to create a ray tracer from scratch in C++. I wil
     - [X] Octree 
 - [X] hittable objects
     - [X] Sphere
-    - [X] Polygons (imo this is better than creating quadralaterals if you have a quadtree or another spatial partitioning method) (also look into more than 3 index polygons)
+    - [X] Polygon_Ts (imo this is better than creating quadralaterals if you have a quadtree or another spatial partitioning method) (also look into more than 3 index Polygon_Ts)
 
 - [ ] other ideas
     - [ ] live render preview (probably not doing this one) 

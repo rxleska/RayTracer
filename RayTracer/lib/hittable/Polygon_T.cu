@@ -1,5 +1,5 @@
 
-#include "headers/Polygon.hpp"
+#include "headers/Polygon_T.hpp"
 #include "assert.h"
 
 #ifndef F_EPSILON
@@ -10,7 +10,7 @@
 
 
 
-__device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat): vertices(vertices), num_vertices(num_vertices), mat(mat) {
+__device__ Polygon_T::Polygon_T(Vec3 * vertices, int num_vertices, Material * mat): vertices(vertices), num_vertices(num_vertices), mat(mat) {
     if(num_vertices < 3 && num_vertices > 20){
         num_vertices = 0;
         assert(false);
@@ -23,23 +23,23 @@ __device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat): 
 
 
     if(mat->type == MaterialType::TEXTURED && num_vertices > 4){
-        printf("Image Textured Polygons only completely supported on 3 or 4 vertices, for better results please break up your polygon\n");
+        printf("Image Textured Polygon_Ts only completely supported on 3 or 4 vertices, for better results please break up your Polygon_T\n");
     }
 
     calculate_normal_and_area();
 }
 
 
-__device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat, Vec3 * uvmap) : vertices(vertices), num_vertices(num_vertices), mat(mat), uvmap(uvmap) {
+__device__ Polygon_T::Polygon_T(Vec3 * vertices, int num_vertices, Material * mat, Vec3 * uvmap) : vertices(vertices), num_vertices(num_vertices), mat(mat), uvmap(uvmap) {
     if(num_vertices < 3){
         num_vertices = 0;
-        printf("Polygon must have at least 3 vertices\n");
+        printf("Polygon_T must have at least 3 vertices\n");
         assert(false);
     }
 
     if(!is_coplanar()){
         num_vertices = 0;
-        printf("Polygon is not coplanar\n");
+        printf("Polygon_T is not coplanar\n");
         assert(false);
     }
 
@@ -48,7 +48,7 @@ __device__ Polygon::Polygon(Vec3 * vertices, int num_vertices, Material * mat, V
 
 
 // function to check if a ray hits the sphere
-__device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
+__device__ bool Polygon_T::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
     //check if the ray is parallel to the plane
     float denom = normal.dot(r.direction);
     if(denom > -F_EPSILON){
@@ -63,7 +63,7 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
 
     Vec3 p = r.pointAt(t);
 
-    //check if the point is inside the polygon by calculating the area of the polygon formed by the point and the vertices
+    //check if the point is inside the Polygon_T by calculating the area of the Polygon_T formed by the point and the vertices
     bool edge_hit = false;
     float totalArea = 0.0f;
     
@@ -128,7 +128,7 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
     rec.t = t;
     rec.p = p;
     rec.normal = normal;
-    rec.front_face = true; //wouldn't have hit the polygon if it was not facing the front
+    rec.front_face = true; //wouldn't have hit the Polygon_T if it was not facing the front
     rec.mat = mat;
 
 
@@ -140,7 +140,7 @@ __device__ bool Polygon::hit(const Ray& r, float t_min, float t_max, HitRecord& 
 #define F_MAX 3.402823466e+38F
 #endif
 
-__device__ void Polygon::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
+__device__ void Polygon_T::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
     // get float max and min
     x_min = y_min = z_min = F_MAX;
     x_max = y_max = z_max = -F_MAX;
@@ -154,7 +154,7 @@ __device__ void Polygon::getBounds(float& x_min, float& x_max, float& y_min, flo
     }
 }
 
-// __device__ bool Polygon::is_coplanar() const{
+// __device__ bool Polygon_T::is_coplanar() const{
 //     Vec3 currentCross;
 //     for (int i = 0; i < num_vertices - 3; i++) {
 //         Vec3 v1 = vertices[i + 1] - vertices[i];
@@ -171,7 +171,7 @@ __device__ void Polygon::getBounds(float& x_min, float& x_max, float& y_min, flo
 //     return true;
 // }
 
-__device__ bool Polygon::is_coplanar() const {
+__device__ bool Polygon_T::is_coplanar() const {
     Vec3 currentCross;
     for (int i = 0; i < num_vertices - 2; i++) {  // Adjusted loop boundary
         Vec3 v1 = vertices[i + 1] - vertices[i];
@@ -195,20 +195,20 @@ __device__ bool Polygon::is_coplanar() const {
 }
 
 
-__device__ void Polygon::calculate_normal_and_area(){
+__device__ void Polygon_T::calculate_normal_and_area(){
     Vec3 v1 = vertices[1] - vertices[0];
     Vec3 v2 = vertices[num_vertices-1] - vertices[0];
     normal = v1.cross(v2);
 
-    // calculate the area of the polygon
-    //choose center of polygon as reference point
+    // calculate the area of the Polygon_T
+    //choose center of Polygon_T as reference point
     Vec3 center = Vec3(0,0,0);
     for(int i = 0; i < num_vertices; i++){
         center = center + vertices[i];
     }
     center = center / float(num_vertices);
 
-    //for each triangle in the polygon calculate 
+    //for each triangle in the Polygon_T calculate 
     area = 0.0f;
     for(int i = 0; i < num_vertices; i++){
         Vec3 v1 = vertices[i] - center;
@@ -221,24 +221,24 @@ __device__ void Polygon::calculate_normal_and_area(){
 }
 
 
-__device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat){
+__device__ Polygon_T * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat){
     Vec3 * vertices = new Vec3[3];
     vertices[0] = v1;
     vertices[1] = v2;
     vertices[2] = v3;
-    return new Polygon(vertices, 3, mat);
+    return new Polygon_T(vertices, 3, mat);
 }
 
-__device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat){
+__device__ Polygon_T * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat){
     Vec3 * vertices = new Vec3[4];
     vertices[0] = v1;
     vertices[1] = v2;
     vertices[2] = v3;
     vertices[3] = v4;
-    return new Polygon(vertices, 4, mat);
+    return new Polygon_T(vertices, 4, mat);
 }
 
-__device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3){
+__device__ Polygon_T * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3){
     Vec3 * vertices = new Vec3[3];
     vertices[0] = v1;
     vertices[1] = v2;
@@ -247,9 +247,9 @@ __device__ Polygon * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat, Vec3 uv
     uvmap[0] = uv1;
     uvmap[1] = uv2;
     uvmap[2] = uv3;
-    return new Polygon(vertices, 3, mat, uvmap);
+    return new Polygon_T(vertices, 3, mat, uvmap);
 }
-__device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3, Vec3 uv4){
+__device__ Polygon_T * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat, Vec3 uv1, Vec3 uv2, Vec3 uv3, Vec3 uv4){
     Vec3 * vertices = new Vec3[4];
     vertices[0] = v1;
     vertices[1] = v2;
@@ -260,11 +260,11 @@ __device__ Polygon * Quad(Vec3 v1, Vec3 v2, Vec3 v3, Vec3 v4, Material * mat, Ve
     uvmap[1] = uv2;
     uvmap[2] = uv3;
     uvmap[3] = uv4;
-    return new Polygon(vertices, 4, mat, uvmap);
+    return new Polygon_T(vertices, 4, mat, uvmap);
 
 }
 
-__device__ bool Polygon::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const{
+__device__ bool Polygon_T::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const{
     float px_min;
     float px_max;
     float py_min;
@@ -274,8 +274,8 @@ __device__ bool Polygon::insideBox(float x_min, float x_max, float y_min, float 
     getBounds(px_min, px_max, py_min, py_max, pz_min, pz_max);
     // TODO confirm if this method works (I think there are cases where this isn't true but maybe not)
     return(
-        // check if polygon mins are below box maxes
-        // check if polygon maxes are above box mins
+        // check if Polygon_T mins are below box maxes
+        // check if Polygon_T maxes are above box mins
         (px_min < x_max + F_EPSILON) &&
         (px_max > x_min - F_EPSILON) &&
         (py_min < y_max + F_EPSILON) &&
@@ -286,8 +286,8 @@ __device__ bool Polygon::insideBox(float x_min, float x_max, float y_min, float 
 
 }
 
-__device__ void Polygon::debug_print() const{
-    printf("Polygon with %d vertices\n", num_vertices);
+__device__ void Polygon_T::debug_print() const{
+    printf("Polygon_T with %d vertices\n", num_vertices);
     for(int i = 0; i < num_vertices; i++){
         printf("Vertex %d: ", i);
         printf("x: %f, y: %f, z: %f\n", vertices[i].x, vertices[i].y, vertices[i].z);

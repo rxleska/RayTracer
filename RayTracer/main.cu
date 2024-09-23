@@ -3,7 +3,7 @@
 #include "lib/hittable/headers/HitRecord.hpp"
 #include "lib/hittable/headers/Octree.hpp"
 #include "lib/hittable/headers/Sphere.hpp"
-#include "lib/hittable/headers/Polygon.hpp"
+#include "lib/hittable/headers/Polygon_T.hpp"
 #include "lib/hittable/headers/Octree.hpp"
 // materials
 #include "lib/materials/headers/Material.hpp"

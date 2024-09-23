@@ -5,7 +5,7 @@
 #include "../hittable/headers/HitRecord.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../hittable/headers/Sphere.hpp"
-#include "../hittable/headers/Polygon.hpp"
+#include "../hittable/headers/Polygon_T.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../materials/headers/Material.hpp"
 #include "../materials/headers/Lambertian.hpp"
@@ -47,7 +47,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
 
 
         
-        //test polygon
+        //test Polygon_T
         //cuda malloc a vertices array
         Vec3 * vertices_poly = new Vec3[4];
         vertices_poly[0] = Vec3( -10,  0, -5);
@@ -60,9 +60,9 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         uvmap[1] = Vec3(1, 0, 0);
         uvmap[2] = Vec3(1, 1, 0);
         uvmap[3] = Vec3(0, 1, 0);
-        // device_object_list[i++] = new Polygon(vertices_poly, 4, new Lambertian(Vec3(0.9, 0.2, 0.1)));
-        device_object_list[i++] = new Polygon(vertices_poly, 4, new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
-        // device_object_list[i++] = new Polygon(vertices_poly, 4, text1, uvmap);
+        // device_object_list[i++] = new Polygon_T(vertices_poly, 4, new Lambertian(Vec3(0.9, 0.2, 0.1)));
+        device_object_list[i++] = new Polygon_T(vertices_poly, 4, new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
+        // device_object_list[i++] = new Polygon_T(vertices_poly, 4, text1, uvmap);
 
 
         //test mesh
@@ -81,17 +81,17 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         }
         
 
-        //test polygons
+        //test Polygon_Ts
         // device_object_list[i++] = Triangle(vertices_poly[0], vertices_poly[1], vertices_poly[3], text1, uvmap[0], uvmap[1], uvmap[3]);
         // device_object_list[i++] = Triangle(vertices_poly[1], vertices_poly[2], vertices_poly[3], text1, uvmap[1], uvmap[2], uvmap[3]);
 
         
-        //log polygon vertice count
-        // printf("Polygon vertices count: %d\n", ((Polygon *)device_object_list[i-1])->num_vertices);
-        //log polygon area
-        // printf("Polygon area: %f\n", ((Polygon *)device_object_list[i-1])->area);
+        //log Polygon_T vertice count
+        // printf("Polygon_T vertices count: %d\n", ((Polygon_T *)device_object_list[i-1])->num_vertices);
+        //log Polygon_T area
+        // printf("Polygon_T area: %f\n", ((Polygon_T *)device_object_list[i-1])->area);
         //log normal
-        // printf("Polygon normal: %f %f %f\n", ((Polygon *)device_object_list[i-1])->normal.x, ((Polygon *)device_object_list[i-1])->normal.y, ((Polygon *)device_object_list[i-1])->normal.z);
+        // printf("Polygon_T normal: %f %f %f\n", ((Polygon_T *)device_object_list[i-1])->normal.x, ((Polygon_T *)device_object_list[i-1])->normal.y, ((Polygon_T *)device_object_list[i-1])->normal.z);
         
         Vec3 lookfrom(5,10,10);
 

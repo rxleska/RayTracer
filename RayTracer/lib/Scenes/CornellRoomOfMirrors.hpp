@@ -5,7 +5,7 @@
 #include "../hittable/headers/HitRecord.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../hittable/headers/Sphere.hpp"
-#include "../hittable/headers/Polygon.hpp"
+#include "../hittable/headers/Polygon_T.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../materials/headers/Material.hpp"
 #include "../materials/headers/Lambertian.hpp"
@@ -101,7 +101,7 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
         device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(549.6, 0.0, 559.2),Vec3(556.0, 548.8, 559.2), red);
         device_object_list[i++] = Triangle(Vec3(552.8, 0.0, 0.0),Vec3(556.0, 548.8, 559.2),Vec3(556.0, 548.8, 0.0), red);
 
-        // //camera wall (we can see through this due to the directionality of polygons)
+        // //camera wall (we can see through this due to the directionality of Polygon_Ts)
         // //uses white material
         // /*
         // 549.6   0.0 0 
@@ -163,8 +163,8 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 64;
-        (*d_camera)->bounces = 20;
+        (*d_camera)->samples = 16;
+        (*d_camera)->bounces = 100;
 
 
         // printf("World created\n");

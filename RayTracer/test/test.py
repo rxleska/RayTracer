@@ -11,18 +11,18 @@ def read_points(file_name):
             points.append(point)
     return points
 
-# Function to draw polygons for each group of 3 points
-def draw_polygons(points):
+# Function to draw Polygon_Ts for each group of 3 points
+def draw_Polygon_Ts(points):
     # Create a new 3D plot
     fig = plt.figure()
     ax = fig.add_subplot(111, projection='3d')
 
-    # Group every 3 points to form a triangle (polygon)
+    # Group every 3 points to form a triangle (Polygon_T)
     for i in range(0, len(points), 3):
         if i + 2 < len(points):
-            polygon = [points[i], points[i+1], points[i+2]]
-            # Add polygon to the plot
-            ax.add_collection3d(Poly3DCollection([polygon], facecolors='red', edgecolors='black', linewidths=1, alpha=0.9))
+            Polygon_T = [points[i], points[i+1], points[i+2]]
+            # Add Polygon_T to the plot
+            ax.add_collection3d(Poly3DCollection([Polygon_T], facecolors='red', edgecolors='black', linewidths=1, alpha=0.9))
 
     # Set labels for the axes
     ax.set_xlabel('X')
@@ -32,11 +32,11 @@ def draw_polygons(points):
     # Display the plot
     plt.show()
 
-# Main function to read file and draw polygons
+# Main function to read file and draw Polygon_Ts
 def main():
     file_name = 'test/mesh.txt'
     points = read_points(file_name)
-    draw_polygons(points)
+    draw_Polygon_Ts(points)
 
 if __name__ == "__main__":
     main()

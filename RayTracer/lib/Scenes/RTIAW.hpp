@@ -5,7 +5,7 @@
 #include "../hittable/headers/HitRecord.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../hittable/headers/Sphere.hpp"
-#include "../hittable/headers/Polygon.hpp"
+#include "../hittable/headers/Polygon_T.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../materials/headers/Material.hpp"
 #include "../materials/headers/Lambertian.hpp"
@@ -56,13 +56,13 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
         //add sun light
         device_object_list[i++] = new Sphere(Vec3(0,510,400), 200, new Light(Vec3(1.0, 1.0, 1.0), 1.0));
 
-        //test polygon
+        //test Polygon_T
         //cuda malloc a vertices array
         Vec3 * vertices_poly = new Vec3[3];
         vertices_poly[0] = Vec3(0, 0, 0);
         vertices_poly[1] = Vec3(0, 10, 0);
         vertices_poly[2] = Vec3(10, 10, 0);
-        device_object_list[i++] = new Polygon(vertices_poly, 3, new Lambertian(Vec3(0.9, 0.2, 0.1)));
+        device_object_list[i++] = new Polygon_T(vertices_poly, 3, new Lambertian(Vec3(0.9, 0.2, 0.1)));
 
         Vec3 lookfrom(13,2,3);
 
