@@ -18,20 +18,20 @@
 #include "../processing/headers/Ray.hpp"
 #include "../processing/headers/Vec3.hpp"
 
-__device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
+__device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
 
         Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
-        Material *mirror = new Metal(Vec3(0.9, 0.9, 0.9), 0.0001);
-        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 1.5);
+        Material *mirror = new Metal(Vec3(0.9, 0.9, 0.9), 0.001);
+        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 2.0);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         // Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
         // Material *red = new LambertianBordered(Vec3(0.65, 0.05, 0.05));
-        Material *green = new Metal(Vec3(0.12, 0.45, 0.15), 0.0001);
-        Material *red = new Metal(Vec3(0.65, 0.05, 0.05), 0.0001);
+        Material *green = new Metal(Vec3(0.12, 0.45, 0.15), 0.001);
+        Material *red = new Metal(Vec3(0.65, 0.05, 0.05), 0.001);
 
         //floor 
         /*
@@ -113,127 +113,27 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
         device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), mirror);
         device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), mirror);
 
-        //short block
-        //uses white material
-        //wall1
-        /*
-        130.0 165.0  65.0 
-        82.0 165.0 225.0
-        240.0 165.0 272.0
-        290.0 165.0 114.0
-        */
-        // device_object_list[i++] = Quad(Vec3(130.0, 165.0, 65.0),Vec3(82.0, 165.0, 225.0),Vec3(240.0, 165.0, 272.0),Vec3(290.0, 165.0, 114.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 165.0, 65.0),Vec3(82.0, 165.0, 225.0),Vec3(240.0, 165.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 165.0, 65.0),Vec3(240.0, 165.0, 272.0),Vec3(290.0, 165.0, 114.0), white);
-        
-        
-        //wall2
-        /*
-        290.0   0.0 114.0
-        290.0 165.0 114.0
-        240.0 165.0 272.0
-        240.0   0.0 272.0
-        */
-        //device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
-        
-        
-        //wall3
-        /*
-        130.0   0.0  65.0
-        130.0 165.0  65.0
-        290.0 165.0 114.0
-        290.0   0.0 114.0
-        */
-        // device_object_list[i++] = Quad(Vec3(130.0, 0.0, 65.0),Vec3(130.0, 165.0, 65.0),Vec3(290.0, 165.0, 114.0),Vec3(290.0, 0.0, 114.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 0.0, 65.0),Vec3(130.0, 165.0, 65.0),Vec3(290.0, 165.0, 114.0), white);
-        device_object_list[i++] = Triangle(Vec3(130.0, 0.0, 65.0),Vec3(290.0, 165.0, 114.0),Vec3(290.0, 0.0, 114.0), white);
-        
-        
-        //wall4
-        /*
-        82.0   0.0 225.0
-        82.0 165.0 225.0
-        130.0 165.0  65.0
-        130.0   0.0  65.0
-        */
-        // device_object_list[i++] = Quad(Vec3(82.0, 0.0, 225.0),Vec3(82.0, 165.0, 225.0),Vec3(130.0, 165.0, 65.0),Vec3(130.0, 0.0, 65.0), white);
-        device_object_list[i++] = Triangle(Vec3(82.0, 0.0, 225.0),Vec3(82.0, 165.0, 225.0),Vec3(130.0, 165.0, 65.0), white);
-        device_object_list[i++] = Triangle(Vec3(82.0, 0.0, 225.0),Vec3(130.0, 165.0, 65.0),Vec3(130.0, 0.0, 65.0), white);
-        
-        
-        //wall5
-        /*
-        240.0   0.0 272.0
-        240.0 165.0 272.0
-        82.0 165.0 225.0
-        82.0   0.0 225.0
-        */
-        // device_object_list[i++] = Quad(Vec3(240.0, 0.0, 272.0),Vec3(240.0, 165.0, 272.0),Vec3(82.0, 165.0, 225.0),Vec3(82.0, 0.0, 225.0), white);
-        device_object_list[i++] = Triangle(Vec3(240.0, 0.0, 272.0),Vec3(240.0, 165.0, 272.0),Vec3(82.0, 165.0, 225.0), white);
-        device_object_list[i++] = Triangle(Vec3(240.0, 0.0, 272.0),Vec3(82.0, 165.0, 225.0),Vec3(82.0, 0.0, 225.0), white);
 
-        
+        // //project the mesh to the proper place and scale it
+        for(int j = 0; j < mesh_lengths[1]; j++) {
+            //rotate about y 180 degrees
+            float x = meshes[1][j].x;
+            float z = meshes[1][j].z;
+            meshes[1][j].x = x * cos(M_PI) - z * sin(M_PI);
+            meshes[1][j].z = x * sin(M_PI) + z * cos(M_PI);
 
-        //tall block
-        //uses white material
-        //wall1
-        /*
-        423.0 330.0 247.0
-        265.0 330.0 296.0
-        314.0 330.0 456.0
-        472.0 330.0 406.0
-        */
-        // device_object_list[i++] = Quad(Vec3(423.0, 330.0, 247.0),Vec3(265.0, 330.0, 296.0),Vec3(314.0, 330.0, 456.0),Vec3(472.0, 330.0, 406.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 330.0, 247.0),Vec3(265.0, 330.0, 296.0),Vec3(314.0, 330.0, 456.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 330.0, 247.0),Vec3(314.0, 330.0, 456.0),Vec3(472.0, 330.0, 406.0), white);
-        
-        
-        //wall2
-        /*
-        423.0   0.0 247.0
-        423.0 330.0 247.0
-        472.0 330.0 406.0
-        472.0   0.0 406.0
-        */
-        // device_object_list[i++] = Quad(Vec3(423.0, 0.0, 247.0),Vec3(423.0, 330.0, 247.0),Vec3(472.0, 330.0, 406.0),Vec3(472.0, 0.0, 406.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 0.0, 247.0),Vec3(423.0, 330.0, 247.0),Vec3(472.0, 330.0, 406.0), white);
-        device_object_list[i++] = Triangle(Vec3(423.0, 0.0, 247.0),Vec3(472.0, 330.0, 406.0),Vec3(472.0, 0.0, 406.0), white);
-        
-        //wall3
-        /*
-        472.0   0.0 406.0
-        472.0 330.0 406.0
-        314.0 330.0 456.0
-        314.0   0.0 456.0
-        */
-        // device_object_list[i++] = Quad(Vec3(472.0, 0.0, 406.0),Vec3(472.0, 330.0, 406.0),Vec3(314.0, 330.0, 456.0),Vec3(314.0, 0.0, 456.0), white);
-        device_object_list[i++] = Triangle(Vec3(472.0, 0.0, 406.0),Vec3(472.0, 330.0, 406.0),Vec3(314.0, 330.0, 456.0), white);
-        device_object_list[i++] = Triangle(Vec3(472.0, 0.0, 406.0),Vec3(314.0, 330.0, 456.0),Vec3(314.0, 0.0, 456.0), white);
-        
-        
-        //wall4
-        /*
-        314.0   0.0 456.0
-        314.0 330.0 456.0
-        265.0 330.0 296.0
-        265.0   0.0 296.0
-        */
-        // device_object_list[i++] = Quad(Vec3(314.0, 0.0, 456.0),Vec3(314.0, 330.0, 456.0),Vec3(265.0, 330.0, 296.0),Vec3(265.0, 0.0, 296.0), white);
-        device_object_list[i++] = Triangle(Vec3(314.0, 0.0, 456.0),Vec3(314.0, 330.0, 456.0),Vec3(265.0, 330.0, 296.0), white);
-        device_object_list[i++] = Triangle(Vec3(314.0, 0.0, 456.0),Vec3(265.0, 330.0, 296.0),Vec3(265.0, 0.0, 296.0), white);
-        
-        //wall5
-        /*
-        265.0   0.0 296.0
-        265.0 330.0 296.0
-        423.0 330.0 247.0
-        423.0   0.0 247.0
-        */
-        // device_object_list[i++] = Quad(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
+
+            meshes[1][j].x = meshes[1][j].x * 75.0f + 278.0f;
+            meshes[1][j].y = meshes[1][j].y * 75.0f + 75.0f; 
+            meshes[1][j].z = meshes[1][j].z * 75.0f + 278.0f;
+        }
+
+        //matte marble material
+        Material * marble = new LambertianBordered(Vec3(0.9, 0.9, 0.9));
+
+        for(int j = 0; j < mesh_lengths[1]/3; j++) {
+            device_object_list[i++] = Triangle(meshes[1][j*3], meshes[1][j*3 + 1], meshes[1][j*3 + 2], marble);
+        }
 
 
         Vec3 lookfrom(278.0f, 278.0f, -400.0f);

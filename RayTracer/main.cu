@@ -310,9 +310,9 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 __global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures);
-        create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
     }
 }
 
@@ -373,13 +373,14 @@ int main() {
 
 
     // LOAD MESHES
-    int num_meshes = 1;
+    int num_meshes = 2;
     Vec3 **meshes; // array of mesh point arrays
     int *num_points_meshes; // array of number of points in each mesh
     checkCudaErrors(cudaMalloc((void **)&meshes, num_meshes * sizeof(Vec3 *)));
     checkCudaErrors(cudaMalloc((void **)&num_points_meshes, num_meshes * sizeof(int)));
 
-    allocate_mesh("meshFiles/scene.gltf", meshes, 0, num_points_meshes);
+    allocate_mesh("meshFiles/man/scene.gltf", meshes, 0, num_points_meshes);
+    allocate_mesh("meshFiles/knight/scene.gltf", meshes, 1, num_points_meshes);
 
 
     // make our world of hitables & the camera
