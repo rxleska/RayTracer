@@ -320,10 +320,10 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512*2;
+    int nx = 512;
     // int nx = 500*1;
     // int nx = 1024;
-    int ny = 512*2;
+    int ny = 512;
     // int ny = 500*1;
     // int ny = 1024;
     int ns = 100;

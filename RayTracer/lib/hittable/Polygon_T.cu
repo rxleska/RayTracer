@@ -154,23 +154,6 @@ __device__ void Polygon_T::getBounds(float& x_min, float& x_max, float& y_min, f
     }
 }
 
-// __device__ bool Polygon_T::is_coplanar() const{
-//     Vec3 currentCross;
-//     for (int i = 0; i < num_vertices - 3; i++) {
-//         Vec3 v1 = vertices[i + 1] - vertices[i];
-//         Vec3 v2 = vertices[i + 2] - vertices[i];
-//         Vec3 normal = v1.cross(v2).normalized();
-//         if (i == 0) {
-//             currentCross = normal;  // store the first cross product
-//         } else {
-//             if (fabs(currentCross.dot(normal)) > F_EPSILON) { // or use fabs(currentCross.dot(normal)) > F_EPSILON
-//                 return false;
-//             }
-//         }
-//     }
-//     return true;
-// }
-
 __device__ bool Polygon_T::is_coplanar() const {
     Vec3 currentCross;
     for (int i = 0; i < num_vertices - 2; i++) {  // Adjusted loop boundary

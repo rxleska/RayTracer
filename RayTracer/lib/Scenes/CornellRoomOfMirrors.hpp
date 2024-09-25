@@ -143,13 +143,14 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
         *rand_state = local_rand_state;
         // *d_world  = new Octree(device_object_list, i);
         printf("rand inited\n");
-        *d_world  = new Octree(device_object_list, i);
-        //initialize Octree
-        printf("Initializing Octree\n");
-        ((Octree*)*d_world)->max_depth = 4;
-        printf("Max depth set\n");
-        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
-        printf("Octree initialized\n");
+        *d_world = new Scene(device_object_list, i);
+        // *d_world  = new Octree(device_object_list, i);
+        // //initialize Octree
+        // printf("Initializing Octree\n");
+        // ((Octree*)*d_world)->max_depth = 4;
+        // printf("Max depth set\n");
+        // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+        // printf("Octree initialized\n");
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();
@@ -163,8 +164,8 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 16;
-        (*d_camera)->bounces = 100;
+        (*d_camera)->samples = 10;
+        (*d_camera)->bounces = 20;
 
 
         // printf("World created\n");

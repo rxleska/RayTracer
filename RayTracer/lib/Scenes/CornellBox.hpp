@@ -24,12 +24,12 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         curandState local_rand_state = *rand_state;
         int i = 0;
 
-        Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
-        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 1.5);
+        Material *white = new Lambertian(Vec3(1.0, 1.0, 1.0));
+        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 4);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
-        Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
-        Material *red = new LambertianBordered(Vec3(0.65, 0.05, 0.05));
+        Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15));
+        Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05));
 
         //floor 
         /*
@@ -241,13 +241,14 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         *rand_state = local_rand_state;
         // *d_world  = new Octree(device_object_list, i);
         printf("rand inited\n");
-        *d_world  = new Octree(device_object_list, i);
-        //initialize Octree
-        printf("Initializing Octree\n");
-        ((Octree*)*d_world)->max_depth = 4;
-        printf("Max depth set\n");
-        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
-        printf("Octree initialized\n");
+        // *d_world  = new Octree(device_object_list, i);
+        *d_world = new Scene(device_object_list, i);
+        // //initialize Octree
+        // printf("Initializing Octree\n");
+        // ((Octree*)*d_world)->max_depth = 2;
+        // printf("Max depth set\n");
+        // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+        // printf("Octree initialized\n");
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();
@@ -260,8 +261,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
                                  aperture,
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
-        (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 16;
+        (*d_camera)->msaa_x = 4;
+        (*d_camera)->samples = 50;
         (*d_camera)->bounces = 50;
 
 
