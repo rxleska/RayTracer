@@ -108,8 +108,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // 556.0 548.8 0
         // */
         // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
+        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
+        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
 
         //short block
         //uses white material
@@ -262,8 +262,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 4;
-        (*d_camera)->samples = 50;
-        (*d_camera)->bounces = 50;
+        (*d_camera)->samples = 500;
+        (*d_camera)->bounces = 100;
 
 
         // printf("World created\n");

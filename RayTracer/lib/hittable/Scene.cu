@@ -12,6 +12,10 @@ __device__ Scene::Scene(){
     // printf("Scene constructor\n");
     // hitables = new Hitable*[hitable_capacity]; // c++ new operator not supported in cuda
     hitables = (Hitable**)malloc(sizeof(Hitable*) * hitable_capacity);
+
+    //point lights
+    pointLights = nullptr;
+    point_light_count = 0;
 }
 
 __host__ void Scene::free_memory(){
@@ -70,4 +74,12 @@ __device__ void Scene::debug_print() const{
     for(int i = 0; i < hitable_count; i++){
         hitables[i]->debug_print();
     }
+}
+
+__device__ void Scene::setPointLights(Vec3 *pointLights, int light_count){
+    this->pointLights = (Vec3*)malloc(sizeof(Vec3) * light_count);
+    for (int i = 0; i < light_count; i++) {
+        this->pointLights[i] = pointLights[i];
+    }
+    this->point_light_count = light_count;
 }

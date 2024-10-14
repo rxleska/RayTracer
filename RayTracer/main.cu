@@ -312,9 +312,9 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures);
         // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
     }
 }
 
@@ -322,10 +322,10 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512;
+    int nx = 512*4;
     // int nx = 500*1;
     // int nx = 1024;
-    int ny = 512;
+    int ny = 512*4;
     // int ny = 500*1;
     // int ny = 1024;
     int ns = 100;

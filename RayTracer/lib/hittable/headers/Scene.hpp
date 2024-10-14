@@ -11,6 +11,7 @@ class Scene{
         __host__ void free_memory();
         __device__ void resize(int new_capacity);
         __device__ void addHitable(Hitable *hittable);
+        __device__ void setPointLights(Vec3 *pointLights, int light_count);
         __device__ virtual bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const;
         __device__ void empty();
         
@@ -21,6 +22,8 @@ class Scene{
 
         Hitable **hitables;
         int hitable_capacity;
+        Vec3 *pointLights;
+        int point_light_count;
 };
 
 
