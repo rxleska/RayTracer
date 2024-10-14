@@ -230,6 +230,9 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             else if(did_scatter == 2){ //light hit return color
                 return cur_attenuation * attenuation;
             }
+            else if(did_scatter == 3) { //phong hit return color
+                return (*world)->handlePhong(rec) * cur_attenuation;
+            }
             else {
                 return Vec3(0.0,0.0,1.0);
             }

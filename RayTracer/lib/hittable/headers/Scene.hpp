@@ -3,6 +3,7 @@
 
 #include "HitRecord.hpp"
 #include "Hitable.hpp"
+#include "../processing/headers/Camera.hpp"
 
 class Scene{
     public:
@@ -14,6 +15,8 @@ class Scene{
         __device__ void setPointLights(Vec3 *pointLights, int light_count);
         __device__ virtual bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const;
         __device__ void empty();
+
+        __device__ Vec3 handlePhong(const HitRecord &rec, Camera **cam) const;
         
         __device__ void debug_print() const;
 
