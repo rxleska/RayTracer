@@ -15,8 +15,6 @@ class Phong : public Material
 
         Vec3 kConsts; //x -> ks, y -> kd, z -> ka
         float a;
-
-    private:
         Vec3 albedo;
         
 };

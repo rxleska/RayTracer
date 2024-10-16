@@ -100,7 +100,7 @@ __device__ Vec3 Scene::handlePhong(const HitRecord &rec, Camera **cam) const{
     Vec3 V_hat = (*cam)->origin - rec.p;
     V_hat.normalize();
 
-    for(int i = 0; i < point_light_count; i++){
+    for(int i = 0; i < point_light_count; i+=2){
         //vector towards the light
         Vec3 L_hat_m = pointLights[i] - rec.p; 
         L_hat_m.normalize();
@@ -108,18 +108,18 @@ __device__ Vec3 Scene::handlePhong(const HitRecord &rec, Camera **cam) const{
         float Lm_dot_N = L_hat_m.dot(N_hat);
 
         //kd * Lm_dot_N * imd
-        returned_color = returned_color + pointLights[i] * (Lm_dot_N * material->kConsts.y);
+        returned_color = returned_color + pointLights[i+1] * (Lm_dot_N * material->kConsts.y);
 
         Vec3 R_hat = (N_hat * 2.0f * Lm_dot_N ) - L_hat_m;
         R_hat.normalize();
         //ks * (R_hat dot V_hat)^a * ims
         float R_dot_V = R_hat.dot(V_hat);
         if(R_dot_V > 0){
-            returned_color = returned_color + pointLights[i] * pow(R_dot_V, material->a) * material->kConsts.x;
+            returned_color = returned_color + pointLights[i+1] * pow(R_dot_V, material->a) * material->kConsts.x;
         }
         
     }
 
 
-    return returned_color;
+    return returned_color * material->albedo;
 }

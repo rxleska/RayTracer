@@ -3,7 +3,7 @@
 
 #include "HitRecord.hpp"
 #include "Hitable.hpp"
-#include "../processing/headers/Camera.hpp"
+#include "../../processing/headers/Camera.hpp"
 
 class Scene{
     public:

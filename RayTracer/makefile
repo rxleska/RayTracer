@@ -20,10 +20,10 @@ CFLAGS = -arch=sm_89 -rdc=true
 
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
-MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj
+MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj bin/Phong.obj
 HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon_T.obj bin/Octree.obj
 
-SCENES = lib/Scenes/CornellBox.hpp lib/Scenes/CornellRoomOfMirrors.hpp lib/Scenes/RTIAW.hpp lib/Scenes/TestScene.hpp lib/Scenes/Billards.hpp
+SCENES = lib/Scenes/CornellBox.hpp lib/Scenes/CornellRoomOfMirrors.hpp lib/Scenes/RTIAW.hpp lib/Scenes/TestScene.hpp lib/Scenes/Billards.hpp lib/Scenes/PhongCornellBox.hpp
 
 all: run 
 
@@ -70,13 +70,16 @@ bin/LambertianBordered.obj: lib/materials/LambertianBordered.cu lib/materials/he
 bin/Textured.obj: lib/materials/Textured.cu lib/materials/headers/Textured.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/materials/Textured.cu -o bin/Textured.obj
 
+bin/Phong.obj: lib/materials/Phong.cu lib/materials/headers/Phong.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
+	$(CC) $(CFLAGS) -c lib/materials/Phong.cu -o bin/Phong.obj
+
 
 # Hittable Objects
 
 bin/Sphere.obj: lib/hittable/Sphere.cu lib/hittable/headers/Sphere.hpp lib/processing/headers/Ray.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Sphere.cu -o bin/Sphere.obj
 
-bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
+bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp lib/materials/headers/Phong.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.obj
 
 bin/Polygon_T.obj: lib/hittable/Polygon_T.cu lib/hittable/headers/Polygon_T.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
