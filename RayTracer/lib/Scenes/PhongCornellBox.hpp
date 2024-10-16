@@ -26,13 +26,13 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
         int i = 0;
 
         // Material *white = new Lambertian(Vec3(1.0, 1.0, 1.0));
-        Material *white = new Phong(Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.5, 0.5), 0.0);
+        Material *white = new PhongLamb(Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.5, 0.5), 0.0, 5);
         Material *light = new Light(Vec3(1.0, 1.0, 1.0), 4);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15));
-        Material *green = new Phong(Vec3(0.12, 0.45, 0.15), Vec3(0.0, 0.5, 0.5), 0.0);
-        Material *red = new Phong(Vec3(0.65, 0.05, 0.05), Vec3(0.0, 0.5, 0.5), 0.0);
+        Material *green = new PhongLamb(Vec3(0.12, 0.45, 0.15), Vec3(0.0, 0.5, 0.5), 0.0, 5);
+        Material *red = new PhongLamb(Vec3(0.65, 0.05, 0.05), Vec3(0.0, 0.5, 0.5), 0.0, 5);
 
         //floor 
         /*
@@ -58,9 +58,18 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
         device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
 
         //point light source
-        Vec3 *pointLights = new Vec3[2];
-        pointLights[0] = Vec3(278.0, 544, 279.5);
-        pointLights[1] = Vec3(1.0, 1.0, 1.0);
+        Vec3 *pointLights = new Vec3[10];
+        int plc = 0;
+        pointLights[plc++] = Vec3(278.0, 544, 279.5);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(343.0, 544, 332.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(343.0, 544, 227.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(213.0, 544, 332.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(213.0, 544, 227.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
 
 
         //Ceiling
@@ -258,7 +267,7 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
         // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         // printf("Octree initialized\n");
 
-        (*d_world)->setPointLights(pointLights, 2);
+        (*d_world)->setPointLights(pointLights, plc);
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();
@@ -272,8 +281,8 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 4;
-        (*d_camera)->samples = 50;
-        (*d_camera)->bounces = 50;
+        (*d_camera)->samples = 5000;
+        (*d_camera)->bounces = 25;
 
 
         // printf("World created\n");

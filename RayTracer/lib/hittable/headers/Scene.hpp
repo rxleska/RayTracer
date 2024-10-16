@@ -17,6 +17,7 @@ class Scene{
         __device__ void empty();
 
         __device__ Vec3 handlePhong(const HitRecord &rec, Camera **cam) const;
+        __device__ Vec3 handlePhongLamb(const HitRecord &rec, Camera **cam, Ray &scattered, curandState *local_rand_state, bool usePhong) const;
         
         __device__ void debug_print() const;
 

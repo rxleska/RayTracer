@@ -15,7 +15,8 @@ enum MaterialType
     DIELECTRIC, // refract
     LIGHT, // emit light
     TEXTURED, // textured material
-    PHONG // Phong material
+    PHONG, // Phong material
+    PHONGLAMB // PhongLamb material
 };
 
 //min function for floats

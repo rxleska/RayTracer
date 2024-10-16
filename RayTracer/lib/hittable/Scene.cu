@@ -4,6 +4,7 @@
 #include "../processing/headers/Ray.hpp"
 
 #include "../materials/headers/Phong.hpp"
+#include "../materials/headers/PhongLamb.hpp"
 
 #include <iostream>
 
@@ -107,19 +108,87 @@ __device__ Vec3 Scene::handlePhong(const HitRecord &rec, Camera **cam) const{
 
         float Lm_dot_N = L_hat_m.dot(N_hat);
 
-        //kd * Lm_dot_N * imd
-        returned_color = returned_color + pointLights[i+1] * (Lm_dot_N * material->kConsts.y);
+        float time = (pointLights[i] - rec.p).x / L_hat_m.x;
+        Ray check_ray = Ray(rec.p, L_hat_m);
+        HitRecord check_rec; //this is not used but a null pointer could lead to errors or undefined behavior
+        if(!hit(check_ray, 0.001, time, check_rec)){
+            //kd * Lm_dot_N * imd
+            returned_color = returned_color + pointLights[i+1] * (Lm_dot_N * material->kConsts.y);
 
-        Vec3 R_hat = (N_hat * 2.0f * Lm_dot_N ) - L_hat_m;
-        R_hat.normalize();
-        //ks * (R_hat dot V_hat)^a * ims
-        float R_dot_V = R_hat.dot(V_hat);
-        if(R_dot_V > 0){
-            returned_color = returned_color + pointLights[i+1] * pow(R_dot_V, material->a) * material->kConsts.x;
+            Vec3 R_hat = (N_hat * 2.0f * Lm_dot_N ) - L_hat_m;
+            R_hat.normalize();
+            //ks * (R_hat dot V_hat)^a * ims
+            float R_dot_V = R_hat.dot(V_hat);
+            if(R_dot_V > 0){
+                returned_color = returned_color + pointLights[i+1] * pow(R_dot_V, material->a) * material->kConsts.x;
+            }
         }
         
     }
 
 
     return returned_color * material->albedo;
+}
+
+__device__ Vec3 Scene::handlePhongLamb(const HitRecord &rec, Camera **cam, Ray &scattered, curandState *local_rand_state, bool usePhong) const{
+    PhongLamb *material = (PhongLamb*) rec.mat;
+
+    if(usePhong){
+        Vec3 returned_color = Vec3(1.0,1.0,1.0) * (*cam)->ambient_light_level * material->kConsts.z;
+
+        // N_hat normal out of the surface
+        Vec3 N_hat = rec.normal;
+        N_hat.normalize();
+
+        // vector towards the camera
+        Vec3 V_hat = (*cam)->origin - rec.p;
+        V_hat.normalize();
+
+        for(int i = 0; i < point_light_count; i+=2){
+            //vector towards the light
+            Vec3 L_hat_m = pointLights[i] - rec.p; 
+            L_hat_m.normalize();
+
+            float Lm_dot_N = L_hat_m.dot(N_hat);
+
+            float time = (pointLights[i] - rec.p).x / L_hat_m.x;
+            Ray check_ray = Ray(rec.p, L_hat_m);
+            HitRecord check_rec; //this is not used but a null pointer could lead to errors or undefined behavior
+            if(!hit(check_ray, 0.001, time, check_rec)){
+                //kd * Lm_dot_N * imd
+                returned_color = returned_color + pointLights[i+1] * (Lm_dot_N * material->kConsts.y);
+
+                Vec3 R_hat = (N_hat * 2.0f * Lm_dot_N ) - L_hat_m;
+                R_hat.normalize();
+                //ks * (R_hat dot V_hat)^a * ims
+                float R_dot_V = R_hat.dot(V_hat);
+                if(R_dot_V > 0){
+                    returned_color = returned_color + pointLights[i+1] * pow(R_dot_V, material->a) * material->kConsts.x;
+                }
+            }
+            
+        }
+
+
+        return returned_color * material->albedo;
+    }
+    else{
+        Vec3 normal = rec.normal; // get the normal of the hit point
+
+        // get a random unit vector
+        Vec3 bounceMod = Vec3::random(-10,10,local_rand_state); // 10 is arbitrary, since we are normalizing it later
+        bounceMod.make_unit();
+
+        // get the new direction
+        Vec3 target = normal + bounceMod;
+        
+        // degenerate case where the new direction is close to zero
+        if (target.isZero()) {
+            target = normal;
+        }
+
+        //create new ray
+        scattered = Ray(rec.p, target);
+        return material->albedo;
+    }
 }

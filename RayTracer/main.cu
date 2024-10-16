@@ -13,6 +13,8 @@
 #include "lib/materials/headers/Light.hpp"
 #include "lib/materials/headers/LambertianBordered.hpp"
 #include "lib/materials/headers/Textured.hpp"
+#include "lib/materials/headers/Phong.hpp"
+#include "lib/materials/headers/PhongLamb.hpp"
 // processing
 #include "lib/processing/headers/Camera.hpp"
 #include "lib/processing/headers/Ray.hpp"
@@ -233,6 +235,16 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             else if(did_scatter == 3) { //phong hit return color
                 return (*world)->handlePhong(rec, cam) * cur_attenuation;
             }
+            else if(did_scatter == 4) { //phong hit return color
+                int bcCount = ((PhongLamb*) rec.mat)->bc;
+                if(bcCount < i){
+                    return (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, true) * cur_attenuation;
+                }
+                else{
+                    cur_attenuation = cur_attenuation * (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, false);
+                    cur_ray = scattered;
+                }
+            }
             else {
                 return Vec3(0.0,0.0,1.0);
             }
@@ -327,10 +339,10 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512*1;
+    int nx = 512*4;
     // int nx = 500*1;
     // int nx = 1024;
-    int ny = 512*1;
+    int ny = 512*4;
     // int ny = 500*1;
     // int ny = 1024;
     int ns = 100;
