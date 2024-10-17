@@ -37,13 +37,13 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
 
         Material * text = new Textured(textures[0], 474, 266);
         // ((Textured*)text)->rot = 0.25f;
-        // device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, text);
+        device_object_list[i++] = new Sphere(Vec3(0, 1, 0), 1.0, text);
 
 
 
-        // Material * text1 = new Textured(textures[1], 474, 327);
+        Material * text1 = new Textured(textures[1], 474, 327);
         // // ((Textured*)text1)->rot = 0.25f;
-        // device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
+        device_object_list[i++] = new Sphere(Vec3(-2, 1, 0), 1.0, text1);
 
 
         

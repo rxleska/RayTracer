@@ -292,8 +292,8 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
                                  aperture,
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
-        (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 1;
+        (*d_camera)->msaa_x = 10;
+        (*d_camera)->samples = 10;
         (*d_camera)->bounces = 2;
 
 
