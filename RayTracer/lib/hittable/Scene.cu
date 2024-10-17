@@ -91,7 +91,7 @@ __device__ void Scene::setPointLights(Vec3 *pointLights, int light_count){
 __device__ Vec3 Scene::handlePhong(const HitRecord &rec, Camera **cam) const{
     Phong *material = (Phong*) rec.mat;
 
-    Vec3 returned_color = Vec3(1.0,1.0,1.0) * (*cam)->ambient_light_level * material->kConsts.z;
+    Vec3 returned_color = material->albedo * (*cam)->ambient_light_level * material->kConsts.z;
 
     // N_hat normal out of the surface
     Vec3 N_hat = rec.normal;

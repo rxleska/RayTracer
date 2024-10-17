@@ -1,5 +1,5 @@
-#ifndef PHONG_CORNELL_BOX_HPP
-#define PHONG_CORNELL_BOX_HPP
+#ifndef PHONG_MIX_CORNELL_BOX_HPP
+#define PHONG_MIX_CORNELL_BOX_HPP
 
 #include "../hittable/headers/Hitable.hpp"
 #include "../hittable/headers/HitRecord.hpp"
@@ -19,10 +19,6 @@
 #include "../processing/headers/Ray.hpp"
 #include "../processing/headers/Vec3.hpp"
 
-#ifndef light_density
-#define light_density 5
-#define light_density_f 5.0f
-#endif
 
 __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
@@ -30,16 +26,13 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
         int i = 0;
 
         // Material *white = new Lambertian(Vec3(1.0, 1.0, 1.0));
-        // Material *white = new PhongLamb(Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.5, 0.5), 0.0, 1);
-        Material *white = new Phong(Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.5, 0.5), 0.0);
+        Material *white = new PhongLamb(Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.5, 0.5), 0.0, 1);
         Material *light = new Light(Vec3(1.0, 1.0, 1.0), 4);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15));
-        Material *green = new Phong(Vec3(0.12, 0.45, 0.15), Vec3(0.0, 0.5, 0.5), 0.0);
-        // Material *green = new PhongLamb(Vec3(0.12, 0.45, 0.15), Vec3(0.0, 0.5, 0.5), 0.0, 1);
-        Material *red = new Phong(Vec3(0.65, 0.05, 0.05), Vec3(0.0, 0.5, 0.5), 0.0);
-        // Material *red = new PhongLamb(Vec3(0.65, 0.05, 0.05), Vec3(0.0, 0.5, 0.5), 0.0, 1);
+        Material *green = new PhongLamb(Vec3(0.12, 0.45, 0.15), Vec3(0.0, 0.5, 0.5), 0.0, 1);
+        Material *red = new PhongLamb(Vec3(0.65, 0.05, 0.05), Vec3(0.0, 0.5, 0.5), 0.0, 1);
 
         //floor 
         /*
@@ -65,23 +58,18 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
         device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
 
         //point light source
-        Vec3 *pointLights = new Vec3[light_density*light_density*2];
+        Vec3 *pointLights = new Vec3[10];
         int plc = 0;
-        float lxs = 213.0;
-        float lxdelta = (343.0 - lxs)/light_density_f;
-        float lys = 227.0;
-        float lydelta = (332.0 - lys)/light_density_f;
-        Vec3 Intensity = Vec3(1.0/light_density_f/light_density_f, 1.0/light_density_f/light_density_f, 1.0/light_density_f/light_density_f);
-        Intensity = Intensity * 0.75;
-        for(int x = 0; x < light_density; x++){
-            lys = 227.0;
-            for(int y = 0; y < light_density; y++){
-                pointLights[plc++] = Vec3(lxs, 544.8, lys);
-                pointLights[plc++] = Intensity;
-                lys += lydelta;
-            }
-            lxs += lxdelta;
-        }
+        pointLights[plc++] = Vec3(278.0, 544, 279.5);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(343.0, 544, 332.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(343.0, 544, 227.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(213.0, 544, 332.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        pointLights[plc++] = Vec3(213.0, 544, 227.0);
+        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
 
 
         //Ceiling
@@ -283,7 +271,7 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();
-        float aperture = 0.25;
+        float aperture = 0.0;
         *d_camera   = new Camera(lookfrom,
                                  lookat,
                                  Vec3(0,1,0),
@@ -292,9 +280,9 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
                                  aperture,
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
-        (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 1;
-        (*d_camera)->bounces = 2;
+        (*d_camera)->msaa_x = 4;
+        (*d_camera)->samples = 100;
+        (*d_camera)->bounces = 25;
 
 
         // printf("World created\n");
