@@ -62,14 +62,14 @@ __device__ void create_Phong_Mix_Cornell_Box_Octree(Hitable **device_object_list
         int plc = 0;
         pointLights[plc++] = Vec3(278.0, 544, 279.5);
         pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
-        pointLights[plc++] = Vec3(343.0, 544, 332.0);
-        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
-        pointLights[plc++] = Vec3(343.0, 544, 227.0);
-        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
-        pointLights[plc++] = Vec3(213.0, 544, 332.0);
-        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
-        pointLights[plc++] = Vec3(213.0, 544, 227.0);
-        pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        // pointLights[plc++] = Vec3(343.0, 544, 332.0);
+        // pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        // pointLights[plc++] = Vec3(343.0, 544, 227.0);
+        // pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        // pointLights[plc++] = Vec3(213.0, 544, 332.0);
+        // pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
+        // pointLights[plc++] = Vec3(213.0, 544, 227.0);
+        // pointLights[plc++] = Vec3(0.15, 0.15, 0.15);
 
 
         //Ceiling
@@ -281,7 +281,7 @@ __device__ void create_Phong_Mix_Cornell_Box_Octree(Hitable **device_object_list
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 50000;
+        (*d_camera)->samples = 5000;
         (*d_camera)->bounces = 25;
 
 
