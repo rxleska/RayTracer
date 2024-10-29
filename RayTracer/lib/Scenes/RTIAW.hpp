@@ -19,7 +19,7 @@
 #include "../processing/headers/Vec3.hpp"
 
 
-__device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 ***textures, int num_textures) {
+__device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
@@ -49,8 +49,8 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
             }
         }
         device_object_list[i++] = new Sphere(Vec3(0, 1,0),  1.0, new Dielectric(1.5));
-        // device_object_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
-        device_object_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Textured((*textures)[0],474,327));
+        device_object_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Lambertian(Vec3(0.4, 0.2, 0.1)));
+        // device_object_list[i++] = new Sphere(Vec3(-4, 1, 0), 1.0, new Textured((*textures)[0],474,327));
         device_object_list[i++] = new Sphere(Vec3(4, 1, 0),  1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
 
         //add sun light
@@ -82,9 +82,9 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
-        (*d_camera)->ambient_light_level = 0.8f;
-        (*d_camera)->msaa_x = 4;
-        (*d_camera)->samples = 200;
+        (*d_camera)->ambient_light_level = 1.0f;
+        (*d_camera)->msaa_x = 1;
+        (*d_camera)->samples = 500;
         (*d_camera)->bounces = 100;
     }
 }
