@@ -28,6 +28,11 @@
 
 #include <vector>
 
+#include <atomic>
+
+__device__ unsigned long long progressCounter = 0;
+__device__ unsigned long long blockCount = 0;
+
 // Define these only in *one* .cc file.
 #define TINYGLTF_IMPLEMENTATION
 #define STB_IMAGE_IMPLEMENTATION
@@ -59,6 +64,12 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
 __global__ void rand_init_singleton(curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curand_init(1984, 0, 0, rand_state);
+    }
+}
+
+__global__ void init_block_count(unsigned long long x){
+    if(threadIdx.x == 0 && blockIdx.x == 0){
+        blockCount = x;
     }
 }
 
@@ -312,6 +323,15 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     fb[pixel_index*3+0] = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
     fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
     fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
+
+
+    //if first thread, and if block is done, log progress
+    if(threadIdx.x == 0 && threadIdx.y == 0){
+        atomicAdd(&progressCounter, 1);
+        if(progressCounter % 10 == 0){
+            printf("Progress: %f\n", 100.0f *progressCounter / blockCount);
+        }
+    }
 }
 
 #define RND (curand_uniform(&local_rand_state))
@@ -430,6 +450,9 @@ int main() {
     dim3 blocks(nx/tx+1,ny/ty+1);
     dim3 threads(tx,ty);
     rand_init_render<<<blocks, threads>>>(nx, ny, d_rand_state);
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+    init_block_count<<<1,1>>>(blocks.x*blocks.y);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     render<<<blocks, threads>>>(fb, nx, ny,  ns, d_camera, d_world, d_rand_state);
