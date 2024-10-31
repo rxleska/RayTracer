@@ -26,13 +26,13 @@ __device__ void create_Phong_Mix_Cornell_Box_Octree(Hitable **device_object_list
         int i = 0;
 
         // Material *white = new Lambertian(Vec3(1.0, 1.0, 1.0));
-        Material *white = new PhongLamb(Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.5, 0.5), 0.0, 1);
+        Material *white = new PhongLamb(Vec3(1.0, 1.0, 1.0), Vec3(0.0, 0.5, 0.5), 0.0, 3);
         Material *light = new Light(Vec3(1.0, 1.0, 1.0), 3);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15));
-        Material *green = new PhongLamb(Vec3(0.12, 0.45, 0.15), Vec3(0.0, 0.5, 0.5), 0.0, 1);
-        Material *red = new PhongLamb(Vec3(0.65, 0.05, 0.05), Vec3(0.0, 0.5, 0.5), 0.0, 1);
+        Material *green = new PhongLamb(Vec3(0.12, 0.45, 0.15), Vec3(0.0, 0.5, 0.5), 0.0, 3);
+        Material *red = new PhongLamb(Vec3(0.65, 0.05, 0.05), Vec3(0.0, 0.5, 0.5), 0.0, 3);
 
         //floor 
         /*
@@ -281,7 +281,7 @@ __device__ void create_Phong_Mix_Cornell_Box_Octree(Hitable **device_object_list
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 5000;
+        (*d_camera)->samples = 100;
         (*d_camera)->bounces = 25;
 
 
