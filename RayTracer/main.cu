@@ -30,8 +30,12 @@
 
 #include <atomic>
 
+// #define LOG_PERCENT //used to toggle logging of progress %
+
+#ifdef LOG_PERCENT
 __device__ unsigned long long progressCounter = 0;
 __device__ unsigned long long blockCount = 0;
+#endif
 
 // Define these only in *one* .cc file.
 #define TINYGLTF_IMPLEMENTATION
@@ -41,6 +45,11 @@ __device__ unsigned long long blockCount = 0;
 #include "lib/external/tiny_gltf.h"
 
 #define MAX_OBJECTS 1000
+
+//testing https://docs.google.com/spreadsheets/d/1Knr7gxuCNoHat9BekMfd5_s_J_zUIKIp5STZWXuLcaQ/edit?gid=0#gid=0
+#define threadDIMX 512
+#define threadDIMY 1
+
 
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
@@ -67,11 +76,13 @@ __global__ void rand_init_singleton(curandState *rand_state) {
     }
 }
 
+#ifdef LOG_PERCENT
 __global__ void init_block_count(unsigned long long x){
     if(threadIdx.x == 0 && blockIdx.x == 0){
         blockCount = x;
     }
 }
+#endif
 
 __global__ void init_texture(Vec3 *textures, float *texture, int width, int height) {
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
@@ -324,14 +335,15 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
     fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
 
-
-    //if first thread, and if block is done, log progress
-    if(threadIdx.x == 0 && threadIdx.y == 0){
+    #ifdef LOG_PERCENT
+    //if first thread, block is done, log progress
+    if((threadIdx.x == 0 && threadIdx.y == 0) || (threadIdx.x == threadDIMX-1 && threadIdx.y == threadDIMY-1)){
         atomicAdd(&progressCounter, 1);
         if(progressCounter % 10 == 0){
             printf("Progress: %f\n", 100.0f *progressCounter / blockCount);
         }
     }
+    #endif
 }
 
 #define RND (curand_uniform(&local_rand_state))
@@ -347,13 +359,13 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 
 __global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
-        create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        // create_Phong_Mix_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_Phong_Mix_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
     }
 }
 
@@ -361,19 +373,19 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    // int nx = 512*8;
+    int nx = 512*1;
     // int nx = 500*1;
-    int nx = 1440;
-    // int ny = 512*8;
+    // int nx = 1440;
+    int ny = 512*1;
     // int ny = 500*1;
-    int ny = 900;
+    // int ny = 900;
     int ns = 100;
     // int tx = 20;
     // int ty = 12;
     // int tx = 16;
     // int ty = 10;
-    int tx = 512;
-    int ty = 1;
+    int tx = threadDIMX;
+    int ty = threadDIMY;
 
     std::cerr << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
@@ -452,9 +464,14 @@ int main() {
     rand_init_render<<<blocks, threads>>>(nx, ny, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+    
+    //initialize progress counter for % logging
+    #ifdef LOG_PERCENT
     init_block_count<<<1,1>>>(blocks.x*blocks.y);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
+    #endif 
+
     render<<<blocks, threads>>>(fb, nx, ny,  ns, d_camera, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
@@ -483,8 +500,9 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
     free_world<<<1,1>>>(device_object_list, d_world,d_camera);
     checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaFree(d_camera));
-    checkCudaErrors(cudaFree(d_world));
+    checkCudaErrors(cudaDeviceSynchronize());
+    // checkCudaErrors(cudaFree(d_camera));
+    // checkCudaErrors(cudaFree(d_world));
     checkCudaErrors(cudaFree(device_object_list));
     checkCudaErrors(cudaFree(d_rand_state));
     checkCudaErrors(cudaFree(d_rand_state2));
