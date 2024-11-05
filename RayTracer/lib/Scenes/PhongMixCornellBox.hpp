@@ -281,7 +281,7 @@ __device__ void create_Phong_Mix_Cornell_Box_Octree(Hitable **device_object_list
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 1;
+        (*d_camera)->samples = 100;
         (*d_camera)->bounces = 25;
 
 
