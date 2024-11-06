@@ -380,7 +380,7 @@ int main() {
     int ny = 600;
     // int ny = 500*1;
     // int ny = 900;
-    int ns = 1000;
+    int ns = 10;
     // int tx = 20;
     // int ty = 12;
     // int tx = 16;
