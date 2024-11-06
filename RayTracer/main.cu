@@ -30,7 +30,7 @@
 
 #include <atomic>
 
-#define LOG_PERCENT //used to toggle logging of progress %
+// #define LOG_PERCENT //used to toggle logging of progress %
 
 #ifdef LOG_PERCENT
 __device__ unsigned long long progressCounter = 0;
@@ -339,8 +339,8 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     //if first thread, block is done, log progress
     if((threadIdx.x == 0 && threadIdx.y == 0) || (threadIdx.x == threadDIMX-1 && threadIdx.y == threadDIMY-1)){
         atomicAdd(&progressCounter, 1);
-        if(progressCounter % 10 == 0){
-            printf("Progress: %f\n", 100.0f *progressCounter / blockCount);
+        if(progressCounter % 25 == 0){
+            printf("Progress: %f\n", 50.0f *progressCounter / blockCount);
         }
     }
     #endif
@@ -499,15 +499,15 @@ int main() {
 
     // clean up
     checkCudaErrors(cudaDeviceSynchronize());
-    free_world<<<1,1>>>(device_object_list, d_world,d_camera);
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
+    // free_world<<<1,1>>>(device_object_list, d_world,d_camera);
+    // checkCudaErrors(cudaGetLastError());
+    // checkCudaErrors(cudaDeviceSynchronize());
     // checkCudaErrors(cudaFree(d_camera));
     // checkCudaErrors(cudaFree(d_world));
-    checkCudaErrors(cudaFree(device_object_list));
-    checkCudaErrors(cudaFree(d_rand_state));
-    checkCudaErrors(cudaFree(d_rand_state2));
-    checkCudaErrors(cudaFree(fb));
+    // checkCudaErrors(cudaFree(device_object_list));
+    // checkCudaErrors(cudaFree(d_rand_state));
+    // checkCudaErrors(cudaFree(d_rand_state2));
+    // checkCudaErrors(cudaFree(fb));
 
     cudaDeviceReset();
 }
