@@ -1,5 +1,9 @@
 #include "headers/Lambertian.hpp"
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 __device__ int Lambertian::scatter(const Ray &ray_in, const HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
     Vec3 normal = rec.normal; // get the normal of the hit point
 
@@ -21,4 +25,22 @@ __device__ int Lambertian::scatter(const Ray &ray_in, const HitRecord &rec, Vec3
     //set the attenuation (color modification)
     attenuation = albedo;
     return 1;
+}
+__device__ double Lambertian::importance_pdf(const Ray &ray_in, const HitRecord &rec, const Ray &scattered, Vec3 *lightPoints, int lightCount) const {
+
+
+    Vec3 dirToLight = Vec3(0,0,0);
+    for(int i = 0; i < lightCount; i+=2){
+        dirToLight = dirToLight + (lightPoints[i] - rec.p);
+    }
+    dirToLight.make_unit();
+
+
+    // the pdf for lambertian is cos(theta) / pi
+    // double cosine = rec.normal.dot(scattered.direction);
+    double cosine = dirToLight.dot(scattered.direction);
+    if (cosine < 0) {
+        cosine = 0;
+    }
+    return cosine / M_PI;    
 }

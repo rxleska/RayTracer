@@ -54,6 +54,13 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(343.0, 545, 332.0),Vec3(213.0, 545, 332.0), light);
         device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
 
+        // add single point light at center of ceiling
+        Vec3 *pointLights = new Vec3[1*1*2];
+        int plc = 0;
+        pointLights[plc++] = Vec3(278.0, 548.8, 278.0);
+        pointLights[plc++] = Vec3(1.0, 1.0, 1.0);
+
+
 
         //Ceiling
         /*
@@ -250,6 +257,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         // printf("Octree initialized\n");
 
+        (*d_world)->setPointLights(pointLights, plc);
+
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();
         float aperture = 0.0;
@@ -263,7 +272,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
         (*d_camera)->samples = 1000;
-        (*d_camera)->bounces = 250;
+        (*d_camera)->bounces = 25;
 
 
         // printf("World created\n");

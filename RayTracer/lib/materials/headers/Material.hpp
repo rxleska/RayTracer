@@ -57,6 +57,10 @@ class Material
             r0 = r0*r0;
             return r0 + (1-r0)*pow((1 - cosine), 5);
         }
+
+        __device__ virtual double importance_pdf(const Ray &ray_in, const HitRecord &rec, const Ray &scattered, Vec3 *lightPoints, int lightCount) const {
+            return 1.0;
+        }
 };
 
 

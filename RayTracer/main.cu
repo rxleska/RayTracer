@@ -248,7 +248,10 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             int did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
             edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
-                cur_attenuation = cur_attenuation * attenuation;
+                double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
+                double pdf = 1.0 / (M_PI);
+                cur_attenuation = cur_attenuation * (attenuation * scattering_pdf * pdf + attenuation * 0.5);
+
                 cur_ray = scattered;
             }
             else if(did_scatter == 2){ //light hit return color
@@ -305,6 +308,9 @@ __device__ float clamp(float x, float min, float max) {
     return x;
 }
 
+#define RND (curand_uniform(&local_rand_state))
+
+
 __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
@@ -316,17 +322,45 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     bool edge_hit = false;
     bool edge_hit_check = false;
     int samples = (*cam)->samples;
-    for(int s=0; s < samples; s++) {
-        float u = float(i + curand_uniform(&local_rand_state)) / float(max_x);
-        float v = float(j + curand_uniform(&local_rand_state)) / float(max_y);
-        Ray r = (*cam)->get_ray(u, v, &local_rand_state);
-        col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
+    int msaaXval = 1;
 
-        if(!edge_hit && edge_hit_check) {
-            edge_hit = true;
-            samples = samples * (*cam)->msaa_x;
+    int sampleX = int(sqrt(float(samples)));
+    int sampleY = int(sqrt(float(samples)));
+    if(sampleX * sampleY != samples){
+        sampleY+=1; // approach correct number of samples
+    }
+
+    for(int m = 0; m < msaaXval; m++){
+        for(int xi = 0; xi < sampleX; xi++){
+            for(int yi = 0; yi < sampleY; yi++){
+                float u = (float(i) + (xi + RND) / sampleX) / float(max_x);
+                float v = (float(j) + (yi + RND) / sampleY) / float(max_y);
+                Ray r = (*cam)->get_ray(u, v, &local_rand_state);
+                col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
+
+                if(!edge_hit && edge_hit_check) {
+                    edge_hit = true;
+                    msaaXval = (*cam)->msaa_x;
+                }
+
+            }
         }
     }
+
+    // for(int s=0; s < samples; s++) {
+    //     float u = (float(i) + curand_uniform(&local_rand_state)) / float(max_x);
+    //     float v = (float(j) + curand_uniform(&local_rand_state)) / float(max_y);
+    //     Ray r = (*cam)->get_ray(u, v, &local_rand_state);
+    //     col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
+
+    //     if(!edge_hit && edge_hit_check) {
+    //         edge_hit = true;
+    //         samples = samples * (*cam)->msaa_x;
+    //     }
+    // }
+
+
+
     rand_state[pixel_index] = local_rand_state;
     col = col / float(samples);
     
@@ -346,7 +380,6 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     #endif
 }
 
-#define RND (curand_uniform(&local_rand_state))
 
 
 #include "lib/Scenes/TestScene.hpp"
