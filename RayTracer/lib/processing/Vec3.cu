@@ -36,8 +36,13 @@ __device__ Vec3 Vec3::random_on_hemisphere(curandState *state, const Vec3 &norma
     //TODO CHECK THAT MY ROTATION OF z oriented hemisphere to normal is correct
 
     Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
-    Vec3 s = normal.cross(hemisphere).normalized();
-    Vec3 t = normal.cross(s).normalized();
-    Vec3 returned = s* hemisphere.x + t * hemisphere.y + normal*hemisphere.z;
-    return returned;
+    
+    Vec3 r = normal.cross(Vec3(0,0,1));
+    double rcos = normal.dot(Vec3(0,0,1));
+    rcos = rcos / (normal.mag());
+    double rtheta = -acos(rcos);
+
+    hemisphere = hemisphere * rcos + r * r.dot(hemisphere) * (1 - rcos) + r.cross(hemisphere) * sin(rtheta);
+
+    return hemisphere;
 }
