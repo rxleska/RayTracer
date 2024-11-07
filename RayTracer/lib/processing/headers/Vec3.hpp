@@ -90,6 +90,8 @@ public:
     __device__ static Vec3 random(curandState *state);
     __device__ static Vec3 random(float min, float max, curandState *state);
     __device__ void make_unit();
+
+    __device__ static Vec3 random_on_hemisphere(curandState *state, const Vec3 &normal);
 };
 
 #endif // VEC3_HPP

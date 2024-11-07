@@ -248,9 +248,10 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             int did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
             edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
-                double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
-                double pdf = 1.0 / (M_PI);
-                cur_attenuation = cur_attenuation * (attenuation * scattering_pdf * pdf + attenuation * 0.5);
+                // double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
+                // double pdf = 1.0 / (M_PI);
+                // cur_attenuation = cur_attenuation * (attenuation * scattering_pdf * pdf + attenuation * 0.5);
+                cur_attenuation = cur_attenuation * attenuation;
 
                 cur_ray = scattered;
             }

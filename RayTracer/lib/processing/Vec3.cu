@@ -22,3 +22,22 @@ __device__ Vec3 Vec3::random(curandState *state) {
 __device__ Vec3 Vec3::random(float min, float max, curandState *state) {
     return Vec3(min + (max - min) * curand_uniform(state), min + (max - min) * curand_uniform(state), min + (max - min) * curand_uniform(state));
 }
+
+#ifndef M_PI 
+#define M_PI 3.14159265358979323846
+#endif
+
+__device__ Vec3 Vec3::random_on_hemisphere(curandState *state, const Vec3 &normal) {
+    float h0 = curand_uniform(state);
+    float h1 = curand_uniform(state);
+    float theta = acos(h0); //between 0 and pi/2 since h0 is between 0 and 1
+    float phi = 2 * M_PI * h1; // between 0 and 2pi
+
+    //TODO CHECK THAT MY ROTATION OF z oriented hemisphere to normal is correct
+
+    Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+    Vec3 s = normal.cross(hemisphere).normalized();
+    Vec3 t = normal.cross(s).normalized();
+    Vec3 returned = s* hemisphere.x + t * hemisphere.y + normal*hemisphere.z;
+    return returned;
+}
