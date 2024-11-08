@@ -5,7 +5,7 @@
 #define d_fmin(a,b) ((a < b) ? a : b)
 #endif
 
-__device__ int Dielectric::scatter(const Ray &ray_in, const HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
+__device__ int Dielectric::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
     attenuation = Vec3(1.0, 1.0, 1.0);
     float refraction_ratio = rec.front_face ? (1.0 / refraction_index) : refraction_index;
 

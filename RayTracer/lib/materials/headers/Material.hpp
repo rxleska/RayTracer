@@ -34,7 +34,7 @@ class Material
 {
     public:
         MaterialType type;
-        __device__ virtual int scatter(const Ray &ray_in, const HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const = 0;
+        __device__ virtual int scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const = 0;
 
         __device__ inline Vec3 refract(const Vec3 &uv, const Vec3 &n, float ni_over_nt) const
         {

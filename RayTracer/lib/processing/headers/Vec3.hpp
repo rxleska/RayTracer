@@ -92,6 +92,10 @@ public:
     __device__ void make_unit();
 
     __device__ static Vec3 random_on_hemisphere(curandState *state, const Vec3 &normal);
+    __device__ static Vec3 random_on_hemisphere_powerweighted_cosine(curandState *state, const Vec3 &normal, float a, float &cos_theta);
+    __device__ static Vec3 random_on_hemisphere_beckmann(curandState *state, const Vec3 &normal, float a, float &cos_theta);
+    __device__ static Vec3 random_on_hemisphere_blinn_phong(curandState *state, const Vec3 &normal, float a, float &cos_theta);
+    
 };
 
 #endif // VEC3_HPP

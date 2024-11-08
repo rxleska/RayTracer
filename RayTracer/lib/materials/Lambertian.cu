@@ -4,7 +4,7 @@
 #define M_PI 3.14159265358979323846
 #endif
 
-__device__ int Lambertian::scatter(const Ray &ray_in, const HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
+__device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
     Vec3 normal = rec.normal; // get the normal of the hit point
 
     // // get a random unit vector
@@ -14,7 +14,9 @@ __device__ int Lambertian::scatter(const Ray &ray_in, const HitRecord &rec, Vec3
     // // get the new direction
     // Vec3 target = normal + bounceMod;
     
+    // Vec3 target = Vec3::random_on_hemisphere_blinn_phong(rand_state, normal, 2, rec.pdf_passValue);
     Vec3 target = Vec3::random_on_hemisphere(rand_state, normal);
+    rec.pdf_passValue = 1.0;
 
     // degenerate case where the new direction is close to zero
     if (target.isZero()) {

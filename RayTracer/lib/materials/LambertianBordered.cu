@@ -1,6 +1,6 @@
 #include "headers/LambertianBordered.hpp"
 
-__device__ int LambertianBordered::scatter(const Ray &ray_in, const HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
+__device__ int LambertianBordered::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
     Vec3 normal = rec.normal; // get the normal of the hit point
 
     // get a random unit vector

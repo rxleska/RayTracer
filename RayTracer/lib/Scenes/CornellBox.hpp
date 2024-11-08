@@ -25,7 +25,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         int i = 0;
 
         Material *white = new Lambertian(Vec3(1.0, 1.0, 1.0));
-        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 4);
+        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 6.0f);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15));
@@ -271,7 +271,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 2500;
+        (*d_camera)->samples = 90000;
         (*d_camera)->bounces = 25;
 
 

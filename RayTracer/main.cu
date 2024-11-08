@@ -249,9 +249,11 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
                 // double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
+                double scattering_pdf = rec.pdf_passValue;
+
                 // double pdf = 1.0 / (M_PI);
-                // cur_attenuation = cur_attenuation * (attenuation * scattering_pdf * pdf + attenuation * 0.5);
-                cur_attenuation = cur_attenuation * attenuation;
+                cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
+                // cur_attenuation = cur_attenuation * attenuation;
 
                 cur_ray = scattered;
             }
@@ -337,7 +339,19 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
                 float u = (float(i) + (xi + RND) / sampleX) / float(max_x);
                 float v = (float(j) + (yi + RND) / sampleY) / float(max_y);
                 Ray r = (*cam)->get_ray(u, v, &local_rand_state);
-                col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
+                Vec3 color = getColor(r, cam, world, &local_rand_state, edge_hit_check);
+                // col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
+                if (color.x != color.x){
+                    color.x = 0.0;
+                }
+                if (color.y != color.y){
+                    color.y = 0.0;
+                }
+                if (color.z != color.z){
+                    color.z = 0.0;
+                }
+                col = col + color;
+
 
                 if(!edge_hit && edge_hit_check) {
                     edge_hit = true;
