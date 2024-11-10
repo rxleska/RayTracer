@@ -4,19 +4,30 @@
 #define M_PI 3.14159265358979323846
 #endif
 
+#ifndef SAMPLING_METHOD
+#define SAMPLING_METHOD 3
+#endif
+
 __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
     Vec3 normal = rec.normal; // get the normal of the hit point
 
-    // // get a random unit vector
-    // Vec3 bounceMod = Vec3::random(-10,10,rand_state); // 10 is arbitrary, since we are normalizing it later
-    // bounceMod.make_unit();
-
-    // // get the new direction
-    // Vec3 target = normal + bounceMod;
-    
-    // Vec3 target = Vec3::random_on_hemisphere_blinn_phong(rand_state, normal, 2, rec.pdf_passValue);
-    Vec3 target = Vec3::random_on_hemisphere(rand_state, normal);
-    rec.pdf_passValue = 1.0;
+    // multiple methods for generating random direction
+    #if SAMPLING_METHOD == 1
+        Vec3 target = Vec3::random(-10,10, rand_state);
+        target.make_unit();
+        target = target + normal;
+        target.make_unit();
+        rec.pdf_passValue = 1.0;
+    #elif SAMPLING_METHOD == 2
+        Vec3 target = Vec3::random_on_hemisphere(rand_state, normal);
+        rec.pdf_passValue = 1.0;
+    #elif SAMPLING_METHOD == 3
+        Vec3 target = Vec3::random_on_hemisphere_powerweighted_cosine(rand_state, normal, 0, rec.pdf_passValue);
+    #elif SAMPLING_METHOD == 4
+        Vec3 target = Vec3::random_on_hemisphere_beckmann(rand_state, normal, 2, rec.pdf_passValue);
+    #elif SAMPLING_METHOD == 5
+        Vec3 target = Vec3::random_on_hemisphere_blinn_phong(rand_state, normal, 2, rec.pdf_passValue);
+    #endif
 
     // degenerate case where the new direction is close to zero
     if (target.isZero()) {

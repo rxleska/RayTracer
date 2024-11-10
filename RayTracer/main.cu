@@ -30,7 +30,7 @@
 
 #include <atomic>
 
-// #define LOG_PERCENT //used to toggle logging of progress %
+#define LOG_PERCENT //used to toggle logging of progress %
 
 #ifdef LOG_PERCENT
 __device__ unsigned long long progressCounter = 0;
