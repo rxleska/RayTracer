@@ -22,7 +22,7 @@ __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &atte
         Vec3 target = Vec3::random_on_hemisphere(rand_state, normal);
         rec.pdf_passValue = 1.0;
     #elif SAMPLING_METHOD == 3
-        Vec3 target = Vec3::random_on_hemisphere_powerweighted_cosine(rand_state, normal, 0, rec.pdf_passValue);
+        Vec3 target = Vec3::random_on_hemisphere_powerweighted_cosine(rand_state, normal, 2, rec.pdf_passValue);
     #elif SAMPLING_METHOD == 4
         Vec3 target = Vec3::random_on_hemisphere_beckmann(rand_state, normal, 2, rec.pdf_passValue);
     #elif SAMPLING_METHOD == 5

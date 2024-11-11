@@ -18,8 +18,9 @@ for i in range(1000):
     h0 = rd.uniform(0, 1)
     h1 = rd.uniform(0, 1)
     # theta = np.arccos(h0) 
-    a = 2
-    theta = np.arctan(np.sqrt(-a**2 * np.log(1-h0/np.pi)))
+    a = -0.5
+    # theta = np.arctan(np.sqrt(-a**2 * np.log(1-h0/np.pi)))
+    theta = np.cos(pow(h0, 1/(a+1)))
     phi = 2 * np.pi * h1
     x = np.sin(theta) * np.cos(phi)
     y = np.sin(theta) * np.sin(phi)

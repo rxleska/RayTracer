@@ -38,9 +38,9 @@ __device__ Vec3 Vec3::random_on_hemisphere(curandState *state, const Vec3 &norma
     Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
     
     Vec3 r = normal.cross(Vec3(0,0,1));
-    double rcos = normal.dot(Vec3(0,0,1));
+    float rcos = normal.dot(Vec3(0,0,1));
     rcos = rcos / (normal.mag());
-    double rtheta = -acos(rcos);
+    float rtheta = -acos(rcos);
 
     hemisphere = hemisphere * rcos + r * r.dot(hemisphere) * (1 - rcos) + r.cross(hemisphere) * sin(rtheta);
 
@@ -58,15 +58,15 @@ __device__ Vec3 Vec3::random_on_hemisphere_powerweighted_cosine(curandState *sta
     Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
     
     Vec3 r = normal.cross(Vec3(0,0,1));
-    double rcos = normal.dot(Vec3(0,0,1));
+    float rcos = normal.dot(Vec3(0,0,1));
     rcos = rcos / (normal.mag());
-    double rtheta = -acos(rcos);
+    float rtheta = -acos(rcos);
 
     hemisphere = hemisphere * rcos + r * r.dot(hemisphere) * (1 - rcos) + r.cross(hemisphere) * sin(rtheta);
 
 
     // calculate the pdf
-    cos_theta = (1.0 + a) * pow(cos_theta, int(a))/ (2.0 * M_PI);
+    cos_theta = (1.0 + a) * pow(cos_theta, int(a))/ (1.0 * M_PI);
 
     return hemisphere;
 }
@@ -81,9 +81,9 @@ __device__ Vec3 Vec3::random_on_hemisphere_beckmann(curandState *state, const Ve
     Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
     
     Vec3 r = normal.cross(Vec3(0,0,1));
-    double rcos = normal.dot(Vec3(0,0,1));
+    float rcos = normal.dot(Vec3(0,0,1));
     rcos = rcos / (normal.mag());
-    double rtheta = -acos(rcos);
+    float rtheta = -acos(rcos);
 
     hemisphere = hemisphere * rcos + r * r.dot(hemisphere) * (1 - rcos) + r.cross(hemisphere) * sin(rtheta);
 
@@ -103,9 +103,9 @@ __device__ Vec3 Vec3::random_on_hemisphere_blinn_phong(curandState *state, const
     Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
     
     Vec3 r = normal.cross(Vec3(0,0,1));
-    double rcos = normal.dot(Vec3(0,0,1));
+    float rcos = normal.dot(Vec3(0,0,1));
     rcos = rcos / (normal.mag());
-    double rtheta = -acos(rcos);
+    float rtheta = -acos(rcos);
 
     hemisphere = hemisphere * rcos + r * r.dot(hemisphere) * (1 - rcos) + r.cross(hemisphere) * sin(rtheta);
 
