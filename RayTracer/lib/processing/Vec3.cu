@@ -33,8 +33,6 @@ __device__ Vec3 Vec3::random_on_hemisphere(curandState *state, const Vec3 &norma
     float theta = acos(h0); //between 0 and pi/2 since h0 is between 0 and 1
     float phi = 2 * M_PI * h1; // between 0 and 2pi
 
-    //TODO CHECK THAT MY ROTATION OF z oriented hemisphere to normal is correct
-
     Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
     
     Vec3 r = normal.cross(Vec3(0,0,1));
@@ -66,7 +64,7 @@ __device__ Vec3 Vec3::random_on_hemisphere_powerweighted_cosine(curandState *sta
 
 
     // calculate the pdf
-    cos_theta = (1.0 + a) * pow(cos_theta, int(a))/ (1.0 * M_PI);
+    cos_theta = (1.0 + a) * pow(cos_theta, a)/ (2.0 * M_PI);
 
     return hemisphere;
 }
