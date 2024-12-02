@@ -5,7 +5,7 @@
 #endif
 
 #ifndef SAMPLING_METHOD
-#define SAMPLING_METHOD 3
+#define SAMPLING_METHOD 6
 #endif
 
 __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
@@ -20,6 +20,9 @@ __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &atte
         rec.pdf_passValue = 1.0;
     #elif SAMPLING_METHOD == 2
         Vec3 target = Vec3::random_on_hemisphere(rand_state, normal);
+        rec.pdf_passValue = 1.0;
+    #elif SAMPLING_METHOD == 6
+        Vec3 target = Vec3::random_on_hemisphere_powerweighted_cosine(rand_state, normal, 1, rec.pdf_passValue);
         rec.pdf_passValue = 1.0;
     #elif SAMPLING_METHOD == 3
         Vec3 target = Vec3::random_on_hemisphere_powerweighted_cosine(rand_state, normal, 2, rec.pdf_passValue);
