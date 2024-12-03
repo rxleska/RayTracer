@@ -54,7 +54,7 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
         device_object_list[i++] = new Sphere(Vec3(4, 1, 0),  1.0, new Metal(Vec3(0.7, 0.6, 0.5), 0.0));
 
         //add sun light
-        device_object_list[i++] = new Sphere(Vec3(0,510,400), 200, new Light(Vec3(1.0, 1.0, 1.0), 1.0));
+        device_object_list[i++] = new Sphere(Vec3(0,510,400), 200, new Light(Vec3(1.0, 1.0, 1.0), 15.0));
 
         //test Polygon_T
         //cuda malloc a vertices array
@@ -82,7 +82,7 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
-        (*d_camera)->ambient_light_level = 1.0f;
+        (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
         (*d_camera)->samples = 500;
         (*d_camera)->bounces = 100;

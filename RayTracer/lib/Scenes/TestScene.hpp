@@ -81,6 +81,10 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         }
         
 
+        // light source
+        Material * light = new Light(Vec3(1.0, 1.0, 1.0), 15.0);
+        device_object_list[i++] = new Sphere(Vec3(0, 510, 400), 200, light);
+
         //test Polygon_Ts
         // device_object_list[i++] = Triangle(vertices_poly[0], vertices_poly[1], vertices_poly[3], text1, uvmap[0], uvmap[1], uvmap[3]);
         // device_object_list[i++] = Triangle(vertices_poly[1], vertices_poly[2], vertices_poly[3], text1, uvmap[1], uvmap[2], uvmap[3]);
@@ -117,7 +121,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         (*d_camera)->ambient_light_level = 0.9f;
         (*d_camera)->msaa_x = 16;
         (*d_camera)->samples = 64;
-        (*d_camera)->bounces = 50;
+        (*d_camera)->bounces = 25;
     }
 }
 
