@@ -236,6 +236,32 @@ __host__ void allocate_mesh(const char *filename, Vec3 **meshes, int mesh_index,
     checkCudaErrors(cudaDeviceSynchronize());
 } 
 
+#define lightpdf_resolution 2
+
+__device__ float getLightPDF(Ray norm, Scene **world, curandState *local_rand_state){
+    return 0.0f;
+    // TODO fix this
+
+
+    int hit_count = 0;
+    Vec3 MontecarloDirection;
+    Ray lightRay;
+    HitRecord rec;
+    for(int i = 0; i < lightpdf_resolution; i++){
+        for(int j = 0; j < lightpdf_resolution; j++){
+            MontecarloDirection = Vec3::random_on_hemisphere_montecarlo(local_rand_state, norm.direction, (float)i, (float)j, 1.0f/lightpdf_resolution, 1.0f/lightpdf_resolution);
+            lightRay = Ray(norm.origin, MontecarloDirection);
+            if((*world)->hit(lightRay, 0.001f, FLT_MAX, rec)){
+                if (rec.mat->type == LIGHT){
+                    hit_count++;
+                }
+            }
+        }
+    }
+
+    return hit_count / (lightpdf_resolution * lightpdf_resolution);
+}
+
 
 __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
@@ -251,10 +277,16 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
                 // double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
                 double scattering_pdf = rec.pdf_passValue;
 
-                // double pdf = 1.0 / (M_PI);
-                cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
-                // cur_attenuation = cur_attenuation * attenuation;
+                // light pdf 
+                float lightpdf = getLightPDF(Ray(rec.p, rec.normal), world, local_rand_state);
+                float inv_lightpdf = 1.0 - lightpdf;
 
+                Vec3 matAttenuation = ((Lambertian *)rec.mat)->getAlbedo();
+
+                // double pdf = 1.0 / (M_PI);
+                cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * inv_lightpdf) + (matAttenuation * lightpdf));
+
+                // cur_attenuation = cur_attenuation * attenuation;
                 cur_ray = scattered;
             }
             else if(did_scatter == 2){ //light hit return color
@@ -423,9 +455,10 @@ int main() {
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
     // int nx = 512*4;
     int nx = 1440;
+    // int nx = 600;
     // int nx = 500*1;
-    // int nx = 1440;
     int ny = 1440;
+    // int ny = 600;
     // int ny = 500*1;
     // int ny = 900;
     int ns = 10;

@@ -14,6 +14,8 @@ class Lambertian : public Material
 
         __device__ double importance_pdf(const Ray &ray_in, const HitRecord &rec, const Ray &scattered, Vec3 *lightPoints, int lightCount) const override;
 
+        __device__ Vec3 getAlbedo() const {return albedo;}
+
     private:
         Vec3 albedo;
 };
