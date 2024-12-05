@@ -274,19 +274,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             int did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
             edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
-                // double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
-                double scattering_pdf = rec.pdf_passValue;
-
-                // light pdf 
-                float lightpdf = getLightPDF(Ray(rec.p, rec.normal), world, local_rand_state);
-                float inv_lightpdf = 1.0 - lightpdf;
-
-                Vec3 matAttenuation = ((Lambertian *)rec.mat)->getAlbedo();
-
-                // double pdf = 1.0 / (M_PI);
-                cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * inv_lightpdf) + (matAttenuation * lightpdf));
-
-                // cur_attenuation = cur_attenuation * attenuation;
+                cur_attenuation = cur_attenuation * attenuation;
                 cur_ray = scattered;
             }
             else if(did_scatter == 2){ //light hit return color
@@ -305,8 +293,24 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
                     cur_ray = scattered;
                 }
             }
+            else if(did_scatter == 5){
+                // double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
+                double scattering_pdf = rec.pdf_passValue;
+
+                // light pdf 
+                float lightpdf = getLightPDF(Ray(rec.p, rec.normal), world, local_rand_state);
+                float inv_lightpdf = 1.0 - lightpdf;
+
+                Vec3 matAttenuation = ((Lambertian *)rec.mat)->getAlbedo();
+
+                // double pdf = 1.0 / (M_PI);
+                cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * inv_lightpdf) + (matAttenuation * lightpdf));
+
+                // cur_attenuation = cur_attenuation * attenuation;
+                cur_ray = scattered;
+            }
             else {
-                return Vec3(0.0,0.0,1.0);
+                return Vec3(1.0,1.0,1.0);
             }
         }
         else {
@@ -436,12 +440,14 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 #include "lib/Scenes/PhongMixCornellBox.hpp"
 #include "lib/Scenes/CornellRoomOfMirrors.hpp"
 #include "lib/Scenes/Billards.hpp"
+#include "lib/Scenes/FinalScene.hpp"
 
 __global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
@@ -454,12 +460,12 @@ int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
     // int nx = 512*4;
-    int nx = 1440;
+    // int nx = 1440;
     // int nx = 600;
-    // int nx = 500*1;
-    int ny = 1440;
+    int nx = 500*1;
+    // int ny = 1440;
     // int ny = 600;
-    // int ny = 500*1;
+    int ny = 500*1;
     // int ny = 900;
     int ns = 10;
     // int tx = 20;

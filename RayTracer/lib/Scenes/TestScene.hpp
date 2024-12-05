@@ -27,7 +27,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         curandState local_rand_state = *rand_state;
         // device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,new Lambertian(Vec3(0.7, 0.5, 0.5)));
         // device_object_list[0] = new Sphere(Vec3(0,-1000.0,-1), 1000,new Metal(Vec3(0.7f, 0.7f, 0.7f), 0.0));
-        device_object_list[0] = Quad(Vec3(-20, 0, -20), Vec3(20, 0, -20), Vec3(20, 0, 20), Vec3(-20, 0, 20), new Lambertian(Vec3(0.7, 0.7, 0.7)));
+        device_object_list[0] = Quad(Vec3(-20, 0, -20), Vec3(20, 0, -20), Vec3(20, 0, 20), Vec3(-20, 0, 20), new Lambertian(Vec3(0.9, 0.7, 0.7)));
         int i = 1;
 
 
@@ -66,7 +66,7 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
 
 
         //test mesh
-        Material * red = new LambertianBordered(Vec3(0.9, 0.2, 0.1));
+        Material * red = new LambertianBordered(Vec3(0.9, 0.2, 0.1),Vec3(0.0,0.0,0.0));
 
         //rotate mesh about x axis by 90 degrees
         for(int j = 0; j < mesh_lengths[0]; j++) {
@@ -82,8 +82,8 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
         
 
         // light source
-        Material * light = new Light(Vec3(1.0, 1.0, 1.0), 15.0);
-        device_object_list[i++] = new Sphere(Vec3(0, 510, 400), 200, light);
+        // Material * light = new Light(Vec3(1.0, 1.0, 1.0), 15.0);
+        // device_object_list[i++] = new Sphere(Vec3(0, 510, 400), 200, light);
 
         //test Polygon_Ts
         // device_object_list[i++] = Triangle(vertices_poly[0], vertices_poly[1], vertices_poly[3], text1, uvmap[0], uvmap[1], uvmap[3]);
@@ -119,9 +119,9 @@ __device__ void create_test_scene(Hitable **device_object_list, Scene **d_world,
                                  aperture,
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.9f;
-        (*d_camera)->msaa_x = 16;
-        (*d_camera)->samples = 64;
-        (*d_camera)->bounces = 25;
+        (*d_camera)->msaa_x = 4;
+        (*d_camera)->samples = 1000;
+        (*d_camera)->bounces = 64;
     }
 }
 

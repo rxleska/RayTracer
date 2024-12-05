@@ -5,7 +5,7 @@
 #endif
 
 #ifndef SAMPLING_METHOD
-#define SAMPLING_METHOD 6
+#define SAMPLING_METHOD 2
 #endif
 
 __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {
@@ -42,7 +42,7 @@ __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &atte
 
     //set the attenuation (color modification)
     attenuation = albedo;
-    return 1;
+    return 5;
 }
 __device__ double Lambertian::importance_pdf(const Ray &ray_in, const HitRecord &rec, const Ray &scattered, Vec3 *lightPoints, int lightCount) const {
 
