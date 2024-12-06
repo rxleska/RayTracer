@@ -15,3 +15,7 @@ __device__ int Light::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuati
 
     return 2;
 }
+
+__device__ Vec3 Light::emitted() const{
+    return color * intensity;
+}

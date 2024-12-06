@@ -192,3 +192,22 @@ __device__ Vec3 Scene::handlePhongLamb(const HitRecord &rec, Camera **cam, Ray &
         return material->albedo;
     }
 }
+
+
+__device__ void Scene::setLights(Hitable **lights, int light_count){
+    this->lights = (Hitable**)malloc(sizeof(Hitable*) * light_count);
+    for (int i = 0; i < light_count; i++) {
+        this->lights[i] = lights[i];
+    }
+    this->light_count = light_count;
+} 
+
+__device__ Vec3 Scene::getRandomPointOnLight(curandState *local_rand_state) const{
+    int light_index = curand(local_rand_state) % light_count;
+    if(light_index < 1){
+        return Vec3(0,0,0);
+    }
+
+
+    return lights[light_index]->getRandomPointInHitable(local_rand_state);
+}

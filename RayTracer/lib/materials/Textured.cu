@@ -35,44 +35,131 @@ __device__ int Textured::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenu
     return 1;
 }
 
+// #include <fstream>
+// #include <sstream>
+// #include <iostream>
+// #include <string>
 
-//loads only ppms in the format P3
-__host__ float *load_texture(const char *filename, int &width, int &height) {
-    std::ifstream file(filename);
+#include <fstream>
+#include <sstream>
+#include <iostream>
+#include <string>
+
+__host__ float* load_texture(const char* filename, int& width, int& height) {
+    std::ifstream file(filename, std::ios::binary); // Open in binary mode for P6
+    if (!file.is_open()) {
+        std::cerr << "Error: Unable to open file " << filename << std::endl;
+        return nullptr;
+    }
+
     std::string line;
     std::getline(file, line);
     if (line != "P3" && line != "P6") {
         std::cerr << "Error: File is not in P3 or P6 format" << std::endl;
         return nullptr;
     }
+    bool isBinary = (line == "P6");
 
     // Skip comments and read width and height
-    std::getline(file, line);
-    while (line[0] == '#') {
+    do {
         std::getline(file, line);
-    }
+    } while (!line.empty() && line[0] == '#');
+
     std::stringstream ss(line);
     ss >> width >> height;
+    if (width <= 0 || height <= 0) {
+        std::cerr << "Error: Invalid width or height" << std::endl;
+        return nullptr;
+    }
 
-    // Skip the max color value
-    std::getline(file, line);
+    // Skip comments and read max color value
+    int max_color_value;
+    do {
+        std::getline(file, line);
+    } while (!line.empty() && line[0] == '#');
+
+    ss.clear();
+    ss.str(line);
+    ss >> max_color_value;
+    if (max_color_value <= 0 || max_color_value > 65535) {
+        std::cerr << "Error: Invalid max color value" << std::endl;
+        return nullptr;
+    }
 
     // Allocate memory for texture
-    float *texture = new float[width * height * 3];
+    float* texture = new float[width * height * 3];
 
-    for (int i = 0; i < width * height; i++) {
+    if (isBinary) {
+        // P6: Binary format
         unsigned char r, g, b;
-        if (line == "P3") {
-            file >> r >> g >> b;
-        } else { // P6
+        for (int i = 0; i < width * height; ++i) {
             file.read(reinterpret_cast<char*>(&r), 1);
             file.read(reinterpret_cast<char*>(&g), 1);
             file.read(reinterpret_cast<char*>(&b), 1);
+
+            texture[i * 3 + 0] = r / static_cast<float>(max_color_value);
+            texture[i * 3 + 1] = g / static_cast<float>(max_color_value);
+            texture[i * 3 + 2] = b / static_cast<float>(max_color_value);
         }
-        texture[i * 3 + 0] = r / 255.0f;
-        texture[i * 3 + 1] = g / 255.0f;
-        texture[i * 3 + 2] = b / 255.0f;
+    } else {
+        // P3: ASCII format
+        for (int i = 0; i < width * height; ++i) {
+            int r, g, b;
+            file >> r >> g >> b;
+
+            texture[i * 3 + 0] = r / static_cast<float>(max_color_value);
+            texture[i * 3 + 1] = g / static_cast<float>(max_color_value);
+            texture[i * 3 + 2] = b / static_cast<float>(max_color_value);
+        }
+    }
+
+    if (!file) {
+        std::cerr << "Error: File read error" << std::endl;
+        delete[] texture;
+        return nullptr;
     }
 
     return texture;
 }
+
+
+// //loads only ppms in the format P3
+// __host__ float *load_texture(const char *filename, int &width, int &height) {
+//     std::ifstream file(filename);
+//     std::string line;
+//     std::getline(file, line);
+//     if (line != "P3" && line != "P6") {
+//         std::cerr << "Error: File is not in P3 or P6 format" << std::endl;
+//         return nullptr;
+//     }
+
+//     // Skip comments and read width and height
+//     std::getline(file, line);
+//     while (line[0] == '#') {
+//         std::getline(file, line);
+//     }
+//     std::stringstream ss(line);
+//     ss >> width >> height;
+
+//     // Skip the max color value
+//     std::getline(file, line);
+
+//     // Allocate memory for texture
+//     float *texture = new float[width * height * 3];
+
+//     for (int i = 0; i < width * height; i++) {
+//         unsigned char r, g, b;
+//         if (line == "P3") {
+//             file >> r >> g >> b;
+//         } else { // P6
+//             file.read(reinterpret_cast<char*>(&r), 1);
+//             file.read(reinterpret_cast<char*>(&g), 1);
+//             file.read(reinterpret_cast<char*>(&b), 1);
+//         }
+//         texture[i * 3 + 0] = r / 255.0f;
+//         texture[i * 3 + 1] = g / 255.0f;
+//         texture[i * 3 + 2] = b / 255.0f;
+//     }
+
+//     return texture;
+// }

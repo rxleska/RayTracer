@@ -76,3 +76,13 @@ __device__ bool Sphere::insideBox(float x_min, float x_max, float y_min, float y
 __device__ void Sphere::debug_print() const{
     printf("Sphere: center: (%f, %f, %f) radius: %f\n", center.x, center.y, center.z, radius);
 }
+
+
+__device__ Vec3 Sphere::getRandomPointInHitable(curandState *state) const {
+    float theta = 2 * M_PI * curand_uniform(state);
+    float phi = acos(1 - 2 * curand_uniform(state));
+    float x = center.x + radius * sin(phi) * cos(theta);
+    float y = center.y + radius * sin(phi) * sin(theta);
+    float z = center.z + radius * cos(phi);
+    return Vec3(x, y, z);    
+}

@@ -277,3 +277,22 @@ __device__ void Polygon_T::debug_print() const{
     }
     printf("Area: %f\n", area);
 }
+
+
+__device__ Vec3 Polygon_T::getRandomPointInHitable(curandState *state) const {
+    //generate random barycentric coordinates
+    float *r = new float[num_vertices];
+    float sum = 0.0f;
+    for(int i = 0; i < num_vertices; i++){
+        r[i] = curand_uniform(state);
+        sum += r[i];
+    }
+    Vec3 p = Vec3(0,0,0);
+    for(int i = 0; i < num_vertices; i++){
+        r[i] = r[i] / sum;
+        p = p + vertices[i] * r[i];
+    }
+    //calculate the point
+    delete[] r;
+    return p;
+}

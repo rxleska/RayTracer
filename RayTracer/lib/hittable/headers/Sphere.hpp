@@ -28,6 +28,8 @@ class Sphere: public Hitable{
 
         __device__ virtual  void debug_print() const override;
 
+        __device__ virtual Vec3 getRandomPointInHitable(curandState *state) const override;
+
 };
 
 

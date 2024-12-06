@@ -266,8 +266,9 @@ __device__ float getLightPDF(Ray norm, Scene **world, curandState *local_rand_st
 __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
     Vec3 cur_attenuation = Vec3(1.0,1.0,1.0);
+    HitRecord recLight;
+    HitRecord rec;
     for(int i = 0; i < (*cam)->bounces; i++) {
-        HitRecord rec;
         if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec)) {
             Ray scattered;
             Vec3 attenuation;
@@ -294,19 +295,42 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
                 }
             }
             else if(did_scatter == 5){
+
                 // double scattering_pdf = rec.mat->importance_pdf(cur_ray, rec, scattered,(*world)->pointLights, (*world)->point_light_count);
                 double scattering_pdf = rec.pdf_passValue;
 
-                // light pdf 
-                float lightpdf = getLightPDF(Ray(rec.p, rec.normal), world, local_rand_state);
-                float inv_lightpdf = 1.0 - lightpdf;
+                cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
 
-                Vec3 matAttenuation = ((Lambertian *)rec.mat)->getAlbedo();
 
-                // double pdf = 1.0 / (M_PI);
-                cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * inv_lightpdf) + (matAttenuation * lightpdf));
+                // get random point on a light
+                Vec3 lightPoint = (*world)->getRandomPointOnLight(local_rand_state);
+                Vec3 lightDir = lightPoint - rec.p;
+                lightDir = lightDir.normalized();
+                Ray lightRay = Ray(rec.p + (lightDir * 0.001f) , lightDir);
+                bool lightHit = false;
+                Vec3 lightAttenuation;
+                
+                if((*world)->hit(lightRay, 0.001f, FLT_MAX, recLight)){
+                    if(recLight.mat->type == LIGHT){
+                        lightAttenuation = ((Light*)recLight.mat)->emitted() * ((Lambertian *)rec.mat)->getAlbedo();
+                        lightHit = true;
+                    }
+                    else{
+                        lightHit = false;
+                    }
+                }
+                else{
+                        lightHit = false;
+                }
 
-                // cur_attenuation = cur_attenuation * attenuation;
+                if(lightHit){
+                    cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * 0.5) + (lightAttenuation * 0.5));
+                    assert(false);
+                }
+                else{
+                    cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
+                }
+
                 cur_ray = scattered;
             }
             else {
@@ -445,9 +469,9 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 __global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
@@ -459,13 +483,13 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    // int nx = 512*4;
+    int nx = 512*2;
     // int nx = 1440;
     // int nx = 600;
-    int nx = 500*1;
+    // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 500*1;
+    int ny = 512*2;
     // int ny = 900;
     int ns = 10;
     // int tx = 20;

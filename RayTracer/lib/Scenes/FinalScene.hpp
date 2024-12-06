@@ -27,7 +27,7 @@ __device__ void create_final_scene(Hitable **device_object_list, Scene **d_world
         curandState local_rand_state = *rand_state;
         int i = 0;
 
-        Material * red = new LambertianBordered(Vec3(0.9, 0.2, 0.1),Vec3(0.1, 0.2, 0.9));
+        Material * red = new LambertianBordered(Vec3(0.9, 0.2, 0.1),Vec3(0.9, 0.1, 0.9));
         // Material * red = new Light(Vec3(1.0f,0.0f,0.0f), 15);
         // Material * red = new Lambertian(Vec3(1.0f,0.2f,0.1f));
 
@@ -42,6 +42,23 @@ __device__ void create_final_scene(Hitable **device_object_list, Scene **d_world
         for(int j = 0; j < mesh_lengths[0]/3; j++) {
             device_object_list[i++] = Triangle(meshes[0][j*3], meshes[0][j*3 + 1], meshes[0][j*3 + 2], red);
         }
+
+        //flip texture 0 vertically
+        for(int j = 0; j < 474*266/2; j++) {
+            Vec3 temp = textures[0][j];
+            textures[0][j] = textures[0][474*266 - j - 1];
+            textures[0][474*266 - j - 1] = temp;
+        }
+
+
+        Material * text = new Textured(textures[0], 474, 266);
+
+
+
+        ((Textured*)text)->rot = 0.25f;
+        device_object_list[i++] = new Sphere(Vec3(0, 7.8, 0), 0.8, text);
+
+
 
 
         // circle light 
@@ -73,7 +90,7 @@ __device__ void create_final_scene(Hitable **device_object_list, Scene **d_world
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.6f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 1000;
+        (*d_camera)->samples = 64;
         (*d_camera)->bounces = 64;
     }
 }

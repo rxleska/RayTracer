@@ -5,7 +5,7 @@
 #endif
 
 #ifndef SAMPLING_METHOD
-#define SAMPLING_METHOD 2
+#define SAMPLING_METHOD 6
 #endif
 
 __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenuation, Ray &scattered_out, curandState * rand_state) const {

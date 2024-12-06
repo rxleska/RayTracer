@@ -35,6 +35,9 @@ class Polygon_T: public Hitable{
         __device__ virtual  void debug_print() const override;
 
 
+        __device__ virtual Vec3 getRandomPointInHitable(curandState *state) const override;
+
+
 };
 
 __device__ Polygon_T * Triangle(Vec3 v1, Vec3 v2, Vec3 v3, Material * mat);
