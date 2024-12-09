@@ -278,8 +278,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 200;
-        (*d_camera)->bounces = 50;
+        (*d_camera)->samples = 20;
+        (*d_camera)->bounces = 10;
 
 
         // printf("World created\n");

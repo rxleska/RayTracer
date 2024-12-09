@@ -296,3 +296,7 @@ __device__ Vec3 Polygon_T::getRandomPointInHitable(curandState *state) const {
     delete[] r;
     return p;
 }
+
+__device__ float Polygon_T::get2dArea() const{
+    return area;
+}

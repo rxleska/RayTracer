@@ -14,7 +14,7 @@ class Scene{
         __device__ void addHitable(Hitable *hittable);
         __device__ void setPointLights(Vec3 *pointLights, int light_count);
         __device__ void setLights(Hitable **lights, int light_count);
-        __device__ Vec3 getRandomPointOnLight(curandState *local_rand_state) const;
+        __device__ Vec3 getRandomPointOnLight(curandState *local_rand_state, float &light_area, Vec3 &lightEmitted) const;
         __device__ virtual bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const;
         __device__ void empty();
 

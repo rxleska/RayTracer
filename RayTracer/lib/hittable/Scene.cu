@@ -202,12 +202,16 @@ __device__ void Scene::setLights(Hitable **lights, int light_count){
     this->light_count = light_count;
 } 
 
-__device__ Vec3 Scene::getRandomPointOnLight(curandState *local_rand_state) const{
+#include "../materials/headers/Light.hpp"
+
+__device__ Vec3 Scene::getRandomPointOnLight(curandState *local_rand_state, float &light_area, Vec3 &lightEmmitted) const{
     int light_index = curand(local_rand_state) % light_count;
     if(light_index < 1){
         return Vec3(0,0,0);
     }
 
+    light_area = lights[light_index]->get2dArea();
+    lightEmmitted = ((Light *) lights[light_index])->emitted();
 
     return lights[light_index]->getRandomPointInHitable(local_rand_state);
 }

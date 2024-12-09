@@ -263,10 +263,83 @@ __device__ float getLightPDF(Ray norm, Scene **world, curandState *local_rand_st
 }
 
 
+__device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, int depth, curandState *local_rand_state, bool &edge_hit){
+    return Vec3(0.0,0.0,0.0); //TODO
+    // ON lambertian !RTD 50-50 scatter cosine weighted with pdf, or sample light 
+    if(depth > (*cam)->bounces * (edge_hit ? (*cam)->msaa_x : 1)){
+        return Vec3(0.0,0.0,0.0);
+    }
+    HitRecord rec;
+    if ((*world)->hit(r, 0.001f, FLT_MAX, rec)) {
+        
+            Ray scattered;
+            Vec3 attenuation;
+            int did_scatter = rec.mat->scatter(r, rec, attenuation, scattered, local_rand_state);
+            edge_hit = rec.edge_hit || edge_hit;
+            if(did_scatter == 1) {
+                return attenuation * getColor(scattered, cam, world, depth + 1, local_rand_state, edge_hit);
+            }
+            else if(did_scatter == 2){ //light hit return color
+                return attenuation;
+            }
+            else if(did_scatter == 3) { //phong hit return color
+                return (*world)->handlePhong(rec, cam);
+            }
+            else if(did_scatter == 4) { //phong hit return color
+                int bcCount = ((PhongLamb*) rec.mat)->bc;
+                if(bcCount < depth){
+                    return (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, true);
+                }
+                else{
+                    return (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, false) * getColor(scattered, cam, world, depth + 1, local_rand_state, edge_hit);
+                }
+            }
+            else if(did_scatter == 5){
+                //!RTD - roll the dice to see if we should sample the light
+                if(curand_uniform(local_rand_state) < 0.5){
+                    return (attenuation * rec.pdf_passValue)  * getColor(scattered, cam, world, depth + 1, local_rand_state, edge_hit);
+                }
+                else{
+                    // get random point on a light
+                    float area;
+                    Vec3 lightEmmitted;
+                    Vec3 lightPoint = (*world)->getRandomPointOnLight(local_rand_state, area, lightEmmitted);
+                    Vec3 lightDir = lightPoint - rec.p;
+                    float lightLengthSq = lightDir.length();
+                    lightLengthSq = lightLengthSq * lightLengthSq;
+
+                    lightDir = lightDir.normalized();
+                    if(lightDir.dot(rec.normal) < 0.0f){
+                        return Vec3(0.0,0.0,0.0);
+                    }
+                    else{
+                        float light_cos = (lightDir.y < 0.0f) ? lightDir.y * -1.0 : lightDir.y;
+                        if(light_cos < F_EPSILON){
+                            return Vec3(0.0,0.0,0.0);
+                        }
+                        else{
+                            float pdf_value = lightLengthSq / (light_cos * area);
+                            Ray lightRay = Ray(rec.p + (lightDir * 0.001f) , lightDir);
+                            return getColor(lightRay, cam, world, depth + 1, local_rand_state, edge_hit) * pdf_value;
+                        }
+                    }
+                }                
+            }
+    }
+    else {
+        float ambient = (*cam)->ambient_light_level;
+        Vec3 unit_direction = (r.direction).normalized();
+        float t = 0.5f*(unit_direction.y + 1.0f);
+        Vec3 c = Vec3(1.0, 1.0, 1.0)*(1.0f-t) + Vec3(0.5, 0.7, 1.0)*t;
+        return c*ambient;
+    }
+
+}
+
 __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
     Vec3 cur_attenuation = Vec3(1.0,1.0,1.0);
-    HitRecord recLight;
+    // HitRecord recLight;
     HitRecord rec;
     for(int i = 0; i < (*cam)->bounces; i++) {
         if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec)) {
@@ -303,32 +376,59 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
 
 
                 // get random point on a light
-                Vec3 lightPoint = (*world)->getRandomPointOnLight(local_rand_state);
+                float area;
+                Vec3 lightEmmitted;
+                Vec3 lightPoint = (*world)->getRandomPointOnLight(local_rand_state, area, lightEmmitted);
                 Vec3 lightDir = lightPoint - rec.p;
-                lightDir = lightDir.normalized();
-                Ray lightRay = Ray(rec.p + (lightDir * 0.001f) , lightDir);
-                bool lightHit = false;
-                Vec3 lightAttenuation;
-                
-                if((*world)->hit(lightRay, 0.001f, FLT_MAX, recLight)){
-                    if(recLight.mat->type == LIGHT){
-                        lightAttenuation = ((Light*)recLight.mat)->emitted() * ((Lambertian *)rec.mat)->getAlbedo();
-                        lightHit = true;
-                    }
-                    else{
-                        lightHit = false;
-                    }
-                }
-                else{
-                        lightHit = false;
-                }
+                float lightLengthSq = lightDir.length();
+                lightLengthSq = lightLengthSq * lightLengthSq;
 
-                if(lightHit){
-                    cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * 0.8) + (lightAttenuation * 0.2));
-                }
-                else{
+                lightDir = lightDir.normalized();
+
+                if(lightDir.dot(rec.normal) < 0.0f){
                     cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
                 }
+                else{
+                    float light_cos = (lightDir.y < 0.0f) ? lightDir.y * -1.0 : lightDir.y;
+                    if(light_cos < F_EPSILON){
+                        cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
+                    }
+                    else{
+                        float pdf_value = lightLengthSq / (light_cos * area);
+                        Vec3 lightAttenuation = (lightEmmitted * ((Lambertian *)rec.mat)->getAlbedo());
+
+                        // cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf) + (lightAttenuation * pdf_value));
+                        return lightAttenuation;
+                    }
+                }
+                
+
+
+
+                // Ray lightRay = Ray(rec.p + (lightDir * 0.001f) , lightDir);
+                // bool lightHit = false;
+                // Vec3 lightAttenuation;
+
+
+                // if((*world)->hit(lightRay, 0.001f, FLT_MAX, recLight)){
+                //     if(recLight.mat->type == LIGHT){
+                //         lightAttenuation = ((Light*)recLight.mat)->emitted() * ((Lambertian *)rec.mat)->getAlbedo();
+                //         lightHit = true;
+                //     }
+                //     else{
+                //         lightHit = false;
+                //     }
+                // }
+                // else{
+                //         lightHit = false;
+                // }
+
+                // if(lightHit){
+                //     cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * 0.8) + (lightAttenuation * 0.2));
+                // }
+                // else{
+                //     cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
+                // }
 
                 cur_ray = scattered;
             }
@@ -398,7 +498,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
                 float u = (float(i) + (xi + RND) / sampleX) / float(max_x);
                 float v = (float(j) + (yi + RND) / sampleY) / float(max_y);
                 Ray r = (*cam)->get_ray(u, v, &local_rand_state);
-                Vec3 color = getColor(r, cam, world, &local_rand_state, edge_hit_check);
+                Vec3 color = getColor(r, cam, world, 0, &local_rand_state, edge_hit_check);
                 // col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
                 if (color.x != color.x){
                     color.x = 0.0;

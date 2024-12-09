@@ -86,3 +86,7 @@ __device__ Vec3 Sphere::getRandomPointInHitable(curandState *state) const {
     float z = center.z + radius * cos(phi);
     return Vec3(x, y, z);    
 }
+
+__device__ float Sphere::get2dArea() const{
+    return 2.0f * M_PI * radius * radius;
+}
