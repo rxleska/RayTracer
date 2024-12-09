@@ -324,8 +324,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
                 }
 
                 if(lightHit){
-                    cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * 0.5) + (lightAttenuation * 0.5));
-                    assert(false);
+                    cur_attenuation = cur_attenuation * ((attenuation * scattering_pdf * 0.8) + (lightAttenuation * 0.2));
                 }
                 else{
                     cur_attenuation = cur_attenuation * (attenuation * scattering_pdf);
