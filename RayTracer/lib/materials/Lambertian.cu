@@ -38,13 +38,17 @@ __device__ int Lambertian::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &atte
 
     //create new ray
     scattered_out = Ray(rec.p, target);
+    // scattered_out.move3Epsilon();
+
 
     //set the attenuation (color modification)
     attenuation = albedo;
     return 5;
 }
-__device__ double Lambertian::importance_pdf(const Ray &ray_in, const HitRecord &rec, const Ray &scattered, Vec3 *lightPoints, int lightCount) const {
 
+//DEPRECATED
+__device__ double Lambertian::importance_pdf(const Ray &ray_in, const HitRecord &rec, const Ray &scattered, Vec3 *lightPoints, int lightCount) const {
+    // the PDFS have been moved to being calculated in the sampling methods
 
     Vec3 dirToLight = Vec3(0,0,0);
     for(int i = 0; i < lightCount; i+=2){

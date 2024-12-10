@@ -65,3 +65,11 @@ __device__ bool Ray::hitsBox(float x_min, float x_max, float y_min, float y_max,
 __device__ Vec3 Ray::inverse() const{
     return Vec3(1.0f / direction.x, 1.0f / direction.y, 1.0f / direction.z);
 }
+
+#ifndef F_EPSILON
+#define F_EPSILON 0.0001f
+#endif
+
+__device__ void Ray::move3Epsilon(){
+    origin = origin + direction * 3.0f * F_EPSILON;
+}

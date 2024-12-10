@@ -121,8 +121,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // 556.0 548.8 0
         // */
         // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
 
         //short block
         //uses white material
@@ -246,12 +246,16 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
         //adding a red box into the center
+
+        // Material * glass = new Dielectric(1.1);
+        // device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), glass);
         device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(310.0, 225.0, 134.0), red);
         // Material * white2 = new Lambertian(Vec3(1.0, 1.0, 1.0));
         // device_object_list[i++] = new Box(Vec3(0.0, 185.0, 94.0), Vec3(552.8, 225.0, 134.0), white2);
 
 
-        Vec3 lookfrom(278.0f, 278.0f, -400.0f);
+        // Vec3 lookfrom(278.0f, 278.0f, -400.0f)
+        Vec3 lookfrom(278.0f, 300.0f, -400.0f);
         // Vec3 lookfrom(278.0f, -278.0f, -400.0f);
 
 
@@ -282,10 +286,10 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
-        (*d_camera)->ambient_light_level = 0.0f;
+        (*d_camera)->ambient_light_level = 1.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 20;
-        (*d_camera)->bounces = 50;
+        (*d_camera)->samples = 200;
+        (*d_camera)->bounces = 10;
 
 
         // printf("World created\n");

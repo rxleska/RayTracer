@@ -333,7 +333,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, int depth, c
         Vec3 c = Vec3(1.0, 1.0, 1.0)*(1.0f-t) + Vec3(0.5, 0.7, 1.0)*t;
         return c*ambient;
     }
-
+    return Vec3(0.0,0.0,0.0); // exceeded recursion but missed check (should never reach this)
 }
 
 __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
@@ -389,7 +389,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
 
                     lightDir = lightDir.normalized();
                     if(lightDir.dot(rec.normal) < F_EPSILON){ //cosine check
-                        return Vec3(0.0,0.0,0.0);
+                        return Vec3(0.0,0.0,0.0); //failing on boxes
                     }
                     else{
                         light_cos = (lightDir.y < 0.0f) ? lightDir.y * -1.0 : lightDir.y;
@@ -414,8 +414,9 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
         else {
             float ambient = (*cam)->ambient_light_level;
             Vec3 unit_direction = (cur_ray.direction).normalized();
-            float t = 0.5f*(unit_direction.y + 1.0f);
-            Vec3 c = Vec3(1.0, 1.0, 1.0)*(1.0f-t) + Vec3(0.5, 0.7, 1.0)*t;
+            // float t = 0.5f*(unit_direction.y + 1.0f);
+            // Vec3 c = Vec3(1.0, 1.0, 1.0)*(1.0f-t) + Vec3(0.5, 0.7, 1.0)*t;
+            Vec3 c = Vec3(1.0, 1.0, 1.0);
             return cur_attenuation * (c*ambient);
         }
     }
@@ -547,13 +548,13 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512*2;
+    int nx = 512*1;
     // int nx = 1440;
     // int nx = 600;
     // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 512*2;
+    int ny = 512*1;
     // int ny = 900;
     int ns = 10;
     // int tx = 20;

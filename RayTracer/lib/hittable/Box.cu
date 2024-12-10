@@ -72,18 +72,29 @@ __device__ bool Box::hit(const Ray& r, float t_min, float t_max, HitRecord& rec)
     if(tzmax < tmax){
         tmax = tzmax;
     }
+    
     // update the hit record
     rec.t = tmin;
     rec.p = r.pointAt(tmin);
-    Vec3 normal;
+    Vec3 normal = Vec3(0, 0, 0);
 
-    // Determine the face that was hit
-    if (tmin == tzmin) {
-        normal = Vec3(0, 0, sign[2] ? -1 : 1); // Front or back face
-    } else if (tmin == tymin) {
-        normal = Vec3(0, sign[1] ? -1 : 1, 0); // Top or bottom face
-    } else {
-        normal = Vec3(sign[0] ? -1 : 1, 0, 0); // Left or right face
+    if(fabs(rec.p.x - min.x) < F_EPSILON){
+        normal = normal + Vec3(-1, 0, 0);
+    }
+    if(fabs(rec.p.x - max.x) < F_EPSILON){
+        normal = normal + Vec3(1, 0, 0);
+    }
+    if(fabs(rec.p.y - min.y) < F_EPSILON){
+        normal = normal + Vec3(0, -1, 0);
+    }
+    if(fabs(rec.p.y - max.y) < F_EPSILON){
+        normal = normal + Vec3(0, 1, 0);
+    }
+    if(fabs(rec.p.z - min.z) < F_EPSILON){
+        normal = normal + Vec3(0, 0, -1);
+    }
+    if(fabs(rec.p.z - max.z) < F_EPSILON){
+        normal = normal + Vec3(0, 0, 1);
     }
 
     rec.normal = normal;
@@ -95,7 +106,7 @@ __device__ bool Box::hit(const Ray& r, float t_min, float t_max, HitRecord& rec)
     rec.edge_hit = false; //TODO edge hits on boxes
     rec.mat = mat;
 
-    return (tmin < t_max) && (tmax > t_min);
+    return (tmin < t_max - F_EPSILON) && (tmax > t_min + F_EPSILON);
 }
 
 __device__ void Box::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
