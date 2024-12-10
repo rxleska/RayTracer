@@ -64,6 +64,27 @@ __device__ Vec3 Vec3::random_on_hemisphere(curandState *state, const Vec3 &norma
     return hemisphere;
 }
 
+__device__ Vec3 Vec3::random_on_hemisphere_cosine_weighted(curandState *state, const Vec3 &normal, float &cos_theta){
+    float h0 = curand_uniform(state);
+    float h1 = curand_uniform(state);
+    cos_theta = sqrt(h0);
+    float theta = acos(cos_theta); //between 0 and pi/2 since h0 is between 0 and 1
+    float phi = 2 * M_PI * h1; // between 0 and 2pi
+
+    Vec3 hemisphere = Vec3(sin(theta) * cos(phi), sin(theta) * sin(phi), cos(theta));
+    
+    Vec3 r = normal.cross(Vec3(0,0,1));
+    float rcos = normal.dot(Vec3(0,0,1));
+    rcos = rcos / (normal.mag());
+    float rtheta = -acos(rcos);
+
+    hemisphere = hemisphere * rcos + r * r.dot(hemisphere) * (1 - rcos) + r.cross(hemisphere) * sin(rtheta);
+
+    cos_theta = cos_theta / M_PI; // pdf
+
+    return hemisphere;
+}
+
 
 __device__ Vec3 Vec3::random_on_hemisphere_powerweighted_cosine(curandState *state, const Vec3 &normal, float a, float &cos_theta) {
     float h0 = curand_uniform(state);

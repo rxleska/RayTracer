@@ -93,6 +93,7 @@ public:
 
     __device__ static Vec3 random_on_hemisphere_montecarlo(curandState *state, const Vec3 &normal, float h0_ind, float h1_ind, float h0_resolution, float h1_resolution);
     __device__ static Vec3 random_on_hemisphere(curandState *state, const Vec3 &normal);
+    __device__ static Vec3 random_on_hemisphere_cosine_weighted(curandState *state, const Vec3 &normal, float &cos_theta);
     __device__ static Vec3 random_on_hemisphere_powerweighted_cosine(curandState *state, const Vec3 &normal, float a, float &cos_theta);
     __device__ static Vec3 random_on_hemisphere_beckmann(curandState *state, const Vec3 &normal, float a, float &cos_theta);
     __device__ static Vec3 random_on_hemisphere_blinn_phong(curandState *state, const Vec3 &normal, float a, float &cos_theta);

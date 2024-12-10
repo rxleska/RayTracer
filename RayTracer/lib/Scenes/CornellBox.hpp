@@ -25,7 +25,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         int i = 0;
 
         Material *white = new Lambertian(Vec3(1.0, 1.0, 1.0));
-        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 6.0f);
+        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 10.0f);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15));
@@ -51,19 +51,19 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         213.0 548.8 227.0
         */
         // device_object_list[i++] = Quad(Vec3(343.0, 548, 227.0),Vec3(343.0, 548, 332.0),Vec3(213.0, 548, 332.0),Vec3(213.0, 548, 227.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(343.0, 545, 332.0),Vec3(213.0, 545, 332.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
 
         Hitable **lightList = new Hitable*[2];
-        lightList[0] = Triangle(Vec3(343.0, 545, 227.0),Vec3(343.0, 545, 332.0),Vec3(213.0, 545, 332.0), light);
-        lightList[1] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
+        lightList[0] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
+        lightList[1] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
 
 
         // add single point light at center of ceiling
-        Vec3 *pointLights = new Vec3[1*1*2];
-        int plc = 0;
-        pointLights[plc++] = Vec3(278.0, 548.8, 278.0);
-        pointLights[plc++] = Vec3(1.0, 1.0, 1.0);
+        // Vec3 *pointLights = new Vec3[1*1*2];
+        // int plc = 0;
+        // pointLights[plc++] = Vec3(278.0, 548.8, 278.0);
+        // pointLights[plc++] = Vec3(1.0, 1.0, 1.0);
 
 
 
@@ -263,7 +263,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         // printf("Octree initialized\n");
 
-        (*d_world)->setPointLights(pointLights, plc);
+        // (*d_world)->setPointLights(pointLights, plc);
         (*d_world)->setLights(lightList, 2);
 
 
@@ -279,7 +279,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 2000;
+        (*d_camera)->samples = 20;
         (*d_camera)->bounces = 50;
 
 

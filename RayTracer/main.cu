@@ -303,7 +303,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, int depth, c
                     // get random point on a light
                     float area;
                     Vec3 lightEmmitted;
-                    Vec3 lightPoint = (*world)->getRandomPointOnLight(local_rand_state, area, lightEmmitted);
+                    Vec3 lightPoint = (*world)->getRandomPointOnLight(local_rand_state, area);
                     Vec3 lightDir = lightPoint - rec.p;
                     float lightLengthSq = lightDir.length();
                     lightLengthSq = lightLengthSq * lightLengthSq;
@@ -339,13 +339,20 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, int depth, c
 __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState *local_rand_state, bool &edge_hit) {
     Ray cur_ray = r;
     Vec3 cur_attenuation = Vec3(1.0,1.0,1.0);
-    // HitRecord recLight;
     HitRecord rec;
+    Ray scattered;
+    Vec3 attenuation;
+    int did_scatter;
+    Vec3 lightPoint;
+    Vec3 lightDir;
+    float area;
+    float lightLengthSq;
+    float light_cos;
+    float pdf_value;
+
     for(int i = 0; i < (*cam)->bounces; i++) {
         if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec)) {
-            Ray scattered;
-            Vec3 attenuation;
-            int did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
+            did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
             edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
                 cur_attenuation = cur_attenuation * attenuation;
@@ -376,26 +383,24 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
                 }
                 else{
                     // get random point on a light
-                    float area;
-                    Vec3 lightEmmitted;
-                    Vec3 lightPoint = (*world)->getRandomPointOnLight(local_rand_state, area, lightEmmitted);
-                    Vec3 lightDir = lightPoint - rec.p;
-                    float lightLengthSq = lightDir.mag2();
+                    lightPoint = (*world)->getRandomPointOnLight(local_rand_state, area);
+                    lightDir = lightPoint - rec.p;
+                    lightLengthSq = lightDir.mag2();
 
                     lightDir = lightDir.normalized();
                     if(lightDir.dot(rec.normal) < F_EPSILON){ //cosine check
                         return Vec3(0.0,0.0,0.0);
                     }
                     else{
-                        float light_cos = (lightDir.y < 0.0f) ? lightDir.y * -1.0 : lightDir.y;
+                        light_cos = (lightDir.y < 0.0f) ? lightDir.y * -1.0 : lightDir.y;
                         if(light_cos < F_EPSILON){
                             return Vec3(0.0,0.0,0.0);
                         }
                         else{
                             light_cos = lightDir.dot(rec.normal);
-                            float pdf_value = (light_cos * area) / lightLengthSq;
+                            pdf_value = (light_cos * area) / lightLengthSq;
                             Ray lightRay = Ray(rec.p + (lightDir * 0.1) , lightDir);
-                            float scatter_pdf = light_cos/M_PI;
+                            // float scatter_pdf = light_cos/M_PI;
                             cur_attenuation = (cur_attenuation * attenuation) * pdf_value; //* scatter_pdf;
                             cur_ray = lightRay;
                         }
@@ -462,14 +467,18 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
         sampleY+=1; // approach correct number of samples
     }
 
+    float u,v;
+    Ray r;
+    Vec3 color;
+
     for(int m = 0; m < msaaXval; m++){
         for(int xi = 0; xi < sampleX; xi++){
             for(int yi = 0; yi < sampleY; yi++){
-                float u = (float(i) + (xi + RND) / sampleX) / float(max_x);
-                float v = (float(j) + (yi + RND) / sampleY) / float(max_y);
-                Ray r = (*cam)->get_ray(u, v, &local_rand_state);
+                u = (float(i) + (xi + RND) / sampleX) / float(max_x);
+                v = (float(j) + (yi + RND) / sampleY) / float(max_y);
+                r = (*cam)->get_ray(u, v, &local_rand_state);
                 // Vec3 color = getColor(r, cam, world, 0, &local_rand_state, edge_hit_check);
-                Vec3 color = getColor(r, cam, world, &local_rand_state, edge_hit_check);
+                color = getColor(r, cam, world, &local_rand_state, edge_hit_check);
                 if (color.x != color.x){
                     color.x = 0.0;
                 }
@@ -490,20 +499,6 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
             }
         }
     }
-
-    // for(int s=0; s < samples; s++) {
-    //     float u = (float(i) + curand_uniform(&local_rand_state)) / float(max_x);
-    //     float v = (float(j) + curand_uniform(&local_rand_state)) / float(max_y);
-    //     Ray r = (*cam)->get_ray(u, v, &local_rand_state);
-    //     col = col + getColor(r, cam, world, &local_rand_state, edge_hit_check);
-
-    //     if(!edge_hit && edge_hit_check) {
-    //         edge_hit = true;
-    //         samples = samples * (*cam)->msaa_x;
-    //     }
-    // }
-
-
 
     rand_state[pixel_index] = local_rand_state;
     col = col / float(samples);
@@ -539,8 +534,8 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        // create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
