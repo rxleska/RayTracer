@@ -32,7 +32,7 @@ __device__ int Textured::scatter(const Ray &ray_in, HitRecord &rec, Vec3 &attenu
     int v = int(height * (1 - rec.v));
     
     attenuation = texture[u + width * v];
-    return 1;
+    return 5;
 }
 
 // #include <fstream>

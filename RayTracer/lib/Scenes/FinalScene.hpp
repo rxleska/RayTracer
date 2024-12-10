@@ -64,7 +64,13 @@ __device__ void create_final_scene(Hitable **device_object_list, Scene **d_world
         // circle light 
         Material * light_mat = new Light(Vec3(1.0f,1.0f,1.0f),15);
 
-        device_object_list[i++] = new Sphere(Vec3(0.0f, -30.0f, 30.0f), 10, light_mat);
+        device_object_list[i++] = new Sphere(Vec3(0.0f, -30.0f, 40.0f), 30, light_mat);
+        // device_object_list[i++] = new Sphere(Vec3(0.0f, 30.0f, 40.0f), 30, light_mat);
+
+        Hitable **lightList = new Hitable*[5];
+        int k = 0;
+        lightList[k++] = new Sphere(Vec3(0.0f, -30.0f, 40.0f), 30, light_mat);
+        // lightList[k++] = new Sphere(Vec3(0.0f, 30.0f, 40.0f), 30, light_mat);
 
 
         Vec3 lookfrom(5,10,10);
@@ -74,6 +80,8 @@ __device__ void create_final_scene(Hitable **device_object_list, Scene **d_world
         *d_world  = new Octree(device_object_list, i);
         ((Octree*)*d_world)->max_depth = 4;
         ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+
+        (*d_world)->setLights(lightList, k);
 
         // printf("rand inited\n");
         // *d_world  = new Scene(device_object_list, i);
@@ -88,9 +96,9 @@ __device__ void create_final_scene(Hitable **device_object_list, Scene **d_world
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
-        (*d_camera)->ambient_light_level = 0.6f;
+        (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 64;
+        (*d_camera)->samples = 256;
         (*d_camera)->bounces = 64;
     }
 }

@@ -25,7 +25,7 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
 
         Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
         Material *mirror = new Metal(Vec3(0.9, 0.9, 0.9), 0.001);
-        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 2.0);
+        Material *light = new Light(Vec3(1.0, 1.0, 1.0), 15.0);
         // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         // Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
@@ -53,8 +53,14 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
         213.0 548.8 227.0
         */
         // device_object_list[i++] = Quad(Vec3(343.0, 548, 227.0),Vec3(343.0, 548, 332.0),Vec3(213.0, 548, 332.0),Vec3(213.0, 548, 227.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(343.0, 545, 332.0),Vec3(213.0, 545, 332.0), light);
-        device_object_list[i++] = Triangle(Vec3(343.0, 545, 227.0),Vec3(213.0, 545, 332.0),Vec3(213.0, 545, 227.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
+        device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
+
+        Hitable **lightList = new Hitable*[2];
+        int k = 0;
+        lightList[k++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
+        lightList[k++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
+
 
 
         //Ceiling
@@ -151,6 +157,7 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
         // printf("Max depth set\n");
         // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         // printf("Octree initialized\n");
+        (*d_world)->setLights(lightList, k);
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();
@@ -164,7 +171,7 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 2;
-        (*d_camera)->samples = 10;
+        (*d_camera)->samples = 100;
         (*d_camera)->bounces = 20;
 
 

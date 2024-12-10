@@ -25,5 +25,5 @@ __device__ int LambertianBordered::scatter(const Ray &ray_in, HitRecord &rec, Ve
     else{
         attenuation = albedo;
     }
-    return 1;
+    return 5;
 }

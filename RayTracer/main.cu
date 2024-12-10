@@ -355,8 +355,8 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
             edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
-                cur_attenuation = cur_attenuation * attenuation;
-                cur_ray = scattered;
+                    cur_attenuation = cur_attenuation * attenuation;
+                    cur_ray = scattered;
             }
             else if(did_scatter == 2){ //light hit return color
                 return cur_attenuation * attenuation;
