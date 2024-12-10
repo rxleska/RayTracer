@@ -206,7 +206,7 @@ __device__ void Scene::setLights(Hitable **lights, int light_count){
 
 __device__ Vec3 Scene::getRandomPointOnLight(curandState *local_rand_state, float &light_area, Vec3 &lightEmmitted) const{
     int light_index = curand(local_rand_state) % light_count;
-    if(light_index < 1){
+    if(light_count < 1){
         return Vec3(0,0,0);
     }
 

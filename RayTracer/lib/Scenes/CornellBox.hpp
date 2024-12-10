@@ -247,6 +247,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
 
 
         Vec3 lookfrom(278.0f, 278.0f, -400.0f);
+        // Vec3 lookfrom(278.0f, -278.0f, -400.0f);
 
 
         printf("rand initing\n");
@@ -278,8 +279,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
                                  dist_to_focus);
         (*d_camera)->ambient_light_level = 0.0f;
         (*d_camera)->msaa_x = 1;
-        (*d_camera)->samples = 20;
-        (*d_camera)->bounces = 10;
+        (*d_camera)->samples = 2000;
+        (*d_camera)->bounces = 50;
 
 
         // printf("World created\n");
