@@ -61,3 +61,7 @@ __device__ bool Ray::hitsBox(float x_min, float x_max, float y_min, float y_max,
     t = tmax;
     return true;
 }
+
+__device__ Vec3 Ray::inverse() const{
+    return Vec3(1.0f / direction.x, 1.0f / direction.y, 1.0f / direction.z);
+}

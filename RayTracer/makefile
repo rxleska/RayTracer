@@ -21,7 +21,7 @@ CFLAGS = -arch=sm_89 -rdc=true
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
 MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj bin/Phong.obj bin/PhongLamb.obj
-HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon_T.obj bin/Octree.obj
+HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon_T.obj bin/Octree.obj bin/Box.obj
 
 SCENES = lib/Scenes/CornellBox.hpp lib/Scenes/CornellRoomOfMirrors.hpp lib/Scenes/RTIAW.hpp lib/Scenes/TestScene.hpp lib/Scenes/Billards.hpp lib/Scenes/PhongCornellBox.hpp lib/Scenes/PhongMixCornellBox.hpp lib/Scenes/FinalScene.hpp
 
@@ -90,6 +90,9 @@ bin/Polygon_T.obj: lib/hittable/Polygon_T.cu lib/hittable/headers/Polygon_T.hpp 
 
 bin/Octree.obj: lib/hittable/Octree.cu lib/hittable/headers/Octree.hpp lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Octree.cu -o bin/Octree.obj
+
+bin/Box.obj: lib/hittable/Box.cu lib/hittable/headers/Box.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/hittable/Box.cu -o bin/Box.obj
 
 
 

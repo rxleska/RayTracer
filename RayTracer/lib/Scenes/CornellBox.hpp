@@ -5,6 +5,7 @@
 #include "../hittable/headers/HitRecord.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../hittable/headers/Sphere.hpp"
+#include "../hittable/headers/Box.hpp"
 #include "../hittable/headers/Polygon_T.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../materials/headers/Material.hpp"
@@ -244,6 +245,10 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // device_object_list[i++] = Quad(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
         device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
+        //adding a red box into the center
+        device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(310.0, 225.0, 134.0), red);
+        // Material * white2 = new Lambertian(Vec3(1.0, 1.0, 1.0));
+        // device_object_list[i++] = new Box(Vec3(0.0, 185.0, 94.0), Vec3(552.8, 225.0, 134.0), white2);
 
 
         Vec3 lookfrom(278.0f, 278.0f, -400.0f);
