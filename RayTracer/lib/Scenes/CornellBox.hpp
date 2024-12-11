@@ -7,6 +7,7 @@
 #include "../hittable/headers/Sphere.hpp"
 #include "../hittable/headers/Box.hpp"
 #include "../hittable/headers/Medium.hpp"
+#include "../hittable/headers/ObjInst.hpp"
 #include "../hittable/headers/Polygon_T.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../materials/headers/Material.hpp"
@@ -255,9 +256,15 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(310.0, 225.0, 134.0), red);
         // Material * blue = new Lambertian(Vec3(0.1, 0.2, 1.0));
         // device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), red);
-        Material * smoke = new Isotropic(Vec3(0.8, 0.8, 0.8));
+
+        Hitable *rotationTest = new Box(Vec3(-30.0,-30.0,-30.0), Vec3(30.0,30.0,30.0), red);
+        rotationTest = new ObjInstRot(rotationTest, Vec3(-M_PI/12, M_PI/6, 0));
+        rotationTest = new ObjInstTrans(rotationTest, Vec3(300, 215, 124));
+        device_object_list[i++] = rotationTest;
+
+        // Material * smoke = new Isotropic(Vec3(0.8, 0.8, 0.8));
         // device_object_list[i++] = new Medium(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), 0.01, smoke);
-        device_object_list[i++] = new Medium(Vec3(0.0, 0, 0), Vec3(552.8, 145.0, 552.8), 0.01, smoke);
+        // device_object_list[i++] = new Medium(Vec3(0.0, 0, 0), Vec3(552.8, 145.0, 552.8), 0.01, smoke);
         // Material * white2 = new Lambertian(Vec3(1.0, 1.0, 1.0));
         // device_object_list[i++] = new Box(Vec3(0.0, 185.0, 94.0), Vec3(552.8, 225.0, 134.0), white2);
 

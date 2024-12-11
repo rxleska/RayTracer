@@ -10,7 +10,7 @@ CC = nvcc
 # CFLAGS = -arch=sm_89 -rdc=true -Xptxas -O2 -Xcompiler -O2
 # CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -arch=sm_80 -rdc=true -g -G
-CFLAGS = -arch=sm_89 -rdc=true
+CFLAGS = -arch=sm_80 -rdc=true
 # CFLAGS = -arch=sm_89 -rdc=true -G -g
 
 # testing -G flag removes all optimizations (really slow)
@@ -21,7 +21,7 @@ CFLAGS = -arch=sm_89 -rdc=true
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
 MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj bin/Phong.obj bin/PhongLamb.obj bin/Isotropic.obj
-HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon_T.obj bin/Octree.obj bin/Box.obj bin/Medium.obj
+HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon_T.obj bin/Octree.obj bin/Box.obj bin/Medium.obj bin/ObjInst.obj
 
 SCENES = lib/Scenes/CornellBox.hpp lib/Scenes/CornellRoomOfMirrors.hpp lib/Scenes/RTIAW.hpp lib/Scenes/TestScene.hpp lib/Scenes/Billards.hpp lib/Scenes/PhongCornellBox.hpp lib/Scenes/PhongMixCornellBox.hpp lib/Scenes/FinalScene.hpp
 
@@ -99,6 +99,9 @@ bin/Box.obj: lib/hittable/Box.cu lib/hittable/headers/Box.hpp lib/hittable/heade
 
 bin/Medium.obj: lib/hittable/Medium.cu lib/hittable/headers/Medium.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Medium.cu -o bin/Medium.obj
+
+bin/ObjInst.obj: lib/hittable/ObjInst.cu lib/hittable/headers/ObjInst.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
+	$(CC) $(CFLAGS) -c lib/hittable/ObjInst.cu -o bin/ObjInst.obj
 
 
 
