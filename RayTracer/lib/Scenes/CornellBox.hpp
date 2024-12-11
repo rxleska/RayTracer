@@ -257,7 +257,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), red);
         Material * smoke = new Isotropic(Vec3(0.8, 0.8, 0.8));
         // device_object_list[i++] = new Medium(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), 0.01, smoke);
-        device_object_list[i++] = new Medium(Vec3(0.0, 0, 0), Vec3(552.8, 245.0, 552.8), 0.0025, smoke);
+        device_object_list[i++] = new Medium(Vec3(0.0, 0, 0), Vec3(552.8, 145.0, 552.8), 0.01, smoke);
         // Material * white2 = new Lambertian(Vec3(1.0, 1.0, 1.0));
         // device_object_list[i++] = new Box(Vec3(0.0, 185.0, 94.0), Vec3(552.8, 225.0, 134.0), white2);
 
