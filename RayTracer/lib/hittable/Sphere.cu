@@ -15,7 +15,7 @@
 #include "../materials/headers/Textured.hpp"
 
 
-__device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
+__device__ bool Sphere::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
     // using the quadratic formula to solve for t in the equation of a ray-sphere intersection
 
     //formula for sphere ray intersection taken from wikipedia https://en.wikipedia.org/wiki/Line%E2%80%93sphere_intersection

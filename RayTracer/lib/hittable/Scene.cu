@@ -44,11 +44,11 @@ __device__ void Scene::addHitable(Hitable *hittable){
     }
     hitables[hitable_count++] = hittable;
 }
-__device__ bool Scene::hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const{
+__device__ bool Scene::hit(const Ray &ray, float t_min, float t_max, HitRecord &rec, curandState *state) const{
     bool has_hit = false;
     // float closest = t_max;
     for (int i = 0; i < hitable_count; i++) {
-        if (hitables[i]->hit(ray, t_min, t_max, rec)) {
+        if (hitables[i]->hit(ray, t_min, t_max, rec, state)) {
             has_hit = true;
             t_max = rec.t;
             // rec = current_hit;
@@ -88,7 +88,7 @@ __device__ void Scene::setPointLights(Vec3 *pointLights, int light_count){
 }
 
 
-__device__ Vec3 Scene::handlePhong(const HitRecord &rec, Camera **cam) const{
+__device__ Vec3 Scene::handlePhong(const HitRecord &rec, Camera **cam, curandState *state) const{
     Phong *material = (Phong*) rec.mat;
 
     Vec3 returned_color = material->albedo * (*cam)->ambient_light_level * material->kConsts.z;
@@ -111,7 +111,7 @@ __device__ Vec3 Scene::handlePhong(const HitRecord &rec, Camera **cam) const{
         float time = (pointLights[i] - rec.p).x / L_hat_m.x;
         Ray check_ray = Ray(rec.p, L_hat_m);
         HitRecord check_rec; //this is not used but a null pointer could lead to errors or undefined behavior
-        if(!hit(check_ray, 0.001, time, check_rec)){
+        if(!hit(check_ray, 0.001, time, check_rec, state)){
             //kd * Lm_dot_N * imd
             returned_color = returned_color + pointLights[i+1] * (Lm_dot_N * material->kConsts.y);
 
@@ -154,7 +154,7 @@ __device__ Vec3 Scene::handlePhongLamb(const HitRecord &rec, Camera **cam, Ray &
             float time = (pointLights[i] - rec.p).x / L_hat_m.x;
             Ray check_ray = Ray(rec.p, L_hat_m);
             HitRecord check_rec; //this is not used but a null pointer could lead to errors or undefined behavior
-            if(!hit(check_ray, 0.001, time, check_rec)){
+            if(!hit(check_ray, 0.001, time, check_rec, local_rand_state)){
                 //kd * Lm_dot_N * imd
                 returned_color = returned_color + pointLights[i+1] * (Lm_dot_N * material->kConsts.y);
 

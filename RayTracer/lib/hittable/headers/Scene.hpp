@@ -15,10 +15,10 @@ class Scene{
         __device__ void setPointLights(Vec3 *pointLights, int light_count);
         __device__ void setLights(Hitable **lights, int light_count);
         __device__ Vec3 getRandomPointOnLight(curandState *local_rand_state, float &light_area) const;
-        __device__ virtual bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const;
+        __device__ virtual bool hit(const Ray &ray, float t_min, float t_max, HitRecord &rec, curandState *state) const;
         __device__ void empty();
 
-        __device__ Vec3 handlePhong(const HitRecord &rec, Camera **cam) const;
+        __device__ Vec3 handlePhong(const HitRecord &rec, Camera **cam, curandState * state) const;
         __device__ Vec3 handlePhongLamb(const HitRecord &rec, Camera **cam, Ray &scattered, curandState *local_rand_state, bool usePhong) const;
         
         __device__ void debug_print() const;

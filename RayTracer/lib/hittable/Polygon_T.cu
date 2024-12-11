@@ -48,7 +48,7 @@ __device__ Polygon_T::Polygon_T(Vec3 * vertices, int num_vertices, Material * ma
 
 
 // function to check if a ray hits the sphere
-__device__ bool Polygon_T::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
+__device__ bool Polygon_T::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
     //check if the ray is parallel to the plane
     float denom = normal.dot(r.direction);
     if(denom > -F_EPSILON){

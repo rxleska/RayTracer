@@ -1,16 +1,22 @@
-#ifndef BOX_HPP
-#define BOX_HPP
+#ifndef MEDIUM_HPP
+#define MEDIUM_HPP
 
 #include "Hitable.hpp"
 
-//class to represent a box in the scene
+#include <iostream>
 
-class Box: public Hitable{
+class Medium: public Hitable{
     public:
         Vec3 min, max;
         Material * mat;
+        double neg_inv_density;
 
-        __device__ Box(Vec3 min, Vec3 max, Material *mat) : min(min), max(max), mat(mat) {
+        __device__ Medium(Vec3 min, Vec3 max, double density, Material *mat) : min(min), max(max), mat(mat), neg_inv_density(-1.0/density) {
+            if(mat->type != ISOTROPIC){
+                printf("Error: Medium material type is not ISOTROPIC\n");
+            }
+
+
             if(min.x > max.x){
                 float temp = min.x;
                 min.x = max.x;
@@ -26,7 +32,7 @@ class Box: public Hitable{
                 min.z = max.z;
                 max.z = temp;
             }
-        }
+        }   
 
         __device__ float bound(int axis, int side) const;
 
@@ -45,5 +51,6 @@ class Box: public Hitable{
         __device__ virtual float get2dArea() const override;
 
 };
+
 
 #endif

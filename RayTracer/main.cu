@@ -251,7 +251,7 @@ __device__ float getLightPDF(Ray norm, Scene **world, curandState *local_rand_st
         for(int j = 0; j < lightpdf_resolution; j++){
             MontecarloDirection = Vec3::random_on_hemisphere_montecarlo(local_rand_state, norm.direction, (float)i, (float)j, 1.0f/lightpdf_resolution, 1.0f/lightpdf_resolution);
             lightRay = Ray(norm.origin, MontecarloDirection);
-            if((*world)->hit(lightRay, 0.001f, FLT_MAX, rec)){
+            if((*world)->hit(lightRay, 0.001f, FLT_MAX, rec, local_rand_state)){
                 if (rec.mat->type == LIGHT){
                     hit_count++;
                 }
@@ -270,7 +270,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, int depth, c
         return Vec3(0.0,0.0,0.0);
     }
     HitRecord rec;
-    if ((*world)->hit(r, 0.001f, FLT_MAX, rec)) {
+    if ((*world)->hit(r, 0.001f, FLT_MAX, rec, local_rand_state)) {
         
             Ray scattered;
             Vec3 attenuation;
@@ -283,7 +283,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, int depth, c
                 return attenuation;
             }
             else if(did_scatter == 3) { //phong hit return color
-                return (*world)->handlePhong(rec, cam);
+                return (*world)->handlePhong(rec, cam, local_rand_state);
             }
             else if(did_scatter == 4) { //phong hit return color
                 int bcCount = ((PhongLamb*) rec.mat)->bc;
@@ -351,7 +351,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
     float pdf_value;
 
     for(int i = 0; i < (*cam)->bounces; i++) {
-        if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec)) {
+        if ((*world)->hit(cur_ray, 0.001f, FLT_MAX, rec, local_rand_state)) {
             did_scatter = rec.mat->scatter(cur_ray, rec, attenuation, scattered, local_rand_state);
             edge_hit = rec.edge_hit;
             if(did_scatter == 1) {
@@ -362,7 +362,7 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
                 return cur_attenuation * attenuation;
             }
             else if(did_scatter == 3) { //phong hit return color
-                return (*world)->handlePhong(rec, cam) * cur_attenuation;
+                return (*world)->handlePhong(rec, cam, local_rand_state) * cur_attenuation;
             }
             else if(did_scatter == 4) { //phong hit return color
                 int bcCount = ((PhongLamb*) rec.mat)->bc;

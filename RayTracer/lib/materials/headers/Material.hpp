@@ -16,7 +16,8 @@ enum MaterialType
     LIGHT, // emit light
     TEXTURED, // textured material
     PHONG, // Phong material
-    PHONGLAMB // PhongLamb material
+    PHONGLAMB, // PhongLamb material
+    ISOTROPIC
 };
 
 //min function for floats

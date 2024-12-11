@@ -1,14 +1,16 @@
-#include "headers/Box.hpp"
+#include "headers/Medium.hpp"
 
 #ifndef F_EPSILON
 #define F_EPSILON 0.000001
 #endif
 
+#include "../hittable/headers/HitRecord.hpp"
+
 #include "../materials/headers/Textured.hpp"
 
 #include "../materials/headers/Lambertian.hpp"
 
-__device__ float Box::bound(int axis, int side) const{
+__device__ float Medium::bound(int axis, int side) const{
     if(axis == 0){
         if(side == 0){
             return min.x;
@@ -37,8 +39,7 @@ __device__ float Box::bound(int axis, int side) const{
 
 #include <cassert>
 
-__device__ bool Box::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
-    
+__device__ bool Medium::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
     Vec3 inverse = r.inverse();
     Vec3 tmin = (min - r.origin) * inverse;
     Vec3 tmax = (max - r.origin) * inverse;
@@ -61,46 +62,34 @@ __device__ bool Box::hit(const Ray& r, float t_min, float t_max, HitRecord& rec,
     float entry = fmax(fmax(tmin.x, tmin.y), tmin.z);
     float exit = fmin(fmin(tmax.x, tmax.y), tmax.z);
 
-    if (entry > exit || exit < t_min || entry > t_max) {
+    if (entry < t_min){
+        entry = t_min;
+    }
+    if (exit > t_max){
+        exit = t_max;
+    }
+    if(entry >= exit){
+        return false;
+    }
+    if(entry < 0){
+        entry = 0;
+    }
+
+    float hit_dist = neg_inv_density * logf(curand_uniform(state));
+    if(hit_dist > (exit - entry)){
         return false;
     }
 
-    rec.t = entry;
-    rec.p = r.origin + r.direction * entry;
-
-    Vec3 normal;
-    if (entry == tmin.x) {
-        if(r.direction.x > 0){
-            normal = Vec3(-1,0,0);
-        }
-        else{
-            normal = Vec3(1,0,0);
-        }
-        
-    } else if (entry == tmin.y) {
-        if(r.direction.y > 0){
-            normal = Vec3(0,-1,0);
-        }
-        else{
-            normal = Vec3(0,1,0);
-        }
-    } else {
-        if(r.direction.z > 0){
-            normal = Vec3(0,0,-1);
-        }
-        else{
-            normal = Vec3(0,0,1);
-        }
-    }
-
-    rec.front_face = false;
-    rec.normal = normal;
-    rec.mat = this->mat;
+    rec.t = entry + hit_dist;
+    rec.p = r.pointAt(rec.t);
+    rec.normal = Vec3(1, 0, 0); // arbitrary normal
+    rec.front_face = true;
+    rec.mat = mat;
 
     return true;
 }
 
-__device__ void Box::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
+__device__ void Medium::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
     x_min = min.x;
     x_max = max.x;
     y_min = min.y;
@@ -109,7 +98,7 @@ __device__ void Box::getBounds(float& x_min, float& x_max, float& y_min, float& 
     z_max = max.z;
 }
 
-__device__ bool Box::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const{
+__device__ bool Medium::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const{
     return (
         // check if box mins are below box maxes
         // check if box maxes are above box mins
@@ -122,7 +111,7 @@ __device__ bool Box::insideBox(float x_min, float x_max, float y_min, float y_ma
     );
 }
 
-__device__ Vec3 Box::getRandomPointInHitable(curandState *state) const {
+__device__ Vec3 Medium::getRandomPointInHitable(curandState *state) const {
     return Vec3(
         curand_uniform(state) * (max.x - min.x) + min.x,
         curand_uniform(state) * (max.y - min.y) + min.y,
@@ -130,13 +119,13 @@ __device__ Vec3 Box::getRandomPointInHitable(curandState *state) const {
     );
 }
 
-__device__ float Box::get2dArea() const {
+__device__ float Medium::get2dArea() const {
     Vec3 diff = max - min;
     return diff.x * diff.y + diff.x * diff.z + diff.y * diff.z;
 }
 
 #include <iostream>
 
-__device__ void Box::debug_print() const{
+__device__ void Medium::debug_print() const{
     printf("Box: min: (%f, %f, %f) max: (%f, %f, %f)\n", min.x, min.y, min.z, max.x, max.y, max.z);
 }

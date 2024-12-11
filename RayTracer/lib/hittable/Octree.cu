@@ -146,7 +146,7 @@ __device__ int  Octree::closest_child(const Vec3 point) const{
     return xFlag + 2 * yFlag + 4 * zFlag; // 0 to 7 index using same method as assignment
 }
 
-__device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord &rec) const{
+__device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord &rec, curandState *state) const{
     float t;
     if(!ray.hitsBox(x_min, x_max, y_min, y_max, z_min, z_max, t)){
         // printf("No box hit\n");
@@ -165,7 +165,7 @@ __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord 
         // printf("Hit leaf\n");
         for(int i = 0; i < hitable_count; i++){
                 // printf("Hit hittable\n");
-            if(hitables[i]->hit(ray, t_min, t_max, rec)){
+            if(hitables[i]->hit(ray, t_min, t_max, rec, state)){
                 has_hit = true;
                 t_max = rec.t;
             }
@@ -175,7 +175,7 @@ __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord 
         //determine the closest nodes to the ray origin
         int indexClosest = closest_child(ray.origin);
 
-        if(children[indexClosest]->hit(ray, t_min, t_max, rec)){
+        if(children[indexClosest]->hit(ray, t_min, t_max, rec, state)){
             // printf("Hit child\n");
             return true;
         }
@@ -206,7 +206,7 @@ __device__ bool Octree::hit(const Ray &ray, float t_min, float t_max, HitRecord 
             }
             // printf("Plane hit: %d\n", plane);
             indexClosest ^= 1 << plane; //flip the bit of the plane that was hit
-            if(children[indexClosest]->hit(ray, t_min, t_max, rec)){
+            if(children[indexClosest]->hit(ray, t_min, t_max, rec, state)){
                 // printf("Hit child\n");
                 return true;
             }
