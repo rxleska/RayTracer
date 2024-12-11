@@ -50,6 +50,32 @@ class ObjInstTrans : public Hitable {
 
 };
 
+
+class ObjInstMotion : public Hitable {
+    public: 
+        Hitable *obj;
+        Vec3 vel;
+        Vec3 acc;
+        float t;
+
+    __device__ ObjInstMotion(Hitable *obj, Vec3 vel, float t) : obj(obj), vel(vel), acc(Vec3()), t(t)  {}
+    __device__ ObjInstMotion(Hitable *obj, Vec3 vel, Vec3 acc, float t) : obj(obj), vel(vel), acc(acc), t(t)  {}
+
+    __device__ virtual bool hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const override;
+
+    __device__ virtual void getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const override;
+        
+    __device__ virtual bool insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const override;
+
+    __device__ virtual  void debug_print() const override;
+
+    __device__ virtual Vec3 getRandomPointInHitable(curandState *state) const override;
+
+    __device__ virtual float get2dArea() const override;
+
+};
+
+
 // abstraction that only allows scaling
 // MAY BE ADDED LATER
 // class ObjInstScale : public ObjInst {

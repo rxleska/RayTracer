@@ -1,5 +1,6 @@
 #include "headers/ObjInst.hpp"
 
+// Translation
 
 __device__ bool ObjInstTrans::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
     // translate the ray to the object's frame
@@ -42,10 +43,12 @@ __device__ float ObjInstTrans::get2dArea() const {
     return obj->get2dArea();
 }
 
+
+// Rotation
+
 #ifndef F_EPSILON
 #define F_EPSILON 1e-6
 #endif
-
 
 __device__ bool ObjInstRot::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
     Ray moved = Ray(r.origin, r.direction);
@@ -255,5 +258,69 @@ __device__ Vec3 ObjInstRot::getRandomPointInHitable(curandState *state) const {
 }
 
 __device__ float ObjInstRot::get2dArea() const {
+    return obj->get2dArea();
+}
+
+
+// Motion Blur
+
+__device__ bool ObjInstMotion::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
+    float rng = curand_uniform(state) * t;
+
+    Vec3 translation = vel * rng  + acc * rng * rng * 0.5;
+    // translate the ray to the object's frame
+    Ray moved = Ray(r.origin - translation, r.direction);
+
+    if(!obj->hit(moved, t_min, t_max, rec, state)) {
+        return false;
+    }
+    rec.p = rec.p + translation;
+
+    return true;
+
+}
+
+
+__device__ void ObjInstMotion::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const {
+    obj->getBounds(x_min, x_max, y_min, y_max, z_min, z_max);
+    Vec3 Cache[2];
+    Cache[0] = Vec3(x_min, y_min, z_min);
+    Cache[1] = Vec3(x_max, y_max, z_max);
+
+
+    // iterative approach
+    int step = 100;
+    for(int i = 0; i <= step; i++){
+        float rng = t * (float(i)/step);
+        Vec3 translation = vel * rng  + acc * rng * rng * 0.5;
+        if(x_min < Cache[0].x + translation.x) x_min = Cache[0].x + translation.x;
+        if(x_max > Cache[1].x + translation.x) x_max = Cache[1].x + translation.x;
+        if(y_min < Cache[0].y + translation.y) y_min = Cache[0].y + translation.y;
+        if(y_max > Cache[1].y + translation.y) y_max = Cache[1].y + translation.y;
+        if(z_min < Cache[0].z + translation.z) z_min = Cache[0].z + translation.z;
+        if(z_max > Cache[1].z + translation.z) z_max = Cache[1].z + translation.z;
+    }
+}
+
+__device__ bool ObjInstMotion::insideBox(float x_min, float x_max, float y_min, float y_max, float z_min, float z_max) const {
+    float bounds[6];
+    getBounds(bounds[0], bounds[1], bounds[2], bounds[3], bounds[4], bounds[5]);
+    return x_min <= bounds[3] && x_max >= bounds[0] && y_min <= bounds[4] && y_max >= bounds[1] && z_min <= bounds[5] && z_max >= bounds[2];
+}
+
+__device__ void ObjInstMotion::debug_print() const {
+    printf("ObjInstMotion: translation: ");
+    printf("t: %f, vel: %f, %f, %f, acc: %f, %f, %f\n", t, vel.x, vel.y, vel.z, acc.x, acc.y, acc.z);
+    obj->debug_print();    
+}
+
+__device__ Vec3 ObjInstMotion::getRandomPointInHitable(curandState *state) const {
+    Vec3 pnt = obj->getRandomPointInHitable(state);
+    float rng = curand_uniform(state) * t;
+    Vec3 translation = vel * rng  + acc * rng * rng * 0.5;
+    return pnt + translation;
+}
+
+__device__ float ObjInstMotion::get2dArea() const {
     return obj->get2dArea();
 }

@@ -257,9 +257,11 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // Material * blue = new Lambertian(Vec3(0.1, 0.2, 1.0));
         // device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), red);
 
-        Hitable *rotationTest = new Box(Vec3(-30.0,-30.0,-30.0), Vec3(30.0,30.0,30.0), red);
-        rotationTest = new ObjInstRot(rotationTest, Vec3(-M_PI/12, M_PI/6, 0));
-        rotationTest = new ObjInstTrans(rotationTest, Vec3(300, 215, 124));
+        Hitable *rotationTest = new Sphere(Vec3(278.0, 278.0, 278.0), 50.0, red);
+        // Hitable *rotationTest = new Box(Vec3(-30.0,-30.0,-30.0), Vec3(30.0,30.0,30.0), red);
+        // rotationTest = new ObjInstRot(rotationTest, Vec3(0.0, M_PI/6, 0));
+        // rotationTest = new ObjInstTrans(rotationTest, Vec3(450, 215, 124));
+        rotationTest = new ObjInstMotion(rotationTest, Vec3(0.0, -100.0, 0.0), 1);
         device_object_list[i++] = rotationTest;
 
         // Material * smoke = new Isotropic(Vec3(0.8, 0.8, 0.8));
