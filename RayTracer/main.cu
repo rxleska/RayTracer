@@ -375,6 +375,15 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
                 }
             }
             else if(did_scatter == 5){
+                //temporary change mat if normal is on axis
+                // Vec3 natten = attenuation;
+                // rec.normal = rec.normal.normalized();
+                // rec.normal = rec.normal.normalized();
+                // if (rec.normal.x < F_EPSILON && rec.normal.y < F_EPSILON && rec.normal.z < F_EPSILON){
+                //     natten = Vec3(1.0, 0.0, 1.0);
+                // }
+                // attenuation = natten;
+
                 // if(false){
                 // if(true){
                 if(curand_uniform(local_rand_state) < 0.5){

@@ -5,6 +5,7 @@
 #include "../hittable/headers/HitRecord.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../hittable/headers/Sphere.hpp"
+#include "../hittable/headers/Box.hpp"
 #include "../hittable/headers/Polygon_T.hpp"
 #include "../hittable/headers/Octree.hpp"
 #include "../materials/headers/Material.hpp"
@@ -71,6 +72,10 @@ __device__ void create_final_scene(Hitable **device_object_list, Scene **d_world
         int k = 0;
         lightList[k++] = new Sphere(Vec3(0.0f, -30.0f, 40.0f), 30, light_mat);
         // lightList[k++] = new Sphere(Vec3(0.0f, 30.0f, 40.0f), 30, light_mat);
+
+        
+        Material * blue = new Lambertian(Vec3(0.1, 0.2, 1.0));
+        device_object_list[i++] = new Box(Vec3(0,0,0), Vec3(1.0, 1.0, 1.0), blue);
 
 
         Vec3 lookfrom(5,10,10);

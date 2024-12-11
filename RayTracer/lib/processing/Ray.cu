@@ -62,8 +62,16 @@ __device__ bool Ray::hitsBox(float x_min, float x_max, float y_min, float y_max,
     return true;
 }
 
+#ifndef F_EPSILON
+#define F_EPSILON 0.0001f
+#endif
+
 __device__ Vec3 Ray::inverse() const{
-    return Vec3(1.0f / direction.x, 1.0f / direction.y, 1.0f / direction.z);
+    
+
+    return Vec3(( direction.x < F_EPSILON && direction.x > -F_EPSILON ? 0.0f : 1.0f / direction.x), 
+                    ( direction.y < F_EPSILON && direction.y > -F_EPSILON ? 0.0f : 1.0f / direction.y ), 
+                    ( direction.z < F_EPSILON && direction.z > -F_EPSILON ? 0.0f : 1.0f / direction.z ));
 }
 
 #ifndef F_EPSILON

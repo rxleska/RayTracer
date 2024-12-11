@@ -6,6 +6,8 @@
 
 #include "../materials/headers/Textured.hpp"
 
+#include "../materials/headers/Lambertian.hpp"
+
 __device__ float Box::bound(int axis, int side) const{
     if(axis == 0){
         if(side == 0){
@@ -36,77 +38,66 @@ __device__ float Box::bound(int axis, int side) const{
 #include <cassert>
 
 __device__ bool Box::hit(const Ray& r, float t_min, float t_max, HitRecord& rec) const {
-    float tmin,tmax,tymin,tymax,tzmin,tzmax;
     
     Vec3 inverse = r.inverse();
-    bool sign[3] = {inverse.x < 0, inverse.y < 0, inverse.z < 0};
-
-    tmin = (bound(0, sign[0]) - r.origin.x) * inverse.x;
-    tmax = (bound(0, 1 - sign[0]) - r.origin.x) * inverse.x;
-    tymin = (bound(1, sign[1]) - r.origin.y) * inverse.y;
-    tymax = (bound(1, 1 - sign[1]) - r.origin.y) * inverse.y;
-    if( 
-        (tmin > tymax) ||
-        (tymin > tmax)
-    ){
-        return false;
+    Vec3 tmin = (min - r.origin) * inverse;
+    Vec3 tmax = (max - r.origin) * inverse;
+    if(tmin.x > tmax.x){
+        float temp = tmin.x;
+        tmin.x = tmax.x;
+        tmax.x = temp;
     }
-    if(tymin > tmin){
-        tmin = tymin;
-        
+    if(tmin.y > tmax.y){
+        float temp = tmin.y;
+        tmin.y = tmax.y;
+        tmax.y = temp;
     }
-    if(tymax < tmax){
-        tmax = tymax;
-    }
-    tzmin = (bound(2, sign[2]) - r.origin.z) * inverse.z;
-    tzmax = (bound(2, 1 - sign[2]) - r.origin.z) * inverse.z;
-    if( 
-        (tmin > tzmax) ||
-        (tzmin > tmax)
-    ){
-        return false;
-    }
-    if(tzmin > tmin){
-        tmin = tzmin;
-    }
-    if(tzmax < tmax){
-        tmax = tzmax;
+    if(tmin.z > tmax.z){
+        float temp = tmin.z;
+        tmin.z = tmax.z;
+        tmax.z = temp;
     }
     
-    // update the hit record
-    rec.t = tmin;
-    rec.p = r.pointAt(tmin);
-    Vec3 normal = Vec3(0, 0, 0);
+    float entry = fmax(fmax(tmin.x, tmin.y), tmin.z);
+    float exit = fmin(fmin(tmax.x, tmax.y), tmax.z);
 
-    if(fabs(rec.p.x - min.x) < F_EPSILON){
-        normal = normal + Vec3(-1, 0, 0);
-    }
-    if(fabs(rec.p.x - max.x) < F_EPSILON){
-        normal = normal + Vec3(1, 0, 0);
-    }
-    if(fabs(rec.p.y - min.y) < F_EPSILON){
-        normal = normal + Vec3(0, -1, 0);
-    }
-    if(fabs(rec.p.y - max.y) < F_EPSILON){
-        normal = normal + Vec3(0, 1, 0);
-    }
-    if(fabs(rec.p.z - min.z) < F_EPSILON){
-        normal = normal + Vec3(0, 0, -1);
-    }
-    if(fabs(rec.p.z - max.z) < F_EPSILON){
-        normal = normal + Vec3(0, 0, 1);
+    if (entry > exit || exit < t_min || entry > t_max) {
+        return false;
     }
 
+    rec.t = entry;
+    rec.p = r.origin + r.direction * entry;
+
+    Vec3 normal;
+    if (entry == tmin.x) {
+        if(r.direction.x > 0){
+            normal = Vec3(-1,0,0);
+        }
+        else{
+            normal = Vec3(1,0,0);
+        }
+        
+    } else if (entry == tmin.y) {
+        if(r.direction.y > 0){
+            normal = Vec3(0,-1,0);
+        }
+        else{
+            normal = Vec3(0,1,0);
+        }
+    } else {
+        if(r.direction.z > 0){
+            normal = Vec3(0,0,-1);
+        }
+        else{
+            normal = Vec3(0,0,1);
+        }
+    }
+
+    rec.front_face = false;
     rec.normal = normal;
+    rec.mat = this->mat;
 
-
-
-    rec.front_face = rec.normal.dot(r.direction) < F_EPSILON;//I dont think this can be zero
-    // rec.normal = rec.front_face ? rec.normal : rec.normal * -1.0f;
-    rec.edge_hit = false; //TODO edge hits on boxes
-    rec.mat = mat;
-
-    return (tmin < t_max - F_EPSILON) && (tmax > t_min + F_EPSILON);
+    return true;
 }
 
 __device__ void Box::getBounds(float& x_min, float& x_max, float& y_min, float& y_max, float& z_min, float& z_max) const{
