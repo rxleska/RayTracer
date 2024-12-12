@@ -238,29 +238,29 @@ __host__ void allocate_mesh(const char *filename, Vec3 **meshes, int mesh_index,
 
 #define lightpdf_resolution 2
 
-__device__ float getLightPDF(Ray norm, Scene **world, curandState *local_rand_state){
-    return 0.0f;
-    // TODO fix this
+// __device__ float getLightPDF(Ray norm, Scene **world, curandState *local_rand_state){
+//     return 0.0f;
+//     // TODO fix this
 
 
-    int hit_count = 0;
-    Vec3 MontecarloDirection;
-    Ray lightRay;
-    HitRecord rec;
-    for(int i = 0; i < lightpdf_resolution; i++){
-        for(int j = 0; j < lightpdf_resolution; j++){
-            MontecarloDirection = Vec3::random_on_hemisphere_montecarlo(local_rand_state, norm.direction, (float)i, (float)j, 1.0f/lightpdf_resolution, 1.0f/lightpdf_resolution);
-            lightRay = Ray(norm.origin, MontecarloDirection);
-            if((*world)->hit(lightRay, 0.001f, FLT_MAX, rec, local_rand_state)){
-                if (rec.mat->type == LIGHT){
-                    hit_count++;
-                }
-            }
-        }
-    }
+//     int hit_count = 0;
+//     Vec3 MontecarloDirection;
+//     Ray lightRay;
+//     HitRecord rec;
+//     for(int i = 0; i < lightpdf_resolution; i++){
+//         for(int j = 0; j < lightpdf_resolution; j++){
+//             MontecarloDirection = Vec3::random_on_hemisphere_montecarlo(local_rand_state, norm.direction, (float)i, (float)j, 1.0f/lightpdf_resolution, 1.0f/lightpdf_resolution);
+//             lightRay = Ray(norm.origin, MontecarloDirection);
+//             if((*world)->hit(lightRay, 0.001f, FLT_MAX, rec, local_rand_state)){
+//                 if (rec.mat->type == LIGHT){
+//                     hit_count++;
+//                 }
+//             }
+//         }
+//     }
 
-    return hit_count / (lightpdf_resolution * lightpdf_resolution);
-}
+//     return hit_count / (lightpdf_resolution * lightpdf_resolution);
+// }
 
 
 // DO NOT USE THIS FUNCTION (RECURSION LIMIT IS HIT EASILY IN CUDA)
@@ -545,7 +545,7 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
+        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
@@ -557,13 +557,13 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512*1;
+    int nx = 512*2;
     // int nx = 1440;
     // int nx = 600;
     // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 512*1;
+    int ny = 512*2;
     // int ny = 900;
     int ns = 10;
     // int tx = 20;

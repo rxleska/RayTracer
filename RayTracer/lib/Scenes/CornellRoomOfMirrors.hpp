@@ -22,16 +22,17 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
+        
 
         Material *white = new LambertianBordered(Vec3(1.0, 1.0, 1.0));
         Material *mirror = new Metal(Vec3(0.9, 0.9, 0.9), 0.001);
         Material *light = new Light(Vec3(1.0, 1.0, 1.0), 15.0);
-        // Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
-        // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
+        Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15)*(1.0f/0.45f));
+        Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         // Material *green = new LambertianBordered(Vec3(0.12, 0.45, 0.15));
         // Material *red = new LambertianBordered(Vec3(0.65, 0.05, 0.05));
-        Material *green = new Metal(Vec3(0.12, 0.45, 0.15), 0.001);
-        Material *red = new Metal(Vec3(0.65, 0.05, 0.05), 0.001);
+        // Material *green = new Metal(Vec3(0.12, 0.45, 0.15), 0.001);
+        // Material *red = new Metal(Vec3(0.65, 0.05, 0.05), 0.001);
 
         //floor 
         /*
@@ -57,9 +58,8 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
         device_object_list[i++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
 
         Hitable **lightList = new Hitable*[2];
-        int k = 0;
-        lightList[k++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
-        lightList[k++] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
+        lightList[0] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(343.0, 548.5, 332.0),Vec3(213.0, 548.5, 332.0), light);
+        lightList[1] = Triangle(Vec3(343.0, 548.5, 227.0),Vec3(213.0, 548.5, 332.0),Vec3(213.0, 548.5, 227.0), light);
 
 
 
@@ -137,27 +137,28 @@ __device__ void create_Cornell_Box_Octree_ROM(Hitable **device_object_list, Scen
         //matte marble material
         Material * marble = new LambertianBordered(Vec3(0.9, 0.9, 0.9));
 
-        for(int j = 0; j < mesh_lengths[1]/3; j++) {
-            device_object_list[i++] = Triangle(meshes[1][j*3], meshes[1][j*3 + 1], meshes[1][j*3 + 2], marble);
-        }
+        // for(int j = 0; j < mesh_lengths[1]/3; j++) {
+        //     device_object_list[i++] = Triangle(meshes[1][j*3], meshes[1][j*3 + 1], meshes[1][j*3 + 2], marble);
+        // }
 
 
-        Vec3 lookfrom(278.0f, 278.0f, -400.0f);
+        // Vec3 lookfrom(278.0f, 278.0f, -400.0f);
+        Vec3 lookfrom(400.0f, 278.0f, -400.0f);
 
 
         printf("rand initing\n");
         *rand_state = local_rand_state;
         // *d_world  = new Octree(device_object_list, i);
         printf("rand inited\n");
-        *d_world = new Scene(device_object_list, i);
-        // *d_world  = new Octree(device_object_list, i);
+        // *d_world = new Scene(device_object_list, i);
+        *d_world  = new Octree(device_object_list, i);
         // //initialize Octree
         // printf("Initializing Octree\n");
-        // ((Octree*)*d_world)->max_depth = 4;
+        ((Octree*)*d_world)->max_depth = 4;
         // printf("Max depth set\n");
-        // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
         // printf("Octree initialized\n");
-        (*d_world)->setLights(lightList, k);
+        (*d_world)->setLights(lightList, 2);
 
         Vec3 lookat(278.0f, 278.0f, 0.0f);
         float dist_to_focus = 15.0; (lookfrom-lookat).length();

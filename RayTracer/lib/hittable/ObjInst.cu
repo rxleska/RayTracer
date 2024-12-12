@@ -72,10 +72,13 @@ __device__ bool ObjInstRot::hit(const Ray& r, float t_min, float t_max, HitRecor
         cosz = cos(rot.z);
         sinz = sin(rot.z);
 
-        rec.p.x = cosz * rec.p.x - sinz * rec.p.y;
-        rec.p.y = sinz * rec.p.x + cosz * rec.p.y;
-        rec.normal.x = cosz * rec.normal.x - sinz * rec.normal.y;
-        rec.normal.y = sinz * rec.normal.x + cosz * rec.normal.y;
+        Vec3 temp = rec.p;
+        rec.p.x = cosz * temp.x - sinz * temp.y;
+        rec.p.y = sinz * temp.x + cosz * temp.y;
+
+        temp = rec.normal;
+        rec.normal.x = cosz * temp.x - sinz * temp.y;
+        rec.normal.y = sinz * temp.x + cosz * temp.y;
         rec.normal.make_unit();
         return true;
 
@@ -109,6 +112,7 @@ __device__ bool ObjInstRot::hit(const Ray& r, float t_min, float t_max, HitRecor
         siny = sin(rot.y);
         sinz = sin(rot.z);
 
+
         rec.p.x = cosz*cosy*rec.p.x + (cosz*siny*sinx - sinz*cosx)*rec.p.y + (cosz*siny*cosx + sinz*sinx)*rec.p.z;
         rec.p.y = sinz*cosy*rec.p.x + (sinz*siny*sinx + cosz*cosx)*rec.p.y + (sinz*siny*cosx - cosz*sinx)*rec.p.z;
         rec.p.z = -siny*rec.p.x + cosy*sinx*rec.p.y + cosy*cosx*rec.p.z;
@@ -117,7 +121,8 @@ __device__ bool ObjInstRot::hit(const Ray& r, float t_min, float t_max, HitRecor
         norm.x = cosz*cosy*rec.normal.x + (cosz*siny*sinx - sinz*cosx)*rec.normal.y + (cosz*siny*cosx + sinz*sinx)*rec.normal.z;
         norm.y = sinz*cosy*rec.normal.x + (sinz*siny*sinx + cosz*cosx)*rec.normal.y + (sinz*siny*cosx - cosz*sinx)*rec.normal.z;
         norm.z = -siny*rec.normal.x + cosy*sinx*rec.normal.y + cosy*cosx*rec.normal.z;
-        rec.normal = norm.normalized();
+        norm.make_unit();
+        rec.normal = norm;
         return true;
 
     }

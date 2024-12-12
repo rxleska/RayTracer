@@ -10,7 +10,8 @@ CC = nvcc
 # CFLAGS = -arch=sm_89 -rdc=true -Xptxas -O2 -Xcompiler -O2
 # CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -arch=sm_80 -rdc=true -g -G
-CFLAGS = -arch=sm_89 -rdc=true
+# CFLAGS = -arch=sm_89 -rdc=true -O3 --use_fast_math -Xptxas -O2 -Xcompiler -O2 -faggressive-loop-optimizations
+CFLAGS = -arch=sm_89 -rdc=true -use_fast_math -O3 -ftz=true -prec-div=false -prec-sqrt=false -Xptxas -v
 # CFLAGS = -arch=sm_89 -rdc=true -G -g
 
 # testing -G flag removes all optimizations (really slow)

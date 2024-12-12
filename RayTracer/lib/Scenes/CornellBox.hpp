@@ -23,7 +23,7 @@
 #include "../processing/headers/Vec3.hpp"
 
 
-__device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state){
+__device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes){
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         curandState local_rand_state = *rand_state;
         int i = 0;
@@ -34,6 +34,7 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05)*(1.0f/0.65f));
         Material *green = new Lambertian(Vec3(0.12, 0.45, 0.15));
         Material *red = new Lambertian(Vec3(0.65, 0.05, 0.05));
+        Material *mirror = new Metal(Vec3(0.9, 0.9, 0.9), 0.001);
 
         //floor 
         /*
@@ -149,8 +150,11 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         240.0   0.0 272.0
         */
         //device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0), white);
-        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
+        // device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0), red);
+        // device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), red);
+        
+        Material * text = new Textured(textures[1], 474, 327);
+        device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0), Vec3(290.0, 165.0, 114.0), Vec3(240.0, 165.0, 272.0), Vec3(240.0, 0.0, 272.0), text, Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(1, 1, 0), Vec3(0, 1, 0));
         
         
         //wall3
@@ -246,8 +250,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         423.0   0.0 247.0
         */
         // device_object_list[i++] = Quad(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
+        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), mirror);
+        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), mirror);
 
 
         //little box test
@@ -257,12 +261,12 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // Material * blue = new Lambertian(Vec3(0.1, 0.2, 1.0));
         // device_object_list[i++] = new Box(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), red);
 
-        Hitable *rotationTest = new Sphere(Vec3(278.0, 278.0, 278.0), 50.0, red);
+        // Hitable *rotationTest = new Sphere(Vec3(278.0, 278.0, 278.0), 50.0, red);
         // Hitable *rotationTest = new Box(Vec3(-30.0,-30.0,-30.0), Vec3(30.0,30.0,30.0), red);
         // rotationTest = new ObjInstRot(rotationTest, Vec3(0.0, M_PI/6, 0));
         // rotationTest = new ObjInstTrans(rotationTest, Vec3(450, 215, 124));
-        rotationTest = new ObjInstMotion(rotationTest, Vec3(20.0, 0.0, 0.0), Vec3(0.0,-9.8,0.0), 4.0);
-        device_object_list[i++] = rotationTest;
+        // rotationTest = new ObjInstMotion(rotationTest, Vec3(20.0, 0.0, 0.0), Vec3(0.0,-9.8,0.0), 4.0);
+        // device_object_list[i++] = rotationTest;
 
         // Material * smoke = new Isotropic(Vec3(0.8, 0.8, 0.8));
         // device_object_list[i++] = new Medium(Vec3(270.0, 185.0, 94.0), Vec3(330.0, 245.0, 154.0), 0.01, smoke);
