@@ -265,15 +265,23 @@ __device__ float ObjInstRot::get2dArea() const {
 // Motion Blur
 
 __device__ bool ObjInstMotion::hit(const Ray& r, float t_min, float t_max, HitRecord& rec, curandState *state) const {
-    float rng = curand_uniform(state) * t;
+    bool didHit = false;
 
-    Vec3 translation = vel * rng  + acc * rng * rng * 0.5;
-    // translate the ray to the object's frame
-    Ray moved = Ray(r.origin - translation, r.direction);
+    float rng;
+    Vec3 translation;
+    Ray moved;
 
-    if(!obj->hit(moved, t_min, t_max, rec, state)) {
-        return false;
+    for(int i = 0; i < ceil(t); i++){
+        rng = curand_uniform(state) * t;
+        translation = vel * rng  + acc * rng * rng * 0.5;
+        moved = Ray(r.origin - translation, r.direction);
+        if(obj->hit(moved, t_min, t_max, rec, state)) {
+            didHit = true;
+            break;
+        }
     }
+    if(!didHit) return false;
+    
     rec.p = rec.p + translation;
 
     return true;
