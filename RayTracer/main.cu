@@ -457,6 +457,8 @@ __device__ float clamp(float x, float min, float max) {
 
 #define RND (curand_uniform(&local_rand_state))
 
+#define ROUND_PIXELS
+
 
 __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
     int i = threadIdx.x + blockIdx.x * blockDim.x;
@@ -477,11 +479,41 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
         sampleY+=1; // approach correct number of samples
     }
 
-    float u,v;
+    float u,v, theta;
     Ray r;
     Vec3 color;
 
     for(int m = 0; m < msaaXval; m++){
+        #ifdef ROUND_PIXELS
+        for (int ri = 0; ri < samples; ri++){
+            theta = (2.0f * M_PI / samples) * RND;
+            theta = theta + (2.0f * M_PI / samples) * ri;
+            u = (float(i) + 0.5f + 0.5f * cos(theta)) / float(max_x);
+            v = (float(j) + 0.5f + 0.5f * sin(theta)) / float(max_y);
+            r = (*cam)->get_ray(u, v, &local_rand_state);
+            // Vec3 color = getColor(r, cam, world, 0, &local_rand_state, edge_hit_check);
+            color = getColor(r, cam, world, &local_rand_state, edge_hit_check);
+            if (color.x != color.x){
+                    color.x = 0.0;
+                }
+                if (color.y != color.y){
+                    color.y = 0.0;
+                }
+                if (color.z != color.z){
+                    color.z = 0.0;
+                }
+                col = col + color;
+
+
+                if(!edge_hit && edge_hit_check) {
+                    edge_hit = true;
+                    msaaXval = (*cam)->msaa_x;
+                }
+
+        }
+
+
+        #else
         for(int xi = 0; xi < sampleX; xi++){
             for(int yi = 0; yi < sampleY; yi++){
                 u = (float(i) + (xi + RND) / sampleX) / float(max_x);
@@ -508,6 +540,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 
             }
         }
+        #endif
     }
 
     rand_state[pixel_index] = local_rand_state;
@@ -557,13 +590,13 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512*2;
+    int nx = 512*1;
     // int nx = 1440;
     // int nx = 600;
     // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 512*2;
+    int ny = 512*1;
     // int ny = 900;
     int ns = 10;
     // int tx = 20;
