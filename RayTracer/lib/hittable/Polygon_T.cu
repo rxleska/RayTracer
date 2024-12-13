@@ -84,7 +84,7 @@ __device__ bool Polygon_T::hit(const Ray& r, float t_min, float t_max, HitRecord
         Vec3 v1 = vertices[(i+1)%num_vertices] - vertices[i];
         Vec3 v2 = p - vertices[i];
         float a = 0.5f * v1.cross(v2).length();
-        if(a < area*0.01f){
+        if(a < area*0.05f){
             edge_hit = true;
         }
         totalArea += a;

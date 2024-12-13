@@ -44,7 +44,7 @@ __device__ unsigned long long blockCount = 0;
 // #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 #include "lib/external/tiny_gltf.h"
 
-#define MAX_OBJECTS 500
+#define MAX_OBJECTS 1000
 
 //testing https://docs.google.com/spreadsheets/d/1Knr7gxuCNoHat9BekMfd5_s_J_zUIKIp5STZWXuLcaQ/edit?gid=0#gid=0
 #define threadDIMX 16
@@ -632,6 +632,11 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     }
     #else
     // convert to gamma corrected SDR
+    // fb[pixel_index*3+0] = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
+    // fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
+    // fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
+
+    
     fb[pixel_index*3+0] = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
     fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
     fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
@@ -676,16 +681,25 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 
 int main() {
     //increase stack size
-    cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512*8;
+    // cudaDeviceSetLimit(cudaLimitStackSize, 4096);
+    cudaDeviceSetLimit(cudaLimitStackSize, 4096*8);
+
+
+    // size_t limit;
+    // cudaDeviceGetLimit(&limit, cudaLimitMallocHeapSize);
+    // std::cerr << "Heap size: " << limit << std::endl;
+
+    // return;
+
+    cudaDeviceSetLimit(cudaLimitMallocHeapSize, 16777216);
+    int nx = 512*1;
     // int nx = 1440;
     // int nx = 600;
     // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 512*8;
+    int ny = 512*1;
     // int ny = 900;
-    int ns = 11;
     // int tx = 20;
     // int ty = 12;
     // int tx = 16;
@@ -693,7 +707,7 @@ int main() {
     int tx = threadDIMX;
     int ty = threadDIMY;
 
-    std::cerr << "Rendering a " << nx << "x" << ny << " image with " << ns << " samples per pixel ";
+    std::cerr << "Rendering a " << nx << "x" << ny << " image";
     std::cerr << "in " << tx << "x" << ty << " blocks.\n";
 
     int num_pixels = nx*ny;
@@ -711,6 +725,8 @@ int main() {
     uint8_t *fb;
     #endif
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
 
     // timing
     clock_t start, stop;
@@ -786,7 +802,7 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
     #endif 
 
-    render<<<blocks, threads>>>(fb, nx, ny,  ns, d_camera, d_world, d_rand_state);
+    render<<<blocks, threads>>>(fb, nx, ny, 1, d_camera, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
     stop = clock();

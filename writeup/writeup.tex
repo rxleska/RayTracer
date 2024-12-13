@@ -46,10 +46,19 @@
 
 \maketitle
 
-\tableofcontents
+% \tableofcontents
+
+\begin{figure}[h!]
+    \centering
+    \includegraphics[width=1\textwidth]{samples/r3.png}
+\end{figure}
+
+\pagebreak
+
 \twocolumn
 
 
+\tableofcontents
 
 
 
@@ -239,7 +248,7 @@
 
 
         \subsubsection{Rectangle}
-        To ease my scene creation I implemented a method Rectangle that is passed 2 vertices and a material. This method creates a rectangle from the vertices and material. (see second graphic above) \par
+        To ease my scene creation I implemented a method Rectangle that is passed 4 vertices and a material. This method creates a rectangle from the vertices and material. (see second graphic above) \par
         
 
 
@@ -298,12 +307,12 @@
     \subsection{Round Pixels}
     To make the image look better I implemented round pixels. When compiling the user can set a flag to either use a circular montecarlo sample (round pixel) or a square montecarlo sample (square pixel). \par
 
-    \begin{SCfigure}
+    \begin{figure}[h!]
         \centering
         \includegraphics[width=0.1\textwidth]{samples/SquarePixels.png}
         \includegraphics[width=0.1\textwidth]{samples/CornellRoundPixels.png}
         \caption{Left: Square Pixels, Right: Round Pixels}
-    \end{SCfigure}
+    \end{figure}
 
     \subsection{HDR}
     this and that \par
