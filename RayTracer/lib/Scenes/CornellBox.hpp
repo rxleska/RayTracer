@@ -279,8 +279,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // device_object_list[i++] = new Box(Vec3(0.0, 185.0, 94.0), Vec3(552.8, 225.0, 134.0), white2);
 
 
-        // Vec3 lookfrom(278.0f, 278.0f, -400.0f);
-        Vec3 lookfrom(200.0f, 278.0f, -400.0f);
+        Vec3 lookfrom(278.0f, 278.0f, -400.0f);
+        // Vec3 lookfrom(200.0f, 278.0f, -400.0f);
         // Vec3 lookfrom(330.0f, 350.0f, -400.0f);
         // Vec3 lookfrom(278.0f, -278.0f, -400.0f);
 

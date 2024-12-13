@@ -44,11 +44,18 @@ __device__ unsigned long long blockCount = 0;
 // #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 #include "lib/external/tiny_gltf.h"
 
-#define MAX_OBJECTS 1000
+#define MAX_OBJECTS 100
 
 //testing https://docs.google.com/spreadsheets/d/1Knr7gxuCNoHat9BekMfd5_s_J_zUIKIp5STZWXuLcaQ/edit?gid=0#gid=0
 #define threadDIMX 16
 #define threadDIMY 8
+
+// comment out to disable round pixels
+#define ROUND_PIXELS
+
+// comment out to use sdr
+// #define HDR
+
 
 
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
@@ -236,7 +243,7 @@ __host__ void allocate_mesh(const char *filename, Vec3 **meshes, int mesh_index,
     checkCudaErrors(cudaDeviceSynchronize());
 } 
 
-#define lightpdf_resolution 2
+// #define lightpdf_resolution 2
 
 // __device__ float getLightPDF(Ray norm, Scene **world, curandState *local_rand_state){
 //     return 0.0f;
@@ -457,10 +464,11 @@ __device__ float clamp(float x, float min, float max) {
 
 #define RND (curand_uniform(&local_rand_state))
 
-#define ROUND_PIXELS
-
-
+#ifdef HDR
+__global__ void render(uint32_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
+#else
 __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
+#endif
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return;
@@ -468,6 +476,9 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     int pixel_index = (max_y - j - 1)*max_x + i;
     curandState local_rand_state = rand_state[pixel_index];
     Vec3 col(0,0,0);
+    double rval = 0.0;
+    double gval = 0.0;
+    double bval = 0.0;
     bool edge_hit = false;
     bool edge_hit_check = false;
     int samples = (*cam)->samples;
@@ -502,7 +513,9 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
                 if (color.z != color.z){
                     color.z = 0.0;
                 }
-                col = col + color;
+                rval += color.x;
+                gval += color.y;
+                bval += color.z;
 
 
                 if(!edge_hit && edge_hit_check) {
@@ -530,7 +543,10 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
                 if (color.z != color.z){
                     color.z = 0.0;
                 }
-                col = col + color;
+                rval += color.x;
+                gval += color.y;
+                bval += color.z;
+                
 
 
                 if(!edge_hit && edge_hit_check) {
@@ -544,12 +560,83 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     }
 
     rand_state[pixel_index] = local_rand_state;
-    col = col / float(samples);
+    // col = col / float(samples * msaaXval);
+    float samplesXmsaaXval = float(samples * msaaXval);
+    col = Vec3(rval/samplesXmsaaXval, gval/samplesXmsaaXval, bval/samplesXmsaaXval);
     
+    #ifdef HDR
+    // col.x = clamp(sqrt(col.x), 0.0f, 1.0f);
+    // col.y = clamp(sqrt(col.y), 0.0f, 1.0f);
+    // col.z = clamp(sqrt(col.z), 0.0f, 1.0f);
 
+    col.x = sqrt(col.x);
+    col.y = sqrt(col.y);
+    col.z = sqrt(col.z);
+
+    Vec3 color_mapped = Vec3(
+        col.x * 0.59719f + col.y*0.35458f + col.z*0.04823f,
+        col.x * 0.07600f + col.y*0.90834f + col.z*0.01566f,
+        col.x * 0.02840f + col.y*0.13383f + col.z*0.83777f
+    );
+
+    Vec3 a = color_mapped * (color_mapped + Vec3(0.0245786f,0.0245786f,0.0245786f)) - Vec3(0.000090537f,0.000090537f,0.000090537f);
+    Vec3 b = color_mapped * (color_mapped * 0.983729f + Vec3(0.4329510f,0.4329510f,0.4329510f)) + Vec3(0.238081f,0.238081f,0.238081f);
+    color_mapped = Vec3(
+        a.x / b.x,
+        a.y / b.y,
+        a.z / b.z
+    );
+
+    Vec3 color_mapped_2 = Vec3(
+        color_mapped.x * 1.60475f  - color_mapped.y*0.53108f - color_mapped.z*0.07367f,
+        color_mapped.x * -0.10208f + color_mapped.y*1.10813f - color_mapped.z*0.00605f,
+        color_mapped.x * -0.00327f - color_mapped.y*0.07276f + color_mapped.z*1.07602f
+    );
+    // Vec3 color_mapped_2 = col;
+    // // clamp
+    color_mapped_2.x = clamp(color_mapped_2.x, 0.0f, 1.0f);
+    color_mapped_2.y = clamp(color_mapped_2.y, 0.0f, 1.0f);
+    color_mapped_2.z = clamp(color_mapped_2.z, 0.0f, 1.0f);
+
+    // color_mapped_2.x = 255.0*clamp(color_mapped_2.x, 0.0f, 1.0f);
+    // color_mapped_2.y = 255.0*clamp(color_mapped_2.y, 0.0f, 1.0f);
+    // color_mapped_2.z = 255.0*clamp(color_mapped_2.z, 0.0f, 1.0f);
+
+    float max_rgb = fmax(fmax(color_mapped_2.x, color_mapped_2.y), color_mapped_2.z);
+    if (max_rgb > 1e-32){
+        int exponent;
+        float scale = frexp(max_rgb, &exponent);
+        scale *= 256.0;
+        // float scale = 255.0 / max_rgb;
+
+        fb[pixel_index] = uint32_t(uint8_t(int(exponent + 128))) << 24 | 
+                          uint32_t(uint8_t(int(color_mapped_2.z * scale))) << 16 | 
+                          uint32_t(uint8_t(int(color_mapped_2.y * scale))) <<  8 |
+                          uint32_t(uint8_t(int(color_mapped_2.x * scale)));
+        //    
+
+        // apply aces tonemapping
+        // fb[pixel_index] = uint32_t(uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)))) << 24 | 
+        //                   uint32_t(uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)))) << 16 | 
+        //                   uint32_t(uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)))) <<  8 |
+        //                   129;
+
+
+        // fb[pixel_index*1] = uint32_t(uint8_t(int(floor(log2(max_rgb) ) + 128))) << 24 |
+        //                     (uint32_t(uint8_t(int(color_mapped_2.z*scale))) << 24) >> 8 | 
+        //                     (uint32_t(uint8_t(int(color_mapped_2.y*scale))) << 24) >> 16 | 
+        //                     (uint32_t(uint8_t(int(color_mapped_2.x*scale))) << 24) >> 24;
+    }
+    else{
+        fb[pixel_index*1] = 0;
+    }
+    #else
+    // convert to gamma corrected SDR
     fb[pixel_index*3+0] = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
     fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
     fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
+    #endif
+
 
     #ifdef LOG_PERCENT
     //if first thread, block is done, log progress
@@ -577,8 +664,8 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        // create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
@@ -598,7 +685,7 @@ int main() {
     // int ny = 600;
     int ny = 512*1;
     // int ny = 900;
-    int ns = 10;
+    int ns = 11;
     // int tx = 20;
     // int ty = 12;
     // int tx = 16;
@@ -611,10 +698,18 @@ int main() {
 
     int num_pixels = nx*ny;
     // size_t fb_size = num_pixels*sizeof(vec3);
+    #ifdef HDR
+    size_t fb_size = num_pixels*sizeof(uint32_t)*1;
+    #else
     size_t fb_size = num_pixels*sizeof(uint8_t)*3;
+    #endif
 
     // allocate Frame Buffer (fb)
+    #ifdef HDR
+    uint32_t *fb;
+    #else
     uint8_t *fb;
+    #endif
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
 
     // timing
@@ -701,6 +796,21 @@ int main() {
     start = clock();
 
     //open file
+    #ifdef HDR
+    FILE *f = fopen("image.hdr", "wb");
+    fprintf(f, "#?RADIANCE\n");
+    fprintf(f, "FORMAT=32-bit_rle_rgbe\n\n");
+    fprintf(f, "-Y %d +X %d\n", ny, nx);
+
+    // fprintf(f, "P6 %d %d 65535\n", nx, ny);
+    uint32_t *fb2 = (uint32_t *)malloc(fb_size);
+    //direct memory copy
+    checkCudaErrors(cudaMemcpy(fb2, fb, fb_size, cudaMemcpyDeviceToHost));
+    checkCudaErrors(cudaGetLastError());
+    checkCudaErrors(cudaDeviceSynchronize());
+    fwrite(fb2, sizeof(uint32_t), nx*ny, f);
+    fclose(f);
+    #else
     FILE *f = fopen("image.ppm", "wb");
     fprintf(f, "P6 %d %d 255\n", nx, ny);
     uint8_t *fb2 = (uint8_t *)malloc(fb_size*3);
@@ -710,6 +820,7 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
     fwrite(fb2, sizeof(uint8_t), 3*nx*ny, f);
     fclose(f);
+    #endif
 
     stop = clock();
     timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;

@@ -287,7 +287,7 @@ __device__ void create_Phong_Cornell_Box_Octree(Hitable **device_object_list, Sc
         *d_camera   = new Camera(lookfrom,
                                  lookat,
                                  Vec3(0,1,0),
-                                 70.0,
+                                 65.0,
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);

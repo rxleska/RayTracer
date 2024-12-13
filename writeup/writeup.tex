@@ -21,11 +21,21 @@
 % \usepackage[shortlabels]{enumitem}
 \usepackage{pdfpages}
 \usepackage{listings}
+\usepackage{sidecap}
 % \usepackage{multicol}
 
 % \let\sitem\subitem
 \def\sitem{\subitem $\Diamond$ }
 \let\ssitem\subsubitem
+
+\usepackage{geometry}
+ \geometry{
+ a4paper,
+ total={170mm,257mm},
+ left=10mm,
+ right=10mm,
+ top=20mm,
+ }
 
 
 \title{COM S 366: Ray Tracer Final Report}
@@ -74,7 +84,7 @@
         \subsubsection{Testing}
         During my testing I tried a bunch of different sampling methods. I tried a square random sample, a uniform sample, a cosine weighted sample, a power-weighted cosine sample, a Beckmann distribution sample, and a Blinn-Phong sample. I found that the a cosine weighted sample produced the best results in terms of lighting. Below is a test image I produced using each of these sampling methods. \par
 
-        \begin{figure}[h]
+        \begin{figure}[h!]
             \centering
             \includegraphics[width=0.5\textwidth]{samples/Lighting_Comparison.png}
             \caption{Sampling Test}
@@ -99,7 +109,6 @@
         \item aspect ratio - the aspect ratio of the image (This can override the resolution)
         \item apature - the size of the apature (used to determine the depth of field)
         \item focus distance - the distance the camera is focused at (used to determine the depth of field)
-        \item \quad
         \item MSAA - The scalar of samples per pixel when the camera detects an edge or aliased section 
         \item samples - The number of samples per pixel (pre-msaa)
         \item bounces - the number of bounces the ray will take before it is terminated
@@ -118,30 +127,58 @@
 
     \subsection{Lambertian}
     A lambertian material is a material that scatters light in all directions. This material is used to simulate a matte surface. \par
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/LambertianSphere.png}
+    \end{figure}
 
 
     \subsection{Metal}
     A metal material is a material that reflects light in a specular direction. This material is used to simulate a shiny surface (fuzzy or clear). \par
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/MetalSphereFuzz.png}
+        \includegraphics[width=0.15\textwidth]{samples/MetalSphereNoFuzz.png}
+    \end{figure}
 
 
 
     \subsection{Dielectric}
     A dielectric material is a material that refracts light when it hits the surface. This material is used to simulate glass or water. \par
-
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/Dielectric0p3.png}
+        \includegraphics[width=0.15\textwidth]{samples/Dielectric1p5.png}
+        \includegraphics[width=0.15\textwidth]{samples/Dielectric5.png}
+    \end{figure}
 
 
     \subsection{Textured}
     A textured material is a material that has a texture applied to it. This material is used to simulate surfaces with patterns or images. This material uses u,v mapping to determine the texture location. PPM textures are supported and must be read in by the cpu. \par
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/TexturedMonky.png}
+        \includegraphics[width=0.15\textwidth]{samples/TexturedWMirror.png}
+    \end{figure}
 
 
 
     \subsection{Light}
     A light material is a material that emits light. This material is used to simulate light sources in the scene. \par
-
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/LightSphereLit.png}
+        \includegraphics[width=0.15\textwidth]{samples/LightSphereUnlit.png}
+        \includegraphics[width=0.15\textwidth]{samples/LightSphereUnlitBright.png}
+    \end{figure}
 
 
     \subsection{Isotropic}
     An isotropic material is a material that scatters light in all directions. This material is used to simulate a matte surface. The way this differs from lambertian is that Isotropic sattering is in a sphere while lambertian is on the hemisphere \par
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/WeGetItYouVape.png}
+    \end{figure}
 
 
 
@@ -151,16 +188,28 @@
 
         \subsubsection{Phong}
         This material was lightly discussed in the class. I implemented it as a test, but it is not used in the final render. The material is a shaded material following the Phong Lighting model. \par
-
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[width=0.15\textwidth]{samples/Phong1bnc50000spls512p.png}
+        \end{figure}
 
 
         \subsubsection{Phong-Lambertian}
         This material is a combination of a Phong and Lambertian material. The material is passed a parameter that determines a number of bounces before the material switches to a Phong material. This allows for the nice uniform phong lighting along with color bleeding and light reflections from nearby objects. This results in a similar result to Importance sampling with light sampling.\par
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[width=0.15\textwidth]{samples/4k5000s2bnc.jpg}
+        \end{figure}
 
         
         \subsubsection{LambertianBordered}
         A lambertian material that returns a different color when an edge is hit. I created this during my testing of MSAA. I found the effect cool, its very similar to the cell shading seen in the video-game series Borderlands.\par
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[width=0.15\textwidth]{samples/lambertianBorderedCornell.png}
+        \end{figure}
 
+        Note: these boxes are polygons not the boxes hittable object. For a better cell shading effect. \par
 
 
 \section{Hittables}
@@ -169,28 +218,48 @@
 
     \subsection{Sphere}
     A sphere is a hittable object that is defined by a center and a radius.  \par
-
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/LambertianSphere.png}
+    \end{figure}
 
     \subsection{Polygons}
     A polygon is a hittable object that is defined by a list of vertices in a plane. I implemented this such that the polygons can be any number of vertices and these vertices can be texture mapped using u,v coordinates. \par
 
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[width=0.15\textwidth]{samples/Triangle.png}
+            \includegraphics[width=0.15\textwidth]{samples/Quad.png}
+            \includegraphics[width=0.15\textwidth]{samples/Pentagon.png}
+        \end{figure}
+
 
         \subsubsection{Triangle}
-        To ease my scene creation I implemented a method Triangle that is passed 3 vertices and a material. This method creates a triangle from the vertices and material. \par
+        To ease my scene creation I implemented a method Triangle that is passed 3 vertices and a material. This method creates a triangle from the vertices and material. (see first graphic above) \par
 
 
         \subsubsection{Rectangle}
-        To ease my scene creation I implemented a method Rectangle that is passed 2 vertices and a material. This method creates a rectangle from the vertices and material. \par
+        To ease my scene creation I implemented a method Rectangle that is passed 2 vertices and a material. This method creates a rectangle from the vertices and material. (see second graphic above) \par
+        
 
 
 
     \subsection{Boxes}
     A box is a hittable object that is defined by a minimum and maximum point. \par
 
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/Box.png}
+    \end{figure}
 
 
     \subsection{Continuous Medium}
     A continuous medium is a hittable object that is defined by a boundary and a density. This object can be used to simulate fog or smoke (using the isotropic material). \par
+
+    \begin{figure}[h!]
+        \centering
+        \includegraphics[width=0.15\textwidth]{samples/WeGetItYouVape.png}
+    \end{figure}
 
 
 
@@ -206,25 +275,39 @@
 
         \subsubsection{Rotation}
         Rotation is a class that is a hittable object that contains another hittable object. \par
-
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[width=0.15\textwidth]{samples/Instancing.png}
+            \caption{Box translated and rotated}
+        \end{figure}
 
 
         \subsubsection{Motion Blur}
         Motion Blur is a class that is a hittable object that contains another hittable object. It is passed a Velocity vector, an Acceleration vector, and a time interval. The time interval determines both how far the object moves as well as the number of overall hit attempts per ray hit check. A long time leads to more sample and therefore a clearer movement (with respect to a lower time higher velocity).\par 
+        Bounding boxes for motion blur are done by sampling the object throughout its movement and creating a bounding box from the maximum and minimum points. \par
+
+        \begin{figure}[h!]
+            \centering
+            \includegraphics[width=0.15\textwidth]{samples/MotionBlur.png}
+        \end{figure}
 
 
 
 \section{Other Features}
 
-
-
     \subsection{Round Pixels}
     To make the image look better I implemented round pixels. When compiling the user can set a flag to either use a circular montecarlo sample (round pixel) or a square montecarlo sample (square pixel). \par
 
+    \begin{SCfigure}
+        \centering
+        \includegraphics[width=0.1\textwidth]{samples/SquarePixels.png}
+        \includegraphics[width=0.1\textwidth]{samples/CornellRoundPixels.png}
+        \caption{Left: Square Pixels, Right: Round Pixels}
+    \end{SCfigure}
 
     \subsection{HDR}
+    this and that \par
 
-\pagebreak
 \section{Feature List Summary - For Easier Grading}
 
 \begin{enumerate}[\quad]
