@@ -1,0 +1,247 @@
+{
+  "accessors": [
+    {
+      "bufferView": 2,
+      "componentType": 5126,
+      "count": 666,
+      "max": [
+        0.9999995231628418,
+        1.7799594402313232,
+        0.9510564804077148
+      ],
+      "min": [
+        -0.8090171813964844,
+        -1.0,
+        -0.951056718826294
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 2,
+      "byteOffset": 7992,
+      "componentType": 5126,
+      "count": 666,
+      "max": [
+        0.9992483854293823,
+        1.0,
+        0.9964378476142883
+      ],
+      "min": [
+        -0.9440675973892212,
+        -1.0,
+        -0.9776661396026611
+      ],
+      "type": "VEC3"
+    },
+    {
+      "bufferView": 1,
+      "componentType": 5126,
+      "count": 666,
+      "max": [
+        0.65625,
+        0.9924311637878418
+      ],
+      "min": [
+        0.3735910654067993,
+        0.007647410035133362
+      ],
+      "type": "VEC2"
+    },
+    {
+      "bufferView": 0,
+      "componentType": 5125,
+      "count": 1038,
+      "type": "SCALAR"
+    }
+  ],
+  "asset": {
+    "extras": {
+      "author": "Justin Vaughn (https://sketchfab.com/jvaughn)",
+      "license": "CC-BY-NC-4.0 (http://creativecommons.org/licenses/by-nc/4.0/)",
+      "source": "https://sketchfab.com/3d-models/low-poly-chess-knight-unpainted-5cd4255a6db54f9e9867bfbcfef65f34",
+      "title": "Low Poly Chess Knight (Unpainted)"
+    },
+    "generator": "Sketchfab-12.68.0",
+    "version": "2.0"
+  },
+  "bufferViews": [
+    {
+      "buffer": 0,
+      "byteLength": 4152,
+      "name": "floatBufferViews",
+      "target": 34963
+    },
+    {
+      "buffer": 0,
+      "byteLength": 5328,
+      "byteOffset": 4152,
+      "byteStride": 8,
+      "name": "floatBufferViews",
+      "target": 34962
+    },
+    {
+      "buffer": 0,
+      "byteLength": 15984,
+      "byteOffset": 9480,
+      "byteStride": 12,
+      "name": "floatBufferViews",
+      "target": 34962
+    }
+  ],
+  "buffers": [
+    {
+      "byteLength": 25464,
+      "uri": "scene.bin"
+    }
+  ],
+  "materials": [
+    {
+      "doubleSided": true,
+      "name": "blinn1",
+      "pbrMetallicRoughness": {
+        "baseColorFactor": [
+          0.39440000000000003,
+          0.39358080000000006,
+          0.3920336,
+          1.0
+        ],
+        "metallicFactor": 0.0,
+        "roughnessFactor": 0.6
+      }
+    }
+  ],
+  "meshes": [
+    {
+      "name": "pasted__knight_blinn1_0",
+      "primitives": [
+        {
+          "attributes": {
+            "NORMAL": 1,
+            "POSITION": 0,
+            "TEXCOORD_0": 2
+          },
+          "indices": 3,
+          "material": 0,
+          "mode": 4
+        }
+      ]
+    }
+  ],
+  "nodes": [
+    {
+      "children": [
+        1
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        2.220446049250313e-16,
+        -1.0,
+        0.0,
+        0.0,
+        1.0,
+        2.220446049250313e-16,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "Sketchfab_model"
+    },
+    {
+      "children": [
+        2
+      ],
+      "matrix": [
+        1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -1.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        0.0,
+        1.0
+      ],
+      "name": "063a5382f23842689267fc12571f5b35.fbx"
+    },
+    {
+      "children": [
+        3
+      ],
+      "name": "RootNode"
+    },
+    {
+      "children": [
+        4
+      ],
+      "matrix": [
+        0.9633517030012987,
+        0.0,
+        -0.2682414888202375,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        0.2682414888202375,
+        0.0,
+        0.9633517030012987,
+        0.0,
+        -13.76088809967041,
+        -0.538040816783905,
+        1.2915370464324951,
+        1.0
+      ],
+      "name": "knight_in_board"
+    },
+    {
+      "children": [
+        5
+      ],
+      "matrix": [
+        0.7029315276314188,
+        0.0,
+        0.7112575254166102,
+        0.0,
+        0.0,
+        1.0,
+        0.0,
+        0.0,
+        -0.7112575254166102,
+        0.0,
+        0.7029315276314188,
+        0.0,
+        -1.7763568394002505e-15,
+        0.996149480342865,
+        4.635558128356934,
+        1.0
+      ],
+      "name": "pasted__knight"
+    },
+    {
+      "mesh": 0,
+      "name": "pasted__knight_blinn1_0"
+    }
+  ],
+  "scene": 0,
+  "scenes": [
+    {
+      "name": "Sketchfab_Scene",
+      "nodes": [
+        0
+      ]
+    }
+  ]
+}

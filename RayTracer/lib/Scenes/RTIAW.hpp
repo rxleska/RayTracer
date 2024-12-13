@@ -55,6 +55,9 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
 
         //add sun light
         device_object_list[i++] = new Sphere(Vec3(0,510,400), 200, new Light(Vec3(1.0, 1.0, 1.0), 15.0));
+        
+        Hitable **lightList = new Hitable*[1];
+        lightList[0] = new Sphere(Vec3(0,510,400), 200, new Light(Vec3(1.0, 1.0, 1.0), 15.0));
 
         //test Polygon_T
         //cuda malloc a vertices array
@@ -67,14 +70,18 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
         Vec3 lookfrom(13,2,3);
 
         *rand_state = local_rand_state;
-        *d_world  = new Octree(device_object_list, i);
-        ((Octree*)*d_world)->max_depth = 10;
-        ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+        *d_world  = new Scene(device_object_list, i);
+        // *d_world  = new Octree(device_object_list, i);
+        // ((Octree*)*d_world)->max_depth = 10;
+        // ((Octree*)*d_world)->init(lookfrom.x, lookfrom.y, lookfrom.z);
+
+        (*d_world)->setLights(lightList, 1);
 
 
         Vec3 lookat(0,0,0);
         float dist_to_focus = 10.0; (lookfrom-lookat).length();
-        float aperture = 0.0;
+        // float dist_to_focus = (lookfrom-lookat).length();
+        float aperture = 0.1;
         *d_camera   = new Camera(lookfrom,
                                  lookat,
                                  Vec3(0,1,0),
@@ -82,7 +89,7 @@ __device__ void create_RTIAW_sample(Hitable **device_object_list, Scene **d_worl
                                  float(nx)/float(ny),
                                  aperture,
                                  dist_to_focus);
-        (*d_camera)->ambient_light_level = 0.0f;
+        (*d_camera)->ambient_light_level = 0.4f;
         (*d_camera)->msaa_x = 1;
         (*d_camera)->samples = 500;
         (*d_camera)->bounces = 100;

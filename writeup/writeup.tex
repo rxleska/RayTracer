@@ -22,6 +22,7 @@
 \usepackage{pdfpages}
 \usepackage{listings}
 \usepackage{sidecap}
+\usepackage{float}
 % \usepackage{multicol}
 
 % \let\sitem\subitem
@@ -48,7 +49,7 @@
 
 % \tableofcontents
 
-\begin{figure}[h!]
+\begin{figure}[H]
     \centering
     \includegraphics[width=1\textwidth]{samples/r3.png}
 \end{figure}
@@ -83,7 +84,7 @@
 
 
 
-        \subsubsection{Implementation}
+        \subsubsection{Implementation - Importance Sampling}
         The sampling method I settled on for my final implementation was a weight cosine hemisphere sample along side a weighted direct light sample. This method was chosen because it seemed to produce the best results in terms of noise and speed. \par
         When a scattering material is hit the ray has an equal (or configurable) chance to either scatter in a cosine weighted direction or towards a light. The light is chosen randomly from the list of lights in the world. Both of these samples are then weighted by their respective pdfs are applied to the final color. \par
         Due to my usage of CUDA my path tracing function getColor() is not recursive. Instead I used an iterative approach where the ray is scattered until it hits a light or the maximum depth is reached. \par 
@@ -93,14 +94,15 @@
         \subsubsection{Testing}
         During my testing I tried a bunch of different sampling methods. I tried a square random sample, a uniform sample, a cosine weighted sample, a power-weighted cosine sample, a Beckmann distribution sample, and a Blinn-Phong sample. I found that the a cosine weighted sample produced the best results in terms of lighting. Below is a test image I produced using each of these sampling methods. \par
 
-        \begin{figure}[h!]
+        \begin{figure}[H]
             \centering
             \includegraphics[width=0.5\textwidth]{samples/Lighting_Comparison.png}
             \caption{Sampling Test}
         \end{figure}
 
 
-    \subsection{Octree - Acceleration Datastructure} 
+    \subsection{Octree - Acceleration Datastructure}
+    (/lib/hittable/Octree.cu (.hpp))\par 
     To help with the speed of my ray tracer I implemented an octree to store the hittables in the world. This octree is built when the world is created. Since I am using CUDA C++ I made the Octree a child of the scene (world) class. The octree is built by recursively splitting the world into 8 octants until the number of hittables in the octant is less than a threshold or a configurable depth is reached. \par 
     While working on the octree I though about how a voxel based render might be implemented to be really fast, so I might try that in the future. \par   
 
@@ -108,6 +110,7 @@
 
 
     \subsection{Camera Configuration}
+    (/lib/processing/Camera.cu (.hpp))\par
     The camera is configured by setting a number of parameters during the world/camera creation. The camera is configured by setting the following parameters: \par
     \begin{enumerate}
         % \item resolution - the resolution of the image (width, height)
@@ -124,6 +127,14 @@
         \item Ambient Light - the percent brightness of the ambient light in the scene 
     \end{enumerate}
 
+        \subsubsection{Depth of Field}
+        The depth of field is implemented by using the apature and focus distance. When rays are being cast they are randomly offset by the apature size then the focus distance is used to determine the points the rays are focused on. \par
+        \begin{figure}[H]
+            \centering
+            \includegraphics[width=0.15\textwidth]{samples/DOF-none.png}
+            \includegraphics[width=0.15\textwidth]{samples/DOF.png}
+            \caption{Left: No Depth of Field, Right: Depth of Field}
+        \end{figure}
 
 
     \subsection{Anti-Aliasing - Adaptive Sampling}
@@ -131,62 +142,75 @@
 
 
 \section{Materials}
-
+    (/lib/Materials/Materials.cu/.hpp)\par
+    In my design Materials are child classes of the Material class. This call has a couple different methods that are used in the rendering but the primary method is the scatter method which determines how to color and redirect the ray. \par
 
 
     \subsection{Lambertian}
-    A lambertian material is a material that scatters light in all directions. This material is used to simulate a matte surface. \par
-    \begin{figure}[h!]
+    (Lambertian.cu/.hpp)\par
+    A lambertian material is a material that scatters light in all directions following Lambert's cosine law. This material is used to simulate a matte surface. \par
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/LambertianSphere.png}
+        \caption{Lambertian Sphere}
     \end{figure}
 
 
     \subsection{Metal}
+    (Metal.cu/.hpp)\par
     A metal material is a material that reflects light in a specular direction. This material is used to simulate a shiny surface (fuzzy or clear). \par
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/MetalSphereFuzz.png}
         \includegraphics[width=0.15\textwidth]{samples/MetalSphereNoFuzz.png}
+        \caption{Left: Fuzzy Metal Sphere, Right: Clear Metal Sphere}
     \end{figure}
 
 
 
     \subsection{Dielectric}
+    (Dielectric.cu/.hpp)\par
     A dielectric material is a material that refracts light when it hits the surface. This material is used to simulate glass or water. \par
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/Dielectric0p3.png}
         \includegraphics[width=0.15\textwidth]{samples/Dielectric1p5.png}
         \includegraphics[width=0.15\textwidth]{samples/Dielectric5.png}
+        \caption{Left: k = 0.3, Middle: k = 1.5, Right: k = 5}
     \end{figure}
 
 
     \subsection{Textured}
+    (Textured.cu/.hpp)\par
     A textured material is a material that has a texture applied to it. This material is used to simulate surfaces with patterns or images. This material uses u,v mapping to determine the texture location. PPM textures are supported and must be read in by the cpu. \par
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/TexturedMonky.png}
         \includegraphics[width=0.15\textwidth]{samples/TexturedWMirror.png}
+        \caption{Left: Textured Monky Polygon, Right: Textured TV-TEST Sphere}
     \end{figure}
 
 
 
     \subsection{Light}
+    (Light.cu/.hpp)\par
     A light material is a material that emits light. This material is used to simulate light sources in the scene. \par
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/LightSphereLit.png}
         \includegraphics[width=0.15\textwidth]{samples/LightSphereUnlit.png}
         \includegraphics[width=0.15\textwidth]{samples/LightSphereUnlitBright.png}
+        \caption{Left: Lit Light Sphere, Middle: Unlit Light Sphere, Right: Bright Unlit Light Sphere}
     \end{figure}
 
 
     \subsection{Isotropic}
+    (Isotropic.cu/.hpp)\par
     An isotropic material is a material that scatters light in all directions. This material is used to simulate a matte surface. The way this differs from lambertian is that Isotropic sattering is in a sphere while lambertian is on the hemisphere \par
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/WeGetItYouVape.png}
+        \caption{Continuous Medium (Smoke)}
     \end{figure}
 
 
@@ -196,50 +220,61 @@
 
 
         \subsubsection{Phong}
+        (Phong.cu/.hpp)\par
         This material was lightly discussed in the class. I implemented it as a test, but it is not used in the final render. The material is a shaded material following the Phong Lighting model. \par
-        \begin{figure}[h!]
+        \begin{figure}[H]
             \centering
             \includegraphics[width=0.15\textwidth]{samples/Phong1bnc50000spls512p.png}
+            \caption{Phong Lighting Cornell Box}
         \end{figure}
 
 
         \subsubsection{Phong-Lambertian}
+        (PhongLamb.cu/.hpp)\par
         This material is a combination of a Phong and Lambertian material. The material is passed a parameter that determines a number of bounces before the material switches to a Phong material. This allows for the nice uniform phong lighting along with color bleeding and light reflections from nearby objects. This results in a similar result to Importance sampling with light sampling.\par
-        \begin{figure}[h!]
+        \begin{figure}[H]
             \centering
             \includegraphics[width=0.15\textwidth]{samples/4k5000s2bnc.jpg}
+            \caption{Phong-Lambertian Cornell Box 2 Bounce Phong Limit}
         \end{figure}
 
         
         \subsubsection{LambertianBordered}
+        (LambertianBordered.cu/.hpp)\par
         A lambertian material that returns a different color when an edge is hit. I created this during my testing of MSAA. I found the effect cool, its very similar to the cell shading seen in the video-game series Borderlands.\par
-        \begin{figure}[h!]
+        \begin{figure}[H]
             \centering
             \includegraphics[width=0.15\textwidth]{samples/lambertianBorderedCornell.png}
+            \caption{Lambertian Bordered Cornell Box}
         \end{figure}
 
         Note: these boxes are polygons not the boxes hittable object. For a better cell shading effect. \par
 
 
 \section{Hittables}
+    (/lib/hittable/ (/headers/hitable.hpp))\par
     Hittable is misspelled in the code, I apologize for that. \par
-
+    Hittables are objects that can be hit by a ray. Continuing the trend of OOP in my code I made hittables a parent class of all hittable objects. Each hittable object has a hit function that determines if a ray hits the object and returns a hit record (see HitRecord.hpp in hittable/headers/). \par
 
     \subsection{Sphere}
+    (Sphere.cu/.hpp)\par
     A sphere is a hittable object that is defined by a center and a radius.  \par
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/LambertianSphere.png}
+        \caption{Lambertian Sphere}
     \end{figure}
 
     \subsection{Polygons}
+    (Polygon$\_$T.cu/.hpp)\par
     A polygon is a hittable object that is defined by a list of vertices in a plane. I implemented this such that the polygons can be any number of vertices and these vertices can be texture mapped using u,v coordinates. \par
 
-        \begin{figure}[h!]
+        \begin{figure}[H]
             \centering
             \includegraphics[width=0.15\textwidth]{samples/Triangle.png}
             \includegraphics[width=0.15\textwidth]{samples/Quad.png}
             \includegraphics[width=0.15\textwidth]{samples/Pentagon.png}
+            \caption{Left: Triangle, Middle: Rectangle, Right: Pentagon}
         \end{figure}
 
 
@@ -254,25 +289,26 @@
 
 
     \subsection{Boxes}
+    (Box.cu/.hpp)\par
     A box is a hittable object that is defined by a minimum and maximum point. \par
 
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
         \includegraphics[width=0.15\textwidth]{samples/Box.png}
+        \caption{Box}
     \end{figure}
 
 
     \subsection{Continuous Medium}
+    (Medium.cu/.hpp)\par
     A continuous medium is a hittable object that is defined by a boundary and a density. This object can be used to simulate fog or smoke (using the isotropic material). \par
 
-    \begin{figure}[h!]
-        \centering
-        \includegraphics[width=0.15\textwidth]{samples/WeGetItYouVape.png}
-    \end{figure}
+    (see Isotropic material above for image) \par
 
 
 
     \subsection{Object Instancing}
+    (ObjInst.cu/.hpp)\par
     Object Instancing are classes that are hittable in themsleves but contain other hittables. This allows for the creation of more complex objects from simpler objects. \par
     For each of the following classes I used ray inverse transformations to determine if a ray hit the object. \par
 
@@ -284,7 +320,7 @@
 
         \subsubsection{Rotation}
         Rotation is a class that is a hittable object that contains another hittable object. \par
-        \begin{figure}[h!]
+        \begin{figure}[H]
             \centering
             \includegraphics[width=0.15\textwidth]{samples/Instancing.png}
             \caption{Box translated and rotated}
@@ -295,9 +331,10 @@
         Motion Blur is a class that is a hittable object that contains another hittable object. It is passed a Velocity vector, an Acceleration vector, and a time interval. The time interval determines both how far the object moves as well as the number of overall hit attempts per ray hit check. A long time leads to more sample and therefore a clearer movement (with respect to a lower time higher velocity).\par 
         Bounding boxes for motion blur are done by sampling the object throughout its movement and creating a bounding box from the maximum and minimum points. \par
 
-        \begin{figure}[h!]
+        \begin{figure}[H]
             \centering
             \includegraphics[width=0.15\textwidth]{samples/MotionBlur.png}
+            \caption{Ball up left velocity, down acceleration}
         \end{figure}
 
 
@@ -307,15 +344,15 @@
     \subsection{Round Pixels}
     To make the image look better I implemented round pixels. When compiling the user can set a flag to either use a circular montecarlo sample (round pixel) or a square montecarlo sample (square pixel). \par
 
-    \begin{figure}[h!]
+    \begin{figure}[H]
         \centering
-        \includegraphics[width=0.1\textwidth]{samples/SquarePixels.png}
-        \includegraphics[width=0.1\textwidth]{samples/CornellRoundPixels.png}
+        \includegraphics[width=0.15\textwidth]{samples/SquarePixels.png}
+        \includegraphics[width=0.15\textwidth]{samples/CornellRoundPixels.png}
         \caption{Left: Square Pixels, Right: Round Pixels}
     \end{figure}
 
-    \subsection{HDR}
-    this and that \par
+    % \subsection{HDR}
+    % this and that \par
 
 \section{Feature List Summary - For Easier Grading}
 
@@ -334,13 +371,13 @@
         \sitem Specular (Metal), Diffuse (Lambertian), and Dielectric Materials 
         \sitem Emissive Material (Light)
     \item For Points
-        \sitem HDR (High Dynamic Range) 
+        % \sitem HDR (High Dynamic Range) 
         \sitem Volume Rendering (smoke, clouds)
         \sitem Quads (Rectangle, Box)
         \sitem Motion Blur 
         \sitem Defocus/Depth of Field (see camera configuration)
         \sitem Object Instancing (Translation, Rotation)
-        \sitem Importance Sampling (Cosine weighted and Light Sampling)
+        \sitem Importance Sampling (Cosine weighted and Light Sampling Mix)
         \sitem Round Pixels 
         \sitem Parallelization (CUDA)
         \sitem GPU Acceleration (CUDA)
