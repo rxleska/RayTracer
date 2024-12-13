@@ -44,7 +44,7 @@ __device__ unsigned long long blockCount = 0;
 // #define TINYGLTF_NOEXCEPTION // optional. disable exception handling.
 #include "lib/external/tiny_gltf.h"
 
-#define MAX_OBJECTS 100
+#define MAX_OBJECTS 500
 
 //testing https://docs.google.com/spreadsheets/d/1Knr7gxuCNoHat9BekMfd5_s_J_zUIKIp5STZWXuLcaQ/edit?gid=0#gid=0
 #define threadDIMX 16
@@ -677,13 +677,13 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
 int main() {
     //increase stack size
     cudaDeviceSetLimit(cudaLimitStackSize, 4096);
-    int nx = 512*1;
+    int nx = 512*8;
     // int nx = 1440;
     // int nx = 600;
     // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 512*1;
+    int ny = 512*8;
     // int ny = 900;
     int ns = 11;
     // int tx = 20;
