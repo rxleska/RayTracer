@@ -669,8 +669,8 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
     if (threadIdx.x == 0 && blockIdx.x == 0) {
         // create_RTIAW_sample(device_object_list, d_world, d_camera, nx, ny, rand_state);
         // create_test_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        // create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        // create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
+        create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
@@ -692,13 +692,13 @@ int main() {
     // return;
 
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 16777216);
-    int nx = 512*1;
+    int nx = 512*4;
     // int nx = 1440;
     // int nx = 600;
     // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 512*1;
+    int ny = 512*4;
     // int ny = 900;
     // int tx = 20;
     // int ty = 12;

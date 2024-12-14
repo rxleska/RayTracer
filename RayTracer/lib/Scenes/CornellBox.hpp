@@ -91,10 +91,10 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         556.0 548.8 559.2
         */
         // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), white);
-        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2), white);
-        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2), mirror);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), mirror);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), white);
+        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 0.0, 559.2),Vec3(0.0, 548.8, 559.2), mirror);
+        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 559.2),Vec3(0.0, 548.8, 559.2),Vec3(556.0, 548.8, 559.2), mirror);
 
         //right wall
         /*
@@ -127,10 +127,10 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         // 556.0 548.8 0
         // */
         // device_object_list[i++] = Quad(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
-        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), mirror);
-        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), mirror);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), white);
+        device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), white);
+        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(0.0, 548.8, 0.0),Vec3(0.0, 0.0, 0.0), mirror);
+        // device_object_list[i++] = Triangle(Vec3(549.6, 0.0, 0.0),Vec3(556.0, 548.8, 0.0),Vec3(0.0, 548.8, 0.0), mirror);
 
         //short block
         //uses white material
@@ -153,12 +153,12 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         240.0 165.0 272.0
         240.0   0.0 272.0
         */
-        //device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
-        // device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0), red);
-        // device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), red);
+        // device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
+        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(290.0, 165.0, 114.0),Vec3(240.0, 165.0, 272.0), white);
+        device_object_list[i++] = Triangle(Vec3(290.0, 0.0, 114.0),Vec3(240.0, 165.0, 272.0),Vec3(240.0, 0.0, 272.0), white);
         
-        Material * text = new Textured(textures[1], 474, 327);
-        device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0), Vec3(290.0, 165.0, 114.0), Vec3(240.0, 165.0, 272.0), Vec3(240.0, 0.0, 272.0), text, Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(1, 1, 0), Vec3(0, 1, 0));
+        // Material * text = new Textured(textures[1], 474, 327);
+        // device_object_list[i++] = Quad(Vec3(290.0, 0.0, 114.0), Vec3(290.0, 165.0, 114.0), Vec3(240.0, 165.0, 272.0), Vec3(240.0, 0.0, 272.0), text, Vec3(0, 0, 0), Vec3(1, 0, 0), Vec3(1, 1, 0), Vec3(0, 1, 0));
         
         
         //wall3
@@ -254,8 +254,8 @@ __device__ void create_Cornell_Box_Octree(Hitable **device_object_list, Scene **
         423.0   0.0 247.0
         */
         // device_object_list[i++] = Quad(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), mirror);
-        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), mirror);
+        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(265.0, 330.0, 296.0),Vec3(423.0, 330.0, 247.0), white);
+        device_object_list[i++] = Triangle(Vec3(265.0, 0.0, 296.0),Vec3(423.0, 330.0, 247.0),Vec3(423.0, 0.0, 247.0), white);
 
 
         //little box test
