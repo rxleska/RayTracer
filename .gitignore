@@ -41,3 +41,14 @@ perf.data*
 *.nvcudmp
 
 guide/
+
+
+.vs
+.vscode
+x64\Debug
+*.sln
+*.vcxproj
+*.vcxproj.filters
+*.vcxproj.user
+*.deb
+*.exp
