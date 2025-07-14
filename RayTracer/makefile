@@ -11,7 +11,7 @@ CC = nvcc
 # CFLAGS = -arch=sm_89 -rdc=true -G
 # CFLAGS = -arch=sm_80 -rdc=true -g -G
 # CFLAGS = -arch=sm_89 -rdc=true -O3 --use_fast_math -Xptxas -O2 -Xcompiler -O2 -faggressive-loop-optimizations
-CFLAGS = -arch=sm_89 -rdc=true -use_fast_math -O3 -ftz=true -prec-div=false -prec-sqrt=false
+CFLAGS = -arch=sm_89 -rdc=true -use_fast_math -O3 -ftz=true -prec-div=false -prec-sqrt=false -I/usr/include/SDL2 -D_REENTRANT -lSDL2
 # CFLAGS = -arch=sm_89 -rdc=true 
 # CFLAGS = -arch=sm_89 -rdc=true -G -g
 
@@ -22,10 +22,10 @@ CFLAGS = -arch=sm_89 -rdc=true -use_fast_math -O3 -ftz=true -prec-div=false -pre
 
 
 PROCESSING = bin/Ray.obj bin/Vec3.obj bin/Camera.obj
-MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj bin/Phong.obj bin/PhongLamb.obj bin/Isotropic.obj
+MATERIALS  = bin/Lambertian.obj bin/Metal.obj bin/Dielectric.obj bin/Light.obj bin/LambertianBordered.obj bin/Textured.obj bin/Isotropic.obj
 HITTABLES  = bin/Sphere.obj  bin/Scene.obj bin/Polygon_T.obj bin/Octree.obj bin/Box.obj bin/Medium.obj bin/ObjInst.obj
 
-SCENES = lib/Scenes/CornellBox.hpp lib/Scenes/CornellRoomOfMirrors.hpp lib/Scenes/RTIAW.hpp lib/Scenes/TestScene.hpp lib/Scenes/Billards.hpp lib/Scenes/PhongCornellBox.hpp lib/Scenes/PhongMixCornellBox.hpp lib/Scenes/FinalScene.hpp
+SCENES = lib/Scenes/CornellBox.hpp lib/Scenes/CornellRoomOfMirrors.hpp lib/Scenes/RTIAW.hpp lib/Scenes/TestScene.hpp lib/Scenes/FinalScene.hpp
 
 all: run 
 
@@ -72,12 +72,6 @@ bin/LambertianBordered.obj: lib/materials/LambertianBordered.cu lib/materials/he
 bin/Textured.obj: lib/materials/Textured.cu lib/materials/headers/Textured.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/materials/Textured.cu -o bin/Textured.obj
 
-bin/Phong.obj: lib/materials/Phong.cu lib/materials/headers/Phong.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
-	$(CC) $(CFLAGS) -c lib/materials/Phong.cu -o bin/Phong.obj
-
-bin/PhongLamb.obj: lib/materials/PhongLamb.cu lib/materials/headers/PhongLamb.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
-	$(CC) $(CFLAGS) -c lib/materials/PhongLamb.cu -o bin/PhongLamb.obj
-
 bin/Isotropic.obj: lib/materials/Isotropic.cu lib/materials/headers/Isotropic.hpp lib/materials/headers/Material.hpp lib/processing/headers/Vec3.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/materials/Isotropic.cu -o bin/Isotropic.obj
 
@@ -87,7 +81,7 @@ bin/Isotropic.obj: lib/materials/Isotropic.cu lib/materials/headers/Isotropic.hp
 bin/Sphere.obj: lib/hittable/Sphere.cu lib/hittable/headers/Sphere.hpp lib/processing/headers/Ray.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Sphere.cu -o bin/Sphere.obj
  
-bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp lib/materials/headers/Phong.hpp lib/materials/headers/PhongLamb.hpp
+bin/Scene.obj: lib/hittable/Scene.cu lib/hittable/headers/Scene.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp
 	$(CC) $(CFLAGS) -c lib/hittable/Scene.cu -o bin/Scene.obj
 
 bin/Polygon_T.obj: lib/hittable/Polygon_T.cu lib/hittable/headers/Polygon_T.hpp lib/hittable/headers/Hitable.hpp lib/hittable/headers/HitRecord.hpp lib/processing/headers/Ray.hpp

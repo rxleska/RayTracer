@@ -13,8 +13,6 @@
 #include "lib/materials/headers/Light.hpp"
 #include "lib/materials/headers/LambertianBordered.hpp"
 #include "lib/materials/headers/Textured.hpp"
-#include "lib/materials/headers/Phong.hpp"
-#include "lib/materials/headers/PhongLamb.hpp"
 // processing
 #include "lib/processing/headers/Camera.hpp"
 #include "lib/processing/headers/Ray.hpp"
@@ -25,6 +23,8 @@
 #include <float.h>
 #include <curand_kernel.h>
 #include <fstream>
+
+#include <SDL2/SDL.h>
 
 #include <vector>
 
@@ -53,10 +53,6 @@ __device__ unsigned long long blockCount = 0;
 // comment out to disable round pixels
 #define ROUND_PIXELS
 
-// comment out to use sdr
-// #define HDR
-
-
 
 // limited version of checkCudaErrors from helper_cuda.h in CUDA examples
 #define checkCudaErrors(val) check_cuda( (val), #val, __FILE__, __LINE__ )
@@ -71,11 +67,6 @@ void check_cuda(cudaError_t result, char const *const func, const char *const fi
     }
 }
 
-// __global__ void rand_init(curandState *rand_state) {
-//     if (threadIdx.x == 0 && blockIdx.x == 0) {
-//         curand_init(1984, 0, 0, rand_state);
-//     }
-// }
 
 __global__ void rand_init_singleton(curandState *rand_state) {
     if (threadIdx.x == 0 && blockIdx.x == 0) {
@@ -289,18 +280,6 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, int depth, c
             else if(did_scatter == 2){ //light hit return color
                 return attenuation;
             }
-            else if(did_scatter == 3) { //phong hit return color
-                return (*world)->handlePhong(rec, cam, local_rand_state);
-            }
-            else if(did_scatter == 4) { //phong hit return color
-                int bcCount = ((PhongLamb*) rec.mat)->bc;
-                if(bcCount < depth){
-                    return (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, true);
-                }
-                else{
-                    return (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, false) * getColor(scattered, cam, world, depth + 1, local_rand_state, edge_hit);
-                }
-            }
             else if(did_scatter == 5){
                 //!RTD - roll the dice to see if we should sample the light
                 if(curand_uniform(local_rand_state) < 0.5){
@@ -367,19 +346,6 @@ __device__ Vec3 getColor(const Ray &r, Camera **cam, Scene **world, curandState 
             }
             else if(did_scatter == 2){ //light hit return color
                 return cur_attenuation * attenuation;
-            }
-            else if(did_scatter == 3) { //phong hit return color
-                return (*world)->handlePhong(rec, cam, local_rand_state) * cur_attenuation;
-            }
-            else if(did_scatter == 4) { //phong hit return color
-                int bcCount = ((PhongLamb*) rec.mat)->bc;
-                if(bcCount < i){
-                    return (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, true) * cur_attenuation;
-                }
-                else{
-                    cur_attenuation = cur_attenuation * (*world)->handlePhongLamb(rec, cam, scattered, local_rand_state, false);
-                    cur_ray = scattered;
-                }
             }
             else if(did_scatter == 5){
                 //temporary change mat if normal is on axis
@@ -464,11 +430,105 @@ __device__ float clamp(float x, float min, float max) {
 
 #define RND (curand_uniform(&local_rand_state))
 
-#ifdef HDR
-__global__ void render(uint32_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
-#else
+__global__ void additive_render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state, int iteration) {
+    int i = threadIdx.x + blockIdx.x * blockDim.x;
+    int j = threadIdx.y + blockIdx.y * blockDim.y;
+    if((i >= max_x) || (j >= max_y)) return;
+
+    int pixel_index = (max_y - j - 1)*max_x + i;
+    curandState local_rand_state = rand_state[pixel_index];
+    Vec3 col(0,0,0);
+    double rval = 0.0;
+    double gval = 0.0;
+    double bval = 0.0;
+    bool edge_hit = false;
+    bool edge_hit_check = false;
+    int samples = (*cam)->samples;
+    int msaaXval = 1;
+
+    int sampleX = int(sqrt(float(samples)));
+    int sampleY = int(sqrt(float(samples)));
+    if(sampleX * sampleY != samples){
+        sampleY+=1; // approach correct number of samples
+    }
+
+    float u,v, theta;
+    Ray r;
+    Vec3 color;
+
+    for(int m = 0; m < msaaXval; m++){
+        #ifdef ROUND_PIXELS
+        theta = (2.0f * M_PI / samples) * RND;
+        theta = theta + (2.0f * M_PI / samples) * ri;
+        u = (float(i) + 0.5f + 0.5f * cos(theta)) / float(max_x);
+        v = (float(j) + 0.5f + 0.5f * sin(theta)) / float(max_y);
+        r = (*cam)->get_ray(u, v, &local_rand_state);
+        // Vec3 color = getColor(r, cam, world, 0, &local_rand_state, edge_hit_check);
+        color = getColor(r, cam, world, &local_rand_state, edge_hit_check);
+        if (color.x != color.x){
+            color.x = 0.0;
+        }
+        if (color.y != color.y){
+            color.y = 0.0;
+        }
+        if (color.z != color.z){
+            color.z = 0.0;
+        }
+        rval += color.x;
+        gval += color.y;
+        bval += color.z;
+
+
+        if(!edge_hit && edge_hit_check) {
+            edge_hit = true;
+            msaaXval = (*cam)->msaa_x;
+        }
+
+        #else
+        int xi = iteration % sampleX; 
+        int yi = iteration / sampleY;
+
+        u = (float(i) + (xi + RND) / sampleX) / float(max_x);
+        v = (float(j) + (yi + RND) / sampleY) / float(max_y);
+        r = (*cam)->get_ray(u, v, &local_rand_state);
+        // Vec3 color = getColor(r, cam, world, 0, &local_rand_state, edge_hit_check);
+        color = getColor(r, cam, world, &local_rand_state, edge_hit_check);
+        if (color.x != color.x){
+            color.x = 0.0;
+        }
+        if (color.y != color.y){
+            color.y = 0.0;
+        }
+        if (color.z != color.z){
+            color.z = 0.0;
+        }
+        rval += color.x;
+        gval += color.y;
+        bval += color.z;
+        
+
+
+        if(!edge_hit && edge_hit_check) {
+            edge_hit = true;
+            msaaXval = (*cam)->msaa_x;
+        }
+
+        #endif
+    }
+
+    rand_state[pixel_index] = local_rand_state;
+    // col = col / float(samples * msaaXval);
+    float samplesXmsaaXval = float(samples * msaaXval);
+    col = Vec3(rval/samplesXmsaaXval, gval/samplesXmsaaXval, bval/samplesXmsaaXval);
+    
+    fb[pixel_index*3+0] += col.x;
+    fb[pixel_index*3+1] += col.y;
+    fb[pixel_index*3+2] += col.z;
+
+}
+
+
 __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, Scene **world, curandState *rand_state) {
-#endif
     int i = threadIdx.x + blockIdx.x * blockDim.x;
     int j = threadIdx.y + blockIdx.y * blockDim.y;
     if((i >= max_x) || (j >= max_y)) return;
@@ -564,83 +624,9 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
     float samplesXmsaaXval = float(samples * msaaXval);
     col = Vec3(rval/samplesXmsaaXval, gval/samplesXmsaaXval, bval/samplesXmsaaXval);
     
-    #ifdef HDR
-    // col.x = clamp(sqrt(col.x), 0.0f, 1.0f);
-    // col.y = clamp(sqrt(col.y), 0.0f, 1.0f);
-    // col.z = clamp(sqrt(col.z), 0.0f, 1.0f);
-
-    col.x = sqrt(col.x);
-    col.y = sqrt(col.y);
-    col.z = sqrt(col.z);
-
-    Vec3 color_mapped = Vec3(
-        col.x * 0.59719f + col.y*0.35458f + col.z*0.04823f,
-        col.x * 0.07600f + col.y*0.90834f + col.z*0.01566f,
-        col.x * 0.02840f + col.y*0.13383f + col.z*0.83777f
-    );
-
-    Vec3 a = color_mapped * (color_mapped + Vec3(0.0245786f,0.0245786f,0.0245786f)) - Vec3(0.000090537f,0.000090537f,0.000090537f);
-    Vec3 b = color_mapped * (color_mapped * 0.983729f + Vec3(0.4329510f,0.4329510f,0.4329510f)) + Vec3(0.238081f,0.238081f,0.238081f);
-    color_mapped = Vec3(
-        a.x / b.x,
-        a.y / b.y,
-        a.z / b.z
-    );
-
-    Vec3 color_mapped_2 = Vec3(
-        color_mapped.x * 1.60475f  - color_mapped.y*0.53108f - color_mapped.z*0.07367f,
-        color_mapped.x * -0.10208f + color_mapped.y*1.10813f - color_mapped.z*0.00605f,
-        color_mapped.x * -0.00327f - color_mapped.y*0.07276f + color_mapped.z*1.07602f
-    );
-    // Vec3 color_mapped_2 = col;
-    // // clamp
-    color_mapped_2.x = clamp(color_mapped_2.x, 0.0f, 1.0f);
-    color_mapped_2.y = clamp(color_mapped_2.y, 0.0f, 1.0f);
-    color_mapped_2.z = clamp(color_mapped_2.z, 0.0f, 1.0f);
-
-    // color_mapped_2.x = 255.0*clamp(color_mapped_2.x, 0.0f, 1.0f);
-    // color_mapped_2.y = 255.0*clamp(color_mapped_2.y, 0.0f, 1.0f);
-    // color_mapped_2.z = 255.0*clamp(color_mapped_2.z, 0.0f, 1.0f);
-
-    float max_rgb = fmax(fmax(color_mapped_2.x, color_mapped_2.y), color_mapped_2.z);
-    if (max_rgb > 1e-32){
-        int exponent;
-        float scale = frexp(max_rgb, &exponent);
-        scale *= 256.0;
-        // float scale = 255.0 / max_rgb;
-
-        fb[pixel_index] = uint32_t(uint8_t(int(exponent + 128))) << 24 | 
-                          uint32_t(uint8_t(int(color_mapped_2.z * scale))) << 16 | 
-                          uint32_t(uint8_t(int(color_mapped_2.y * scale))) <<  8 |
-                          uint32_t(uint8_t(int(color_mapped_2.x * scale)));
-        //    
-
-        // apply aces tonemapping
-        // fb[pixel_index] = uint32_t(uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)))) << 24 | 
-        //                   uint32_t(uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)))) << 16 | 
-        //                   uint32_t(uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)))) <<  8 |
-        //                   129;
-
-
-        // fb[pixel_index*1] = uint32_t(uint8_t(int(floor(log2(max_rgb) ) + 128))) << 24 |
-        //                     (uint32_t(uint8_t(int(color_mapped_2.z*scale))) << 24) >> 8 | 
-        //                     (uint32_t(uint8_t(int(color_mapped_2.y*scale))) << 24) >> 16 | 
-        //                     (uint32_t(uint8_t(int(color_mapped_2.x*scale))) << 24) >> 24;
-    }
-    else{
-        fb[pixel_index*1] = 0;
-    }
-    #else
-    // convert to gamma corrected SDR
-    // fb[pixel_index*3+0] = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
-    // fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
-    // fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
-
-    
     fb[pixel_index*3+0] = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
     fb[pixel_index*3+1] = uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
     fb[pixel_index*3+2] = uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
-    #endif
 
 
     #ifdef LOG_PERCENT
@@ -659,10 +645,7 @@ __global__ void render(uint8_t *fb, int max_x, int max_y, int ns, Camera **cam, 
 #include "lib/Scenes/TestScene.hpp"
 #include "lib/Scenes/RTIAW.hpp"
 #include "lib/Scenes/CornellBox.hpp"
-#include "lib/Scenes/PhongCornellBox.hpp"
-#include "lib/Scenes/PhongMixCornellBox.hpp"
 #include "lib/Scenes/CornellRoomOfMirrors.hpp"
-#include "lib/Scenes/Billards.hpp"
 #include "lib/Scenes/FinalScene.hpp"
 
 __global__ void create_world(Hitable **device_object_list, Scene **d_world, Camera **d_camera, int nx, int ny, curandState *rand_state, Vec3 **textures, int num_textures, Vec3 ** meshes, int * mesh_lengths, int num_meshes){
@@ -672,9 +655,6 @@ __global__ void create_world(Hitable **device_object_list, Scene **d_world, Came
         // create_final_scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         create_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
         // create_Cornell_Box_Octree_ROM(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        // create_Billards_Scene(device_object_list, d_world, d_camera, nx, ny, rand_state, textures, num_textures, meshes, mesh_lengths, num_meshes);
-        // create_Phong_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
-        // create_Phong_Mix_Cornell_Box_Octree(device_object_list, d_world, d_camera, nx, ny, rand_state);
     }
 }
 
@@ -692,13 +672,13 @@ int main() {
     // return;
 
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, 16777216);
-    int nx = 512*4;
+    int nx = 512*2;
     // int nx = 1440;
     // int nx = 600;
     // int nx = 500*1;
     // int ny = 1440;
     // int ny = 600;
-    int ny = 512*4;
+    int ny = 512*2;
     // int ny = 900;
     // int tx = 20;
     // int ty = 12;
@@ -712,18 +692,10 @@ int main() {
 
     int num_pixels = nx*ny;
     // size_t fb_size = num_pixels*sizeof(vec3);
-    #ifdef HDR
-    size_t fb_size = num_pixels*sizeof(uint32_t)*1;
-    #else
     size_t fb_size = num_pixels*sizeof(uint8_t)*3;
-    #endif
 
     // allocate Frame Buffer (fb)
-    #ifdef HDR
-    uint32_t *fb;
-    #else
     uint8_t *fb;
-    #endif
     checkCudaErrors(cudaMallocManaged((void **)&fb, fb_size));
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
@@ -802,6 +774,66 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
     #endif 
 
+
+    // Initialize SDL
+    if (SDL_Init(SDL_INIT_VIDEO) < 0) {
+        std::cerr << "Failed to initialize SDL: " << SDL_GetError() << std::endl;
+        return -1;
+    }
+
+    SDL_Window *window = SDL_CreateWindow("CUDA Ray Tracer", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, nx, ny, SDL_WINDOW_SHOWN);
+    if (!window) {
+        std::cerr << "Failed to create window: " << SDL_GetError() << std::endl;
+        SDL_Quit();
+        return -1;
+    }
+
+    SDL_Renderer *renderer = SDL_CreateRenderer(window, -1, SDL_RENDERER_ACCELERATED);
+    SDL_Texture *texture = SDL_CreateTexture(renderer, SDL_PIXELFORMAT_RGB24, SDL_TEXTUREACCESS_STREAMING, nx, ny);
+
+    // Allocate CPU memory for framebuffer
+    uint8_t *h_fb = new uint8_t[nx * ny * 3];
+
+    // uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
+    // uint8_t(int(255.99*clamp(sqrt(col.y), 0.0f, 1.0f)));
+    // uint8_t(int(255.99*clamp(sqrt(col.z), 0.0f, 1.0f)));
+
+    // Main loop
+    bool running = true;
+    SDL_Event event;
+    while (running) {
+        // Handle events
+        while (SDL_PollEvent(&event)) {
+            if (event.type == SDL_QUIT) {
+                running = false;
+            }
+        }
+
+        // Render image with CUDA
+        renderCUDA(d_fb, nx, ny, d_camera, d_world, d_rand_state);
+
+        // Copy CUDA framebuffer to host memory
+        cudaMemcpy(h_fb, d_fb, nx * ny * 3 * sizeof(uint8_t), cudaMemcpyDeviceToHost);
+
+        for(int ix = 0; ix < nx; ix++){
+            for(int iy = 0; iy < ny; iy++){
+                int pindex = (ny - iy - 1)*nx + ix;
+                h_fb[pindex*3]   = uint8_t(int(255.99*clamp(sqrt(col.x), 0.0f, 1.0f)));
+                h_fb[pindex*3+1] = 
+                h_fb[pindex*3+2] = 
+            }
+        }
+
+        // Update SDL texture
+        SDL_UpdateTexture(texture, nullptr, h_fb, nx * 3);
+
+        // Render texture to screen
+        SDL_RenderClear(renderer);
+        SDL_RenderCopy(renderer, texture, nullptr, nullptr);
+        SDL_RenderPresent(renderer);
+    } 
+
+
     render<<<blocks, threads>>>(fb, nx, ny, 1, d_camera, d_world, d_rand_state);
     checkCudaErrors(cudaGetLastError());
     checkCudaErrors(cudaDeviceSynchronize());
@@ -812,21 +844,6 @@ int main() {
     start = clock();
 
     //open file
-    #ifdef HDR
-    FILE *f = fopen("image.hdr", "wb");
-    fprintf(f, "#?RADIANCE\n");
-    fprintf(f, "FORMAT=32-bit_rle_rgbe\n\n");
-    fprintf(f, "-Y %d +X %d\n", ny, nx);
-
-    // fprintf(f, "P6 %d %d 65535\n", nx, ny);
-    uint32_t *fb2 = (uint32_t *)malloc(fb_size);
-    //direct memory copy
-    checkCudaErrors(cudaMemcpy(fb2, fb, fb_size, cudaMemcpyDeviceToHost));
-    checkCudaErrors(cudaGetLastError());
-    checkCudaErrors(cudaDeviceSynchronize());
-    fwrite(fb2, sizeof(uint32_t), nx*ny, f);
-    fclose(f);
-    #else
     FILE *f = fopen("image.ppm", "wb");
     fprintf(f, "P6 %d %d 255\n", nx, ny);
     uint8_t *fb2 = (uint8_t *)malloc(fb_size*3);
@@ -836,7 +853,6 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
     fwrite(fb2, sizeof(uint8_t), 3*nx*ny, f);
     fclose(f);
-    #endif
 
     stop = clock();
     timer_seconds = ((double)(stop - start)) / CLOCKS_PER_SEC;
