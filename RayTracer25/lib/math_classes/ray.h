@@ -22,6 +22,12 @@ __host__ __device__ inline vec3 ray_at(const ray& r, float t) {
     };
 }
 
+__device__ inline void inch_ray(ray&r, const float t) {
+    r.origin.x += r.direction.x * t;
+    r.origin.y += r.direction.y * t;
+    r.origin.z += r.direction.z * t;
+}
+
 // class ray {
 //     public:
 //         vec3 origin; 

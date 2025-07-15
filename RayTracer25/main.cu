@@ -7,6 +7,7 @@
 
 #include "lib/kernel_code.h"
 #include "lib/random_cuda_funcs.h"
+#include "lib/camera.h"
 
 // CUDA memory limits (TODO this will be important so I can check if I am using too much stack memory)
 #define heap_size (3221225472) // 3 GB heap size (1/4 of my GPU memory)
@@ -71,17 +72,21 @@ int main() {
     // -------------------- define hittables -----------------------
     // -------------------------------------------------------------
     material lambertian_red = new_material_lambertian(new_color(1.0f, 0.0f, 0.0f)); // Example material
+    material lambertian_yellow = new_material_lambertian(new_color(1.0f, 1.0f, 0.0f)); // Example material
     material lambertian_green = new_material_lambertian(new_color(0.0f, 1.0f, 0.0f)); // Example material
+    // material mirror_metal = new_material_metal(new_color(0.8f, 0.8f, 0.8f), 0.0f); // Example metal material
+    material glass_dielectric = new_material_dielectric(1.33f); // Example dielectric material
+
     hittable *hittables = (hittable*)malloc(hittable_max * sizeof(hittable));
     int hittable_count = 0; // Number of hittable objects, for now just one sphere
     if (!hittables) {
         std::cerr << "Failed to allocate hittables memory!" << std::endl;
         return -1;
     }
-    hittables[hittable_count] = new_hittable_sphere(new_vec3(0, 0, 2), 0.5f, lambertian_red); // Example sphere
-    hittable_count+= 1; // Set hittable count to 1 for now
-    hittables[hittable_count] = new_hittable_sphere(new_vec3(0, -500, 2), 499.0f, lambertian_green); // Example ground sphere
-    hittable_count+= 1; // Increment hittable count
+    hittables[hittable_count++] = new_hittable_sphere(new_vec3(0, 0, 2), 0.5, glass_dielectric); // Example sphere
+    hittables[hittable_count++] = new_hittable_sphere(new_vec3(0.7, -0.4, 1.25), 0.1, lambertian_red); // Example sphere
+    hittables[hittable_count++] = new_hittable_sphere(new_vec3(0, 0, 5), 0.1, lambertian_yellow); // Example sphere
+    hittables[hittable_count++] = new_hittable_sphere(new_vec3(0, -500, 2), 499.5f, lambertian_green); // Example ground sphere
 
     // Allocate device memory for hittables
     hittable *device_hittables;

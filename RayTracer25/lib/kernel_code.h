@@ -12,10 +12,11 @@
 
 #define FLT_MAX 3.402823466e+38F // Define FLT_MAX if not already defined
 
-__device__ vec3 get_sky_box_color(const ray& r) {
+__device__ inline vec3 get_sky_box_color(const ray& r) {
     // Simple skybox color based on ray direction
     float t = 0.5f * (r.direction.y + 1.0f);
     return (1.0f - t) * new_color(1.0f, 1.0f, 1.0f) + t * new_color(0.5f, 0.7f, 1.0f);
+    // return new_color(1.0f, 0.0f, 1.0f); // Default skybox color
 }
 
 __global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables, int hittable_count, curandState *states) {
@@ -40,9 +41,10 @@ __global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables,
         hit_record hit_rec;
         hit_rec.t = FLT_MAX; // Initialize hit record
         int bnc = 0;
+        bool hit_anything;
+        pixel_color_run = new_color(1.0f, 1.0f, 1.0f); // full ray color
         for(; bnc < cam->max_bounces; bnc++) {
-            pixel_color_run = new_color(1.0f, 1.0f, 1.0f); // full ray color
-            bool hit_anything = false;
+            hit_anything = false;
 
             
             for(int i = 0; i < hittable_count; i++) {
@@ -58,6 +60,7 @@ __global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables,
             else{
                 pixel_color_run = pixel_color_run * sub_run_color; // If hit, multiply by the color of the hittable object
                 r = scattered; // Update ray direction to scattered direction
+                inch_ray(r, 1e-6f); // Move the ray origin slightly forward to avoid self-intersection
                 hit_rec.t = FLT_MAX; // Reset hit record for the next bounce
             }   
         }

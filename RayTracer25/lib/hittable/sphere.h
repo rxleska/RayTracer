@@ -25,7 +25,7 @@ __device__ inline bool hit(const sphere self, ray& r, float t_min, float t_max, 
     float b = -2.0 * dot(r.direction, oc);
     float c = dot(oc, oc) - self.radius * self.radius;
     float discriminant = b * b - 4 * a * c;
-    if (discriminant < 0) {
+    if (discriminant < 1e-6) {
         return false; // No intersection
     }
     float sqrt_discriminant = sqrtf(discriminant);
@@ -39,9 +39,12 @@ __device__ inline bool hit(const sphere self, ray& r, float t_min, float t_max, 
     }
     record.t = root; // Set the hit distance
     record.intersection_point = r.origin + r.direction * root; // Calculate intersection point
-    record.normal = (record.intersection_point - self.center) / -self.radius; // Calculate normal at intersection
+    vec3 outward_normal = (record.intersection_point - self.center) / self.radius;
+    record.is_front_face = dot(r.direction, outward_normal) < 0.0f;
+    record.normal = record.is_front_face ? outward_normal : -outward_normal;
+
+
     scatter(self.mat, r, record, record.ret_color, scattered, curandState); // Scatter the ray using the material
-    // record.ret_color = self.surface_color; // Set the color at the intersection
     return true; // Intersection occurred
 }
 
