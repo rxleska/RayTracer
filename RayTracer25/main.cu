@@ -75,7 +75,7 @@ int main() {
     material lambertian_yellow = new_material_lambertian(new_color(1.0f, 1.0f, 0.0f)); // Example material
     material lambertian_green = new_material_lambertian(new_color(0.0f, 1.0f, 0.0f)); // Example material
     // material mirror_metal = new_material_metal(new_color(0.8f, 0.8f, 0.8f), 0.0f); // Example metal material
-    material glass_dielectric = new_material_dielectric(1.33f); // Example dielectric material
+    material glass_dielectric = new_material_dielectric(1.5f); // Example dielectric material
 
     hittable *hittables = (hittable*)malloc(hittable_max * sizeof(hittable));
     int hittable_count = 0; // Number of hittable objects, for now just one sphere

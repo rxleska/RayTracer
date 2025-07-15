@@ -22,13 +22,13 @@ __device__ inline bool scatter(const dielectric& self, const ray& r_in, const hi
 
     bool cannot_refract = refraction_ratio * sin_theta > 1.0f; // Check if total internal reflection occurs
     vec3 direction;
-    // if (cannot_refract || schlick(cos_theta, refraction_ratio) > curand_uniform(curandState)) {
-    //     // Reflect the ray if total internal reflection occurs or based on Schlick's approximation
-    //     direction = reflect(unit_direction, rec.normal);
-    // } else {
+    if (cannot_refract || schlick(cos_theta, refraction_ratio) > curand_uniform(curandState)) {
+        // Reflect the ray if total internal reflection occurs or based on Schlick's approximation
+        direction = reflect(unit_direction, rec.normal);
+    } else {
         // Refract the ray if it can pass through the material
         direction = refract(unit_direction, rec.normal, refraction_ratio);
-    // }
+    }
 
     scattered = {rec.intersection_point, direction}; // Create a new ray from the intersection point in the calculated direction
     return true; // Return true to indicate that scattering occurred
