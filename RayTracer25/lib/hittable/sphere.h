@@ -42,10 +42,9 @@ __device__ inline bool hit(const sphere self, ray& r, float t_min, float t_max, 
     vec3 outward_normal = (record.intersection_point - self.center) / self.radius;
     record.is_front_face = dot(r.direction, outward_normal) < 0.0f;
     record.normal = record.is_front_face ? outward_normal : -outward_normal;
+    record.mat = self.mat; 
 
-
-    scatter(self.mat, r, record, record.ret_color, scattered, curandState); // Scatter the ray using the material
-    return true; // Intersection occurred
+    return true;
 }
 
 

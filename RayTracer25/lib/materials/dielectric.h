@@ -6,12 +6,6 @@
 #include "../hittable/hit_record.h"
 #include "material.h"
 
-struct dielectric {
-    float ref_idx; // Refractive index of the dielectric material
-};
-
-
-
 __device__ inline bool scatter(const dielectric& self, const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, curandState* curandState) {
     attenuation = new_color(1.0f, 1.0f, 1.0f); // Attenuation is always white for dielectric materials
     float refraction_ratio = rec.is_front_face ? (1.0f / self.ref_idx) : self.ref_idx; // Determine the refraction ratio based on the front face of the hit record

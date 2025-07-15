@@ -17,7 +17,7 @@ CC = nvcc
 CFLAGS = -arch=sm_89 #-rdc=true  
 
 material_headers = lib/materials/material.h lib/materials/lambertian.h lib/materials/metal.h lib/materials/dielectric.h
-hittable_headers = lib/hittable/sphere.h lib/hittable/hittable.h lib/hittable/hit_record.h
+hittable_headers = lib/hittable/sphere.h lib/hittable/hittable.h lib/hittable/hit_record.h lib/hittable/polygon.h
 math_headers = lib/math_classes/vec3.h lib/math_classes/color.h lib/math_classes/ray.h
 base_headers = lib/camera.h lib/kernel_code.h lib/cuda_check_funcs.h lib/random_cuda_funcs.h
 headers = $(math_headers) $(hittable_headers) $(material_headers) $(base_headers)

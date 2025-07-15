@@ -14,9 +14,9 @@
 
 __device__ inline vec3 get_sky_box_color(const ray& r) {
     // Simple skybox color based on ray direction
-    float t = 0.5f * (r.direction.y + 1.0f);
-    return (1.0f - t) * new_color(1.0f, 1.0f, 1.0f) + t * new_color(0.5f, 0.7f, 1.0f);
-    // return new_color(1.0f, 0.0f, 1.0f); // Default skybox color
+    // float t = 0.5f * (r.direction.y + 1.0f);
+    // return (1.0f - t) * new_color(1.0f, 1.0f, 1.0f) + t * new_color(0.5f, 0.7f, 1.0f);
+    return new_color(0.0f, 0.0f, 0.0f); // Default skybox color
 }
 
 __global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables, int hittable_count, curandState *states) {
@@ -58,7 +58,12 @@ __global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables,
                 break;
             }
             else{
+                if(!scatter(hit_rec.mat, r, hit_rec, sub_run_color, scattered, localState)) {
+                    pixel_color_run = pixel_color_run * sub_run_color; 
+                    break; // If scattering fails, stop the ray (emissives or absorbing materials)
+                } 
                 pixel_color_run = pixel_color_run * sub_run_color; // If hit, multiply by the color of the hittable object
+                
                 r = scattered; // Update ray direction to scattered direction
                 inch_ray(r, 1e-6f); // Move the ray origin slightly forward to avoid self-intersection
                 hit_rec.t = FLT_MAX; // Reset hit record for the next bounce

@@ -6,10 +6,6 @@
 #include "../math_classes/vec3.h"
 #include "../hittable/hit_record.h"
 
-struct lambertian {
-    color albedo; // Diffuse color of the material
-};
-
 __device__ inline bool scatter(const lambertian& self, const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, curandState* curandState) {
     vec3 scatter_direction = rec.normal + random_unit_vector(curandState); // Scatter in a random direction around the normal
     // If the scatter direction is near zero, use the normal as the scatter direction

@@ -7,10 +7,6 @@
 #include "../hittable/hit_record.h"
 #include "material.h"
 
-struct metal {
-    color albedo; // Reflective color of the metal
-    float fuzz; // Fuzziness factor for the metal surface
-};
 
 __device__ inline bool scatter(const metal& self, const ray& r_in, const hit_record& rec, color& attenuation, ray& scattered, curandState* curandState) {
     vec3 reflected = reflect(unit_vector(r_in.direction), rec.normal); // Reflect the incoming ray direction around the normal
