@@ -15,12 +15,33 @@ struct camera {
     float viewport_width; // width of the viewport
     int samples_per_pixel; // number of samples per pixel for anti-aliasing
     int max_bounces; // maximum number of bounces for ray tracing 
+    vec3 look_at_pos;
+    vec3 w;
+    vec3 u;
+    vec3 v;
+    vec3 lower_left_corner;
+    vec3 horizontal;
+    vec3 vertical;
 };
 
 __host__ __device__ inline ray camera_get_ray(const camera &self, float u, float v) {
     // Calculate the direction of the ray based on the viewport and focal length
-    vec3 direction = {(u-0.5f) * self.viewport_width, (v-0.5f) * self.viewport_height, self.focal_length};
+    // vec3 direction = {(u-0.5f) * self.viewport_width, (v-0.5f) * self.viewport_height, self.focal_length};
+    // // transform the direction vector to account for the camera's angle vector
+    // direction = self.u * direction.x + self.v * direction.y + self.w * direction.z; // Apply camera orientation
+    vec3 direction = self.lower_left_corner + u * self.horizontal + v * self.vertical - self.origin; // Calculate the ray direction
+
     return {self.origin, direction};
+}
+
+
+__host__ void camera_calc_look_at(camera* self){
+    self->w = unit_vector(self->origin - self->look_at_pos); // Calculate the w vector (camera direction)
+    self->u = unit_vector(cross({0, 1, 0}, self->w)); // Calculate the u vector (camera right)
+    self->v = cross(self->w, self->u); // Calculate the v vector (camera up)
+    self->lower_left_corner = self->origin - self->u * (self->focal_length * self->viewport_width / 2.0f) - self->v * (self->focal_length * self->viewport_height / 2.0f) - self->w * self->focal_length; 
+    self->horizontal = self->u * self->viewport_width * self->focal_length;
+    self->vertical = self->v * self->viewport_height * self->focal_length;
 }
 
 // class camera{

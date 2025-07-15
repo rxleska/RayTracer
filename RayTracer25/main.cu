@@ -54,12 +54,14 @@ int main() {
     }
     cam->cam_width = img_width;
     cam->cam_height = img_height;
-    cam->origin = new_vec3(0, 0, 0); // camera position
+    cam->origin = new_vec3(0, 0.5, 0); // camera position
     cam->focal_length = 2.0f; // focal length of the camera
     cam->viewport_height = 2.0f; // default viewport height
     cam->viewport_width = (float)img_width / (float)img_height * cam->viewport_height; // calculate viewport width based on aspect ratio
     cam->samples_per_pixel = rays_per_pixel; // number of samples per pixel for anti-aliasing
     cam->max_bounces = max_bounce_count; // maximum number of bounces for ray tracing
+    cam->look_at_pos = new_vec3(0, 0, 2); // Look at position
+    camera_calc_look_at(cam); // Calculate camera orientation vectors
 
     // Allocate device memory for camera
     camera *device_cam;
