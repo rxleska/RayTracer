@@ -7,7 +7,11 @@
 
 #include "lib/kernel_code.h"
 #include "lib/random_cuda_funcs.h"
+#include "lib/cuda_check_funcs.h"
 #include "lib/camera.h"
+
+#include "lib/scenes/base_test.h"
+#include "lib/scenes/cornell_box.h"
 
 // CUDA memory limits (TODO this will be important so I can check if I am using too much stack memory)
 #define heap_size (3221225472) // 3 GB heap size (1/4 of my GPU memory)
@@ -17,12 +21,14 @@
 // 8k resolution is 7680x4320, but I will use 1024x1024 for testing because 8k is too large to view in vscode ppm extension (id have to use infranviewer)
 #define img_width 1024
 #define img_height 1024   
-#define rays_per_pixel 50000
-#define hittable_max 100
-#define max_bounce_count 50 // Maximum number of bounces for ray tracing
+// #define img_width 2048
+// #define img_height 2048   
+#define rays_per_pixel 20000
+#define hittable_max 10
+
+#define max_bounce_count 20 // Maximum number of bounces for ray tracing
 
 
-#include "lib/cuda_check_funcs.h"
 
 int main() {
     cudaDeviceSetLimit(cudaLimitMallocHeapSize, heap_size);
@@ -45,68 +51,18 @@ int main() {
     checkCudaErrors(cudaDeviceSynchronize());
 
     // -------------------------------------------------------------
-    // ---------------------- define camera ------------------------
+    // --------------- setup camera & hittables --------------------    
     // -------------------------------------------------------------
-    camera *cam = (camera*)malloc(sizeof(camera));
-    if (!cam) {
-        std::cerr << "Failed to allocate camera memory!" << std::endl;
-        return -1;
-    }
-    cam->cam_width = img_width;
-    cam->cam_height = img_height;
-    cam->origin = new_vec3(-2, 1, -1); // camera position
-    cam->focal_length = 2.0f; // focal length of the camera
-    cam->viewport_height = 2.0f; // default viewport height
-    cam->viewport_width = (float)img_width / (float)img_height * cam->viewport_height; // calculate viewport width based on aspect ratio
-    cam->samples_per_pixel = rays_per_pixel; // number of samples per pixel for anti-aliasing
-    cam->max_bounces = max_bounce_count; // maximum number of bounces for ray tracing
-    cam->look_at_pos = new_vec3(0, 0, 2); // Look at position
-    camera_calc_look_at(cam); // Calculate camera orientation vectors
-
-    // Allocate device memory for camera
+    std::cout << "Building Scene" << std::endl;
+    
     camera *device_cam;
-    checkCudaErrors(cudaMalloc((void**)&device_cam, sizeof(camera)));
-    checkCudaErrors(cudaMemcpy(device_cam, cam, sizeof(camera), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaDeviceSynchronize());
-    free(cam); // Free host memory for camera after copying to device
-
-    // -------------------------------------------------------------
-    // -------------------- define hittables -----------------------
-    // -------------------------------------------------------------
-    material lambertian_red = new_material_lambertian(new_color(1.0f, 0.0f, 0.0f)); // Example material
-    material lambertian_yellow = new_material_lambertian(new_color(1.0f, 1.0f, 0.0f)); // Example material
-    material lambertian_green = new_material_lambertian(new_color(0.0f, 1.0f, 0.0f)); // Example material
-
-    material light = new_material_emissive(new_color(1.0f, 1.0f, 1.0f), 10.0f); // Example emissive material
-
-    // material mirror_metal = new_material_metal(new_color(0.8f, 0.8f, 0.8f), 0.0f); // Example metal material
-    material glass_dielectric = new_material_dielectric(1.5f); // Example dielectric material
-
-    hittable *hittables = (hittable*)malloc(hittable_max * sizeof(hittable));
-    int hittable_count = 0; // Number of hittable objects, for now just one sphere
-    if (!hittables) {
-        std::cerr << "Failed to allocate hittables memory!" << std::endl;
-        return -1;
-    }
-    hittables[hittable_count++] = new_hittable_sphere(new_vec3(0, 0, 2), 0.5, light); // Example sphere
-    hittables[hittable_count++] = new_hittable_sphere(new_vec3(0.7, -0.4, 1.25), 0.1, lambertian_red); // Example sphere
-    hittables[hittable_count++] = new_hittable_sphere(new_vec3(0, 0, 5), 0.1, lambertian_yellow); // Example sphere
-    hittables[hittable_count++] = new_hittable_polygon( new_vec3(-10, -1,-10), 
-                                                        new_vec3( 10, -1, 10), 
-                                                        new_vec3( 10, -1,-10), 
-                                                        lambertian_green); // Example ground polygon
-    hittables[hittable_count++] = new_hittable_polygon( new_vec3(-10, -1,-10), 
-                                                        new_vec3(-10, -1, 10), 
-                                                        new_vec3( 10, -1, 10), 
-                                                        lambertian_green); // Example ground polygon
-
-
-    // Allocate device memory for hittables
     hittable *device_hittables;
-    checkCudaErrors(cudaMalloc((void**)&device_hittables, hittable_count * sizeof(hittable)));
-    checkCudaErrors(cudaMemcpy(device_hittables, hittables, hittable_count * sizeof(hittable), cudaMemcpyHostToDevice));
-    checkCudaErrors(cudaDeviceSynchronize());
-    free(hittables); // Free host memory for hittables after copying to device
+    int hittable_count = 0; // Number of hittable objects
+    // int scene_err = make_base_scene(device_cam, device_hittables, hittable_count, img_width, img_height, rays_per_pixel, max_bounce_count, hittable_max);
+    int scene_err = make_cornell_box_scene(device_cam, device_hittables, hittable_count, img_width, img_height, rays_per_pixel, max_bounce_count, hittable_max);
+
+    if(scene_err) return -1;
+    std::cout << "Scene Built" << std::endl;
 
     // -------------------------------------------------------------
     // ----------------- define the framebuffer --------------------
@@ -129,7 +85,9 @@ int main() {
     // -------------------------------------------------------------
     // ---------------------- Launch the kernel --------------------
     // -------------------------------------------------------------
+    std::cout << "launching Kernel" << std::endl;
     kernel<<<blocks, threads>>>(device_framebuffer, device_cam, device_hittables, hittable_count, device_rand_states);
+    std::cout << "Kernel returned" << std::endl;
     // checkCudaErrors(cudaGetLastError());
 
 
@@ -150,6 +108,9 @@ int main() {
     fclose(file);
 
     free (framebuffer);
+
+
+    // TODO free cuda memory
 
     return 0;
 }

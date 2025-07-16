@@ -41,13 +41,22 @@ __device__ inline bool hit(const polygon self, ray& r, float t_min, float t_max,
     if (t < t_min || t > t_max) {
         return false; // Intersection is outside the valid range
     }
+    record.is_front_face = dot(r.direction, self.normal) < 0.0f; 
+    if(!record.is_front_face){
+        return false;
+    }
     record.t = t; // Set the hit distance
     record.intersection_point = r.origin + r.direction * t;
     record.normal = self.normal; 
-    record.is_front_face = dot(r.direction, self.normal) < 0.0f; 
+
     record.mat = self.mat; 
     return true; // Intersection occurred
 }
+
+__host__ void invert_polygon(polygon &self){
+    self.normal = -self.normal;
+}
+
 
 
 #endif // POLYGON_H
