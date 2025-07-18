@@ -25,7 +25,7 @@ __host__ int make_cornell_box_scene(camera *&device_camera, hittable *&device_hi
     cam->samples_per_pixel = rays_per_pixel;
     cam->max_bounces = max_bounce_count; 
     cam->look_at_pos = new_vec3(278.0f, 278.0f, 0.0f); 
-    camera_calc_look_at(cam); 
+    cam->calc_look_at(); 
 
     // Allocate device memory for camera
     checkCudaErrors(cudaMalloc((void**)&device_camera, sizeof(camera)));
@@ -39,6 +39,7 @@ __host__ int make_cornell_box_scene(camera *&device_camera, hittable *&device_hi
     material white  = new_material_lambertian(new_color(1.0,1.0,1.0));
     material light  = new_material_emissive(new_color(1.0,1.0,1.0), 10.0f);
     material green  = new_material_lambertian(new_color(0.12,0.45,0.15));
+    // material green  = new_material_lambertian(new_color(0.12,0.45,0.75));
     material red    = new_material_lambertian(new_color(0.65,0.05,0.05));
     material pink    = new_material_lambertian(new_color(1.0,0,1.0));
     // material mirror = new_material_metal(new_color(0.9,0.9,0.9),0.001f);

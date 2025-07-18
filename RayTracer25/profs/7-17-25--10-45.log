@@ -1,0 +1,178 @@
+Windows PowerShell
+Copyright (C) Microsoft Corporation. All rights reserved.
+
+Install the latest PowerShell for new features and improvements! https://aka.ms/PSWindows
+
+Loading personal and system profiles took 1767ms.
+(base) PS C:\WINDOWS\system32> cd ..\..\ProgrammingProd\RayTracer\RayTracer25\
+(base) PS C:\ProgrammingProd\RayTracer\RayTracer25> make
+nvcc -arch=sm_89 -use_fast_math -O3 -ftz=true -prec-div=false -prec-sqrt=false -c main.cu -o bin/main.obj
+main.cu
+tmpxft_00007db4_00000000-10_main.cudafe1.cpp
+nvcc -arch=sm_89 -use_fast_math -O3 -ftz=true -prec-div=false -prec-sqrt=false -o run bin/main.obj
+main.obj
+   Creating library run.lib and object run.exp
+(base) PS C:\ProgrammingProd\RayTracer\RayTracer25> ncu .\run.exe
+Heap Limit Set to 3221225472
+==PROF== Connected to process 18064 (C:\ProgrammingProd\RayTracer\RayTracer25\run.exe)
+Stack Limit Set to 65536
+Block and Thread Size Defined
+==PROF== Profiling "kernel_init_curand_states" - 0: 0%
+==WARNING== Backing up device memory in system memory. Kernel replay might be slow. Consider using "--replay-mode application" to avoid memory save-and-restore.
+....50%....100% - 8 passes
+Building Scene
+Scene Built
+launching Kernel
+==PROF== Profiling "kernel" - 1: 0%..
+==WARNING== Launching the workload is taking more time than expected. If this continues to hang, terminate the profile and re-try by profiling the range of all related launches using '--replay-mode range'. See https://docs.nvidia.com/nsight-compute/ProfilingGuide/index.html#replay for more details.
+..50%....100% - 8 passes
+Kernel returned
+==PROF== Disconnected from process 18064
+[18064] run.exe@127.0.0.1
+  kernel_init_curand_states(curandStateXORWOW *, int, int, unsigned long) (64, 64, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 8.9
+    Section: GPU Speed Of Light Throughput
+    ----------------------- ----------- ------------
+    Metric Name             Metric Unit Metric Value
+    ----------------------- ----------- ------------
+    DRAM Frequency                  Ghz         8.95
+    SM Frequency                    Ghz         2.02
+    Elapsed Cycles                cycle   17,356,344
+    Memory Throughput                 %        94.50
+    DRAM Throughput                   %         5.96
+    Duration                         ms         8.60
+    L1/TEX Cache Throughput           %        99.29
+    L2 Cache Throughput               %        13.45
+    SM Active Cycles              cycle   16,452,000
+    Compute (SM) Throughput           %        94.50
+    ----------------------- ----------- ------------
+
+    INF   The kernel is utilizing greater than 80.0% of the available compute or memory performance of the device. To
+          further improve performance, work will likely need to be shifted from the most utilized to another unit.
+          Start by analyzing workloads in the Compute Workload Analysis section.
+
+    Section: Launch Statistics
+    -------------------------------- --------------- ---------------
+    Metric Name                          Metric Unit    Metric Value
+    -------------------------------- --------------- ---------------
+    Block Size                                                   256
+    Function Cache Configuration                     CachePreferNone
+    Grid Size                                                  4,096
+    Registers Per Thread             register/thread              40
+    Shared Memory Configuration Size           Kbyte           16.38
+    Driver Shared Memory Per Block       Kbyte/block            1.02
+    Dynamic Shared Memory Per Block       byte/block               0
+    Static Shared Memory Per Block        byte/block               0
+    # SMs                                         SM              60
+    Threads                                   thread       1,048,576
+    Uses Green Context                                             0
+    Waves Per SM                                               11.38
+    -------------------------------- --------------- ---------------
+
+    Section: Occupancy
+    ------------------------------- ----------- ------------
+    Metric Name                     Metric Unit Metric Value
+    ------------------------------- ----------- ------------
+    Block Limit SM                        block           24
+    Block Limit Registers                 block            6
+    Block Limit Shared Mem                block           16
+    Block Limit Warps                     block            6
+    Theoretical Active Warps per SM        warp           48
+    Theoretical Occupancy                     %          100
+    Achieved Occupancy                        %        92.48
+    Achieved Active Warps Per SM           warp        44.39
+    ------------------------------- ----------- ------------
+
+    Section: GPU and Memory Workload Distribution
+    -------------------------- ----------- -------------
+    Metric Name                Metric Unit  Metric Value
+    -------------------------- ----------- -------------
+    Average DRAM Active Cycles       cycle  4,588,042.67
+    Total DRAM Elapsed Cycles        cycle   461,740,032
+    Average L1 Active Cycles         cycle    16,452,000
+    Total L1 Elapsed Cycles          cycle 1,037,248,620
+    Average L2 Active Cycles         cycle 10,076,855.50
+    Total L2 Elapsed Cycles          cycle   354,255,936
+    Average SM Active Cycles         cycle    16,452,000
+    Total SM Elapsed Cycles          cycle 1,037,248,620
+    Average SMSP Active Cycles       cycle 16,395,265.92
+    Total SMSP Elapsed Cycles        cycle 4,148,994,480
+    -------------------------- ----------- -------------
+
+  kernel(unsigned char *, camera *, const hittable *, int, curandStateXORWOW *) (64, 64, 1)x(16, 16, 1), Context 1, Stream 7, Device 0, CC 8.9
+    Section: GPU Speed Of Light Throughput
+    ----------------------- ----------- -----------------
+    Metric Name             Metric Unit      Metric Value
+    ----------------------- ----------- -----------------
+    DRAM Frequency                  Ghz              9.63
+    SM Frequency                    Ghz              2.17
+    Elapsed Cycles                cycle    37,979,469,453
+    Memory Throughput                 %             69.64
+    DRAM Throughput                   %              2.14
+    Duration                          s             17.50
+    L1/TEX Cache Throughput           %             71.14
+    L2 Cache Throughput               %             22.07
+    SM Active Cycles              cycle 37,099,727,455.72
+    Compute (SM) Throughput           %             83.58
+    ----------------------- ----------- -----------------
+
+    INF   The kernel is utilizing greater than 80.0% of the available compute or memory performance of the device. To
+          further improve performance, work will likely need to be shifted from the most utilized to another unit.
+          Start by analyzing workloads in the Compute Workload Analysis section.
+
+    Section: Launch Statistics
+    -------------------------------- --------------- ---------------
+    Metric Name                          Metric Unit    Metric Value
+    -------------------------------- --------------- ---------------
+    Block Size                                                   256
+    Function Cache Configuration                     CachePreferNone
+    Grid Size                                                  4,096
+    Registers Per Thread             register/thread              80
+    Shared Memory Configuration Size           Kbyte           16.38
+    Driver Shared Memory Per Block       Kbyte/block            1.02
+    Dynamic Shared Memory Per Block       byte/block               0
+    Static Shared Memory Per Block        byte/block               0
+    # SMs                                         SM              60
+    Threads                                   thread       1,048,576
+    Uses Green Context                                             0
+    Waves Per SM                                               22.76
+    -------------------------------- --------------- ---------------
+
+    Section: Occupancy
+    ------------------------------- ----------- ------------
+    Metric Name                     Metric Unit Metric Value
+    ------------------------------- ----------- ------------
+    Block Limit SM                        block           24
+    Block Limit Registers                 block            3
+    Block Limit Shared Mem                block           16
+    Block Limit Warps                     block            6
+    Theoretical Active Warps per SM        warp           24
+    Theoretical Occupancy                     %           50
+    Achieved Occupancy                        %        49.12
+    Achieved Active Warps Per SM           warp        23.58
+    ------------------------------- ----------- ------------
+
+    OPT   Est. Local Speedup: 50%
+          The 6.00 theoretical warps per scheduler this kernel can issue according to its occupancy are below the
+          hardware maximum of 12. This kernel's theoretical occupancy (50.0%) is limited by the number of required
+          registers.
+
+    Section: GPU and Memory Workload Distribution
+    -------------------------- ----------- -----------------
+    Metric Name                Metric Unit      Metric Value
+    -------------------------- ----------- -----------------
+    Average DRAM Active Cycles       cycle  3,598,230,178.67
+    Total DRAM Elapsed Cycles        cycle 1,010,551,799,296
+    Average L1 Active Cycles         cycle 37,099,727,455.72
+    Total L1 Elapsed Cycles          cycle 2,273,977,439,352
+    Average L2 Active Cycles         cycle 18,643,026,505.50
+    Total L2 Elapsed Cycles          cycle   769,381,112,384
+    Average SM Active Cycles         cycle 37,099,727,455.72
+    Total SM Elapsed Cycles          cycle 2,273,977,439,352
+    Average SMSP Active Cycles       cycle 37,030,492,360.43
+    Total SMSP Elapsed Cycles        cycle 9,095,909,757,408
+    -------------------------- ----------- -----------------
+
+    OPT   Est. Speedup: 5.291%
+          One or more L2 Slices have a much higher number of active cycles than the average number of active cycles.
+          Maximum instance value is 9.10% above the average, while the minimum instance value is 1.75% below the
+          average.

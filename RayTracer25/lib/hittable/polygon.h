@@ -7,54 +7,73 @@
 #include "../hittable/hit_record.h"
 #include "../materials/material.h"
 
+#include "../acceleration_datastructure/aabb.h"
+
 struct polygon {
     vec3 v1; 
     vec3 v2;
     vec3 v3;
     vec3 normal; // Normal vector of the polygon
     material mat; // Material of the polygon
+
+    __device__ inline bool hit(ray& r, float t_min, float t_max, hit_record & record, ray& scattered, curandState* curandState) const {
+        // Calculate the plane equation of the polygon
+        vec3 edge1 = v2 - v1;
+        vec3 edge2 = v3 - v1;
+        vec3 h = cross(r.direction, edge2);
+        float a = dot(edge1, h);
+        if (fabs(a) < 1e-6) {
+            return false; // Ray is parallel to the polygon
+        }
+        float f = 1.0f / a;
+        vec3 s = r.origin - v1;
+        float u = f * dot(s, h);
+        if (u < 0.0f || u > 1.0f) {
+            return false; // Intersection is outside the polygon
+        }
+        vec3 q = cross(s, edge1);
+        float v = f * dot(r.direction, q);
+        if (v < 0.0f || u + v > 1.0f) {
+            return false; // Intersection is outside the polygon
+        }
+        // Calculate the intersection point
+        float t = f * dot(edge2, q);
+        if (t < t_min || t > t_max) {
+            return false; // Intersection is outside the valid range
+        }
+        record.is_front_face = dot(r.direction, normal) < 0.0f; 
+        if(!record.is_front_face){
+            return false;
+        }
+        record.t = t; // Set the hit distance
+        record.intersection_point = r.origin + r.direction * t;
+        record.normal = normal; 
+
+        record.mat = mat; 
+        return true; // Intersection occurred
+    }
 };
 
 
-__device__ inline bool hit(const polygon self, ray& r, float t_min, float t_max, hit_record & record, ray& scattered, curandState* curandState) {
-    // Calculate the plane equation of the polygon
-    vec3 edge1 = self.v2 - self.v1;
-    vec3 edge2 = self.v3 - self.v1;
-    vec3 h = cross(r.direction, edge2);
-    float a = dot(edge1, h);
-    if (fabs(a) < 1e-6) {
-        return false; // Ray is parallel to the polygon
-    }
-    float f = 1.0f / a;
-    vec3 s = r.origin - self.v1;
-    float u = f * dot(s, h);
-    if (u < 0.0f || u > 1.0f) {
-        return false; // Intersection is outside the polygon
-    }
-    vec3 q = cross(s, edge1);
-    float v = f * dot(r.direction, q);
-    if (v < 0.0f || u + v > 1.0f) {
-        return false; // Intersection is outside the polygon
-    }
-    // Calculate the intersection point
-    float t = f * dot(edge2, q);
-    if (t < t_min || t > t_max) {
-        return false; // Intersection is outside the valid range
-    }
-    record.is_front_face = dot(r.direction, self.normal) < 0.0f; 
-    if(!record.is_front_face){
-        return false;
-    }
-    record.t = t; // Set the hit distance
-    record.intersection_point = r.origin + r.direction * t;
-    record.normal = self.normal; 
-
-    record.mat = self.mat; 
-    return true; // Intersection occurred
-}
-
 __host__ void invert_polygon(polygon &self){
     self.normal = -self.normal;
+}
+
+__host__ __device__ aabb get_bounding_box(const polygon &self){
+    return {
+        {
+            fminf(self.v1.x,fminf(self.v2.x,self.v3.x)),
+            fmaxf(self.v1.x,fmaxf(self.v2.x,self.v3.x))
+        },
+        {
+            fminf(self.v1.y,fminf(self.v2.y,self.v3.y)),
+            fmaxf(self.v1.y,fmaxf(self.v2.y,self.v3.y))
+        },
+        {
+            fminf(self.v1.z,fminf(self.v2.z,self.v3.z)),
+            fmaxf(self.v1.z,fmaxf(self.v2.z,self.v3.z))
+        }
+    };
 }
 
 

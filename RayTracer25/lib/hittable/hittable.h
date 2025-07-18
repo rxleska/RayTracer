@@ -6,6 +6,8 @@
 #include "sphere.h"
 #include "polygon.h"
 
+#include "../acceleration_datastructure/aabb.h"
+
 enum hittable_type {
     SPHERE,
     POLYGON
@@ -19,17 +21,31 @@ struct hittable {
         polygon polygon_obj; // Polygon object
         // Add other hittable types here, e.g., polygon
     };
-};
 
-__device__ inline bool hit(const hittable& h, ray& r, float t_min, float t_max, hit_record& record, ray& scattered, curandState* curandState) {
-    switch (h.type) {
+    __device__ inline bool hit(ray& r, float t_min, float t_max, hit_record& record, ray& scattered, curandState* curandState) const {
+    switch (type) {
         case SPHERE:
-            return hit(h.sphere_obj, r, t_min, t_max, record, scattered, curandState);
+            return sphere_obj.hit(r, t_min, t_max, record, scattered, curandState);
         case POLYGON:
-            return hit(h.polygon_obj, r, t_min, t_max, record, scattered, curandState);
+            return polygon_obj.hit(r, t_min, t_max, record, scattered, curandState);
         // Add cases for other hittable types here
         default:
             return false; // Unsupported hittable type
+    }
+}
+};
+
+
+
+__device__ inline aabb get_bounding_box(const hittable& h){
+    switch (h.type)
+    {
+        case SPHERE:
+            return get_bounding_box(h.sphere_obj);
+        case POLYGON:
+            return get_bounding_box(h.polygon_obj);
+        default:
+            return {{0,0},{0,0},{0,0}};
     }
 }
 

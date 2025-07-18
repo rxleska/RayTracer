@@ -26,7 +26,7 @@ __host__ int make_base_scene(camera *&device_camera, hittable *&device_hittables
     cam->samples_per_pixel = rays_per_pixel; // number of samples per pixel for anti-aliasing
     cam->max_bounces = max_bounce_count; // maximum number of bounces for ray tracing
     cam->look_at_pos = new_vec3(0, 0, 2); // Look at position
-    camera_calc_look_at(cam); // Calculate camera orientation vectors
+    cam->calc_look_at(); // Calculate camera orientation vectors
 
     // Allocate device memory for camera
     checkCudaErrors(cudaMalloc((void**)&device_camera, sizeof(camera)));

@@ -15,15 +15,15 @@ CC = nvcc
 
 # simplified version for new development (may add more flags later)
 # CFLAGS = -arch=sm_89  #-rdc=true 
-CFLAGS = -arch=sm_89 -use_fast_math -O3 -ftz=true -prec-div=false -prec-sqrt=false 
+CFLAGS = -arch=sm_89 -use_fast_math -O3 -ftz=true -prec-div=false -prec-sqrt=false
 
-
+# ad_headers = lib/acceleration_datastructures/aabb.h
 scene_headers = lib/scenes/base_test.h lib/scenes/cornell_box.h
 material_headers = lib/materials/material.h lib/materials/lambertian.h lib/materials/metal.h lib/materials/dielectric.h
 hittable_headers = lib/hittable/sphere.h lib/hittable/hittable.h lib/hittable/hit_record.h lib/hittable/polygon.h
 math_headers = lib/math_classes/vec3.h lib/math_classes/color.h lib/math_classes/ray.h
 base_headers = lib/camera.h lib/kernel_code.h lib/cuda_check_funcs.h lib/random_cuda_funcs.h
-headers = $(math_headers) $(hittable_headers) $(material_headers) $(base_headers) $(scene_headers)
+headers = $(math_headers) $(hittable_headers) $(material_headers) $(base_headers) $(scene_headers) #$(ad_headers) 
 
 
 # makefile default target

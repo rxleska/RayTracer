@@ -19,7 +19,7 @@ __device__ inline vec3 get_sky_box_color(const ray& r) {
     return new_color(0.0f, 0.0f, 0.0f); // Default skybox color
 }
 
-__global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables, int hittable_count, curandState *states) {
+__global__ void kernel(uint8_t* framebuffer, camera * cam, const hittable * __restrict__ hittables, int hittable_count, curandState *states) {
     // Kernel code would go here
     int idx = blockIdx.x * blockDim.x + threadIdx.x;
     int idy = blockIdx.y * blockDim.y + threadIdx.y;
@@ -35,7 +35,7 @@ __global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables,
     for(int s = 0; s < cam->samples_per_pixel; s++) {
         float x_offset = curand_uniform(localState);
         float y_offset = curand_uniform(localState);
-        r = camera_get_ray(*cam, (float(idx)+x_offset) / (cam->cam_width), (float(cam->cam_height - idy - 1)+y_offset) / (cam->cam_height));
+        r = cam->get_ray((float(idx)+x_offset) / (cam->cam_width), (float(cam->cam_height - idy - 1)+y_offset) / (cam->cam_height));
 
 
         hit_record hit_rec;
@@ -46,9 +46,8 @@ __global__ void kernel(uint8_t* framebuffer, camera * cam, hittable * hittables,
         for(; bnc < cam->max_bounces; bnc++) {
             hit_anything = false;
 
-            
             for(int i = 0; i < hittable_count; i++) {
-                if(hit(hittables[i], r, 0.0f, hit_rec.t, hit_rec, scattered, localState)) {
+                if(hittables[i].hit(r, 0.0f, hit_rec.t, hit_rec, scattered, localState)) {
                     sub_run_color = hit_rec.ret_color; // If the ray hits a hittable object, use its color
                     hit_anything = true; // Mark that we hit something
                 }
